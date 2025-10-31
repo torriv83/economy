@@ -15,6 +15,21 @@
             "env": {
                 "SITE_PATH": "P:\\Herd\\economy"
             }
+        },
+        "ClickUp": {
+            "type": "stdio",
+            "command": "cmd",
+            "args": [
+                "/c",
+                "npx",
+                "-y",
+                "@taazkareem/clickup-mcp-server@latest"
+            ],
+            "env": {
+                "CLICKUP_API_KEY": "pk_83021_9IRRLMWBLKI8FT7LZNBQFFSTE7CWZY11",
+                "CLICKUP_TEAM_ID": "37435332",
+                "DOCUMENT_SUPPORT": "true"
+            }
         }
     }
 }

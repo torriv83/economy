@@ -3,7 +3,9 @@
     "allow": [
       "mcp__laravel-boost__application-info",
       "mcp__laravel-boost__list-routes",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "mcp__ClickUp__get_workspace_hierarchy",
+      "mcp__laravel-boost__browser-logs"
     ]
   },
   "enableAllProjectMcpServers": true,
