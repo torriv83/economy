@@ -12,7 +12,6 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - laravel/framework (LARAVEL) - v12
 - laravel/prompts (PROMPTS) - v0
 - livewire/livewire (LIVEWIRE) - v3
-- livewire/volt (VOLT) - v1
 - laravel/mcp (MCP) - v0
 - laravel/pint (PINT) - v1
 - laravel/sail (SAIL) - v1
@@ -262,116 +261,6 @@ document.addEventListener('livewire:init', function () {
 </code-snippet>
 
 
-=== volt/core rules ===
-
-## Livewire Volt
-
-- This project uses Livewire Volt for interactivity within its pages. New pages requiring interactivity must also use Livewire Volt. There is documentation available for it.
-- Make new Volt components using `php artisan make:volt [name] [--test] [--pest]`
-- Volt is a **class-based** and **functional** API for Livewire that supports single-file components, allowing a component's PHP logic and Blade templates to co-exist in the same file
-- Livewire Volt allows PHP logic and Blade templates in one file. Components use the `@livewire("volt-anonymous-fragment-eyJuYW1lIjoidm9sdC1hbm9ueW1vdXMtZnJhZ21lbnQtYmQ5YWJiNTE3YWMyMTgwOTA1ZmUxMzAxODk0MGJiZmIiLCJwYXRoIjoic3RvcmFnZVxcZnJhbWV3b3JrXFx2aWV3c1wvMTUxYWRjZWRjMzBhMzllOWIxNzQ0ZDRiMWRjY2FjYWIuYmxhZGUucGhwIn0=", Livewire\Volt\Precompilers\ExtractFragments::componentArguments([...get_defined_vars(), ...array (
-)]))
-</code-snippet>
-
-
-### Volt Class Based Component Example
-To get started, define an anonymous class that extends Livewire\Volt\Component. Within the class, you may utilize all of the features of Livewire using traditional Livewire syntax:
-
-
-<code-snippet name="Volt Class-based Volt Component Example" lang="php">
-use Livewire\Volt\Component;
-
-new class extends Component {
-    public $count = 0;
-
-    public function increment()
-    {
-        $this->count++;
-    }
-} ?>
-
-<div>
-    <h1>{{ $count }}</h1>
-    <button wire:click="increment">+</button>
-</div>
-</code-snippet>
-
-
-### Testing Volt & Volt Components
-- Use the existing directory for tests if it already exists. Otherwise, fallback to `tests/Feature/Volt`.
-
-<code-snippet name="Livewire Test Example" lang="php">
-use Livewire\Volt\Volt;
-
-test('counter increments', function () {
-    Volt::test('counter')
-        ->assertSee('Count: 0')
-        ->call('increment')
-        ->assertSee('Count: 1');
-});
-</code-snippet>
-
-
-<code-snippet name="Volt Component Test Using Pest" lang="php">
-declare(strict_types=1);
-
-use App\Models\{User, Product};
-use Livewire\Volt\Volt;
-
-test('product form creates product', function () {
-    $user = User::factory()->create();
-
-    Volt::test('pages.products.create')
-        ->actingAs($user)
-        ->set('form.name', 'Test Product')
-        ->set('form.description', 'Test Description')
-        ->set('form.price', 99.99)
-        ->call('create')
-        ->assertHasNoErrors();
-
-    expect(Product::where('name', 'Test Product')->exists())->toBeTrue();
-});
-</code-snippet>
-
-
-### Common Patterns
-
-
-<code-snippet name="CRUD With Volt" lang="php">
-<?php
-
-use App\Models\Product;
-use function Livewire\Volt\{state, computed};
-
-state(['editing' => null, 'search' => '']);
-
-$products = computed(fn() => Product::when($this->search,
-    fn($q) => $q->where('name', 'like', "%{$this->search}%")
-)->get());
-
-$edit = fn(Product $product) => $this->editing = $product->id;
-$delete = fn(Product $product) => $product->delete();
-
-?>
-
-<!-- HTML / UI Here -->
-</code-snippet>
-
-<code-snippet name="Real-Time Search With Volt" lang="php">
-    <flux:input
-        wire:model.live.debounce.300ms="search"
-        placeholder="Search..."
-    />
-</code-snippet>
-
-<code-snippet name="Loading States With Volt" lang="php">
-    <flux:button wire:click="save" wire:loading.attr="disabled">
-        <span wire:loading.remove>Save</span>
-        <span wire:loading>Saving...</span>
-    </flux:button>
-</code-snippet>
-
-
 === pint/core rules ===
 
 ## Laravel Pint Code Formatter
@@ -538,3 +427,107 @@ $pages->assertNoJavascriptErrors()->assertNoConsoleLogs();
 | decoration-slice | box-decoration-slice |
 | decoration-clone | box-decoration-clone |
 </laravel-boost-guidelines>
+
+
+=== project specific rules ===
+
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+This is a **personal debt management application** designed to help you track your debts and determine optimal repayment strategies. The application allows you to input your debts, view them in an organized overview, and analyze different payoff methods (Snowball and Avalanche strategies).
+
+## Application Purpose & Core Features
+
+### Current Features
+- Manual debt entry with name, balance, interest rate, and optional minimum payment
+- Debt overview displaying all debts with total debt calculation
+- Edit and delete functionality for debts
+- Payoff strategy comparison (Snowball vs Avalanche methods)
+- Repayment timeline calculations based on extra monthly payments
+- Interest savings calculations across different strategies
+
+### Future Features
+- YNAB API integration for automatic debt data fetching
+- Custom debt ordering options
+
+## Technical Stack
+
+- **Backend**: Laravel 12 with SQLite database
+- **Frontend**: Livewire for reactive components
+- **Styling**: Tailwind CSS v4
+- **Testing**: Pest v4 (including browser testing capabilities)
+
+## Development Commands
+
+### Running the Application
+```bash
+composer run dev          # Starts server, queue, and Vite in parallel
+php artisan serve         # Run only the Laravel server
+npm run dev              # Run only Vite for asset compilation
+npm run build            # Build assets for production
+```
+
+### Testing
+```bash
+php artisan test                              # Run all tests
+php artisan test --filter=testName            # Run specific test by name
+php artisan test tests/Feature/ExampleTest.php # Run tests in specific file
+```
+
+### Code Quality
+```bash
+vendor/bin/pint --dirty   # Format changed files (always run before finalizing)
+```
+
+### Database
+```bash
+php artisan migrate               # Run migrations
+php artisan migrate:fresh --seed  # Fresh database with seeders
+```
+
+## Application Architecture
+
+### Database Schema
+The application uses SQLite and stores debt records with:
+- Debt identification (name/description)
+- Financial data (balance, interest rate, minimum payment)
+- Timestamps for tracking
+
+### Component Structure
+- Uses **Livewire** components for interactive functionality
+- Livewire components located in `app/Livewire/`
+- Blade views located in `resources/views/`
+
+### Business Logic
+- Debt payoff calculations follow financial formulas for amortization
+- **Snowball Method**: Orders debts by lowest balance first (psychological wins)
+- **Avalanche Method**: Orders debts by highest interest rate first (optimal savings)
+- Repayment timeline considers compound interest and minimum payments
+
+## Development Guidelines
+
+### When Creating Features
+1. Create Eloquent models with factories and seeders (`php artisan make:model Debt -mfs`)
+2. Use Livewire components for interactive pages (`php artisan make:livewire DebtList`)
+3. Write comprehensive Pest tests covering happy paths, failures, and edge cases
+4. Run `vendor/bin/pint --dirty` before finalizing changes
+
+### Authentication
+- **No authentication** - this is a personal single-user application
+- Do not add authentication unless explicitly requested
+
+### Testing Strategy
+- Feature tests for user workflows (CRUD operations, calculations)
+- Unit tests for calculation logic (interest calculations, payoff ordering)
+- Browser tests for complex user interactions (Pest v4)
+- Always verify calculation accuracy with financial edge cases
+
+## Important Notes
+
+- This is a **personal single-user application** for local use only
+- Financial calculations must be precise - always test with edge cases
+- YNAB integration is planned but not yet implemented
+- Keep the UI simple and responsive (mobile-first approach)
