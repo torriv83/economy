@@ -20,24 +20,51 @@
         </div>
 
         @if (count($debts) > 0)
-            {{-- Total Debt Card --}}
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                            {{ __('app.total_debt') }}
-                        </p>
-                        <p class="text-3xl font-bold text-gray-900 dark:text-white">
-                            {{ number_format($this->totalDebt, 0, ',', ' ') }} kr
-                        </p>
-                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                            {{ trans_choice('app.debts_count', $this->debtsCount, ['count' => $this->debtsCount]) }}
-                        </p>
+            {{-- Summary Cards --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                {{-- Total Debt Card --}}
+                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                                {{ __('app.total_debt') }}
+                            </p>
+                            <p class="text-3xl font-bold text-gray-900 dark:text-white">
+                                {{ number_format($this->totalDebt, 0, ',', ' ') }} kr
+                            </p>
+                            {{-- Mock data for UI/UX design - will be dynamic when YNAB sync is implemented --}}
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                                {{ __('app.last_updated') }}: {{ __('app.today_at') }} 14:32
+                            </p>
+                        </div>
+                        <div class="h-16 w-16 bg-red-100 dark:bg-red-900/20 rounded-lg flex items-center justify-center">
+                            <svg class="h-8 w-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
                     </div>
-                    <div class="h-16 w-16 bg-red-100 dark:bg-red-900/20 rounded-lg flex items-center justify-center">
-                        <svg class="h-8 w-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                </div>
+
+                {{-- Estimated Payoff Card --}}
+                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                                {{ __('app.debt_free_in') }}
+                            </p>
+                            {{-- Mock data for UI/UX design - real calculation will be implemented later --}}
+                            <p class="text-3xl font-bold text-gray-900 dark:text-white">
+                                2 {{ trans_choice('app.years', 2) }} 5 {{ trans_choice('app.months', 5) }}
+                            </p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                                {{ __('app.with_minimum_payments') }}
+                            </p>
+                        </div>
+                        <div class="h-16 w-16 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
+                            <svg class="h-8 w-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
                     </div>
                 </div>
             </div>

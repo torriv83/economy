@@ -42,4 +42,12 @@ return [
     'edit' => 'Rediger',
     'delete' => 'Slett',
     'deleting' => 'Sletter',
+    'debt_free_in' => 'Gjeldsfri om',
+    'years' => 'år|år',
+    'months' => 'mnd|mnd',
+    'with_minimum_payments' => 'Med minstebetalinger',
+    'unable_to_calculate' => 'Kan ikke beregne',
+    'add_minimum_payments' => 'Legg til minstebetalinger for estimat',
+    'last_updated' => 'Sist oppdatert',
+    'today_at' => 'i dag kl.',
 ];

@@ -42,4 +42,12 @@ return [
     'edit' => 'Edit',
     'delete' => 'Delete',
     'deleting' => 'Deleting',
+    'debt_free_in' => 'Debt-free in',
+    'years' => 'year|years',
+    'months' => 'month|months',
+    'with_minimum_payments' => 'With minimum payments',
+    'unable_to_calculate' => 'Unable to calculate',
+    'add_minimum_payments' => 'Add minimum payments for estimate',
+    'last_updated' => 'Last updated',
+    'today_at' => 'today at',
 ];
