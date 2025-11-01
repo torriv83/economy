@@ -27,7 +27,7 @@
                     <a href="{{ route('debts.create') }}" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition">
                         {{ __('app.add_debt') }}
                     </a>
-                    <a href="#" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition">
+                    <a href="/strategies" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition">
                         {{ __('app.strategies') }}
                     </a>
 
