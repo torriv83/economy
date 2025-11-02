@@ -10,16 +10,50 @@
     </div>
 
     {{-- Strategy Info Bar --}}
-    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6 flex flex-wrap items-center gap-4">
-        <div class="flex items-center gap-2">
-            <span class="text-sm font-medium text-blue-900 dark:text-blue-300">{{ __('app.selected_strategy') }}:</span>
-            <span class="px-3 py-1 bg-blue-600 dark:bg-blue-500 text-white text-sm font-semibold rounded-full">
-                {{ $this->strategy }} {{ __('app.avalanche_method') }}
-            </span>
-        </div>
-        <div class="flex items-center gap-2">
-            <span class="text-sm font-medium text-blue-900 dark:text-blue-300">{{ __('app.extra_monthly_payment') }}:</span>
-            <span class="text-blue-900 dark:text-blue-300 font-bold">{{ number_format($this->extraPayment, 0, ',', ' ') }} kr</span>
+    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+        <div class="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-4">
+            {{-- Strategy Toggle Buttons --}}
+            <div class="flex-1">
+                <label class="text-sm font-medium text-blue-900 dark:text-blue-300 mb-2 block">
+                    {{ __('app.selected_strategy') }}
+                </label>
+                <div class="inline-flex rounded-lg border border-blue-200 dark:border-blue-700 bg-white dark:bg-gray-800 p-1">
+                    <button
+                        type="button"
+                        wire:click="$set('strategy', 'avalanche')"
+                        class="px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer {{ $this->strategy === 'avalanche' ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-sm' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}"
+                    >
+                        <span class="flex items-center gap-2">
+                            @if ($this->strategy === 'avalanche')
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            @endif
+                            {{ __('app.avalanche_method') }}
+                        </span>
+                    </button>
+                    <button
+                        type="button"
+                        wire:click="$set('strategy', 'snowball')"
+                        class="px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer {{ $this->strategy === 'snowball' ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-sm' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}"
+                    >
+                        <span class="flex items-center gap-2">
+                            @if ($this->strategy === 'snowball')
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            @endif
+                            {{ __('app.snowball_method') }}
+                        </span>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Extra Monthly Payment Display --}}
+            <div class="flex items-center gap-2">
+                <span class="text-sm font-medium text-blue-900 dark:text-blue-300">{{ __('app.extra_monthly_payment') }}:</span>
+                <span class="text-blue-900 dark:text-blue-300 font-bold">{{ number_format($this->extraPayment, 0, ',', ' ') }} kr</span>
+            </div>
         </div>
     </div>
 
