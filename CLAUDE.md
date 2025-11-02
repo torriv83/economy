@@ -464,10 +464,7 @@ This is a **personal debt management application** designed to help you track yo
 
 ### Running the Application
 ```bash
-composer run dev          # Starts server, queue, and Vite in parallel
-php artisan serve         # Run only the Laravel server
 npm run dev              # Run only Vite for asset compilation
-npm run build            # Build assets for production
 ```
 
 ### Testing
