@@ -59,7 +59,7 @@ class CreateDebt extends Component
 
         session()->flash('message', 'Gjeld lagt til.');
 
-        $this->redirect(route('home'), navigate: true);
+        $this->redirect(route('home'));
     }
 
     #[Title('Create Debt')]

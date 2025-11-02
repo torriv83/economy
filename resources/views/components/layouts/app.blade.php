@@ -35,7 +35,7 @@
                     </a>
 
                     <!-- Dark Mode Toggle -->
-                    <button @click="darkMode = !darkMode" class="p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                    <button @click="darkMode = !darkMode" class="p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer">
                         <svg x-show="!darkMode" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                         </svg>
@@ -58,7 +58,7 @@
                 <!-- Mobile Menu Button -->
                 <div class="md:hidden flex items-center gap-2">
                     <!-- Dark Mode Toggle (Mobile) -->
-                    <button @click="darkMode = !darkMode" class="p-2 rounded-lg text-gray-700 dark:text-gray-300">
+                    <button @click="darkMode = !darkMode" class="p-2 rounded-lg text-gray-700 dark:text-gray-300 cursor-pointer">
                         <svg x-show="!darkMode" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                         </svg>
@@ -67,7 +67,7 @@
                         </svg>
                     </button>
 
-                    <button type="button" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+                    <button type="button" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white cursor-pointer">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>

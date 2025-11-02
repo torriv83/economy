@@ -68,7 +68,7 @@ class EditDebt extends Component
 
         session()->flash('message', 'Gjeld oppdatert.');
 
-        $this->redirect(route('home'), navigate: true);
+        $this->redirect(route('home'));
     }
 
     #[Title('Edit Debt')]
