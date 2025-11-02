@@ -92,7 +92,7 @@ return [
     'total_paid' => 'Totalt betalt',
     'complete_repayment_schedule' => 'Fullstendig nedbetalingsplan',
     'continues_for_months' => 'fortsetter i :months måneder',
-    'now_priority' => 'NÅ PRIORITET',
+    'now_priority' => 'PRIORITERT NÅ',
     'from_debt' => 'fra :debt',
     'load_more' => 'Last inn flere',
     'show_all' => 'Vis alle',
@@ -103,4 +103,17 @@ return [
     'monthly_payment_timeline' => 'Månedlig betalingsplan',
     'debt' => 'Gjeld',
     'kr_remaining' => 'kr gjenstår',
+
+    // Payment Tracking
+    'mark_as_paid' => 'Merk som betalt',
+    'mark_all_as_paid' => 'Merk alle som betalt',
+    'unmark_all_as_paid' => 'Angre alle',
+    'save_payments' => 'Lagre betalinger',
+    'edit_amount' => 'Rediger beløp',
+    'payment_saved' => 'Betaling lagret',
+    'payment_deleted' => 'Betaling angret',
+    'payments_saved' => 'Betalinger lagret',
+    'payments_deleted' => 'Betalinger angret',
+    'already_paid' => 'Allerede betalt',
+    'paid' => 'Betalt',
 ];

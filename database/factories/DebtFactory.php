@@ -24,9 +24,12 @@ class DebtFactory extends Factory
             'Forbrukslån',
         ];
 
+        $balance = fake()->randomFloat(2, 10000, 500000);
+
         return [
             'name' => fake()->randomElement($debtTypes),
-            'balance' => fake()->randomFloat(2, 10000, 500000),
+            'balance' => $balance,
+            'original_balance' => $balance,
             'interest_rate' => fake()->randomFloat(2, 2.5, 15.0),
             'minimum_payment' => fake()->optional(0.7)->randomFloat(2, 500, 5000),
         ];

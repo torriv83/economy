@@ -13,24 +13,35 @@ class DebtSeeder extends Seeder
     public function run(): void
     {
         Debt::create([
-            'name' => 'Kredittkort',
-            'balance' => 50000.00,
-            'interest_rate' => 8.5,
-            'minimum_payment' => 500.00,
+            'name' => 'Norwegian',
+            'balance' => 24596.58,
+            'original_balance' => 24596.58,
+            'interest_rate' => 24.35,
+            'minimum_payment' => 900.00,
         ]);
 
         Debt::create([
-            'name' => 'Studielån',
-            'balance' => 200000.00,
-            'interest_rate' => 2.5,
-            'minimum_payment' => null,
+            'name' => 'Nordax',
+            'balance' => 23819.70,
+            'original_balance' => 23819.70,
+            'interest_rate' => 15.02,
+            'minimum_payment' => 1000.00,
         ]);
 
         Debt::create([
-            'name' => 'Billån',
-            'balance' => 75000.00,
-            'interest_rate' => 5.0,
-            'minimum_payment' => 1200.00,
+            'name' => 'Nordax 2',
+            'balance' => 23168.45,
+            'original_balance' => 23168.45,
+            'interest_rate' => 18.32,
+            'minimum_payment' => 664.95,
+        ]);
+
+        Debt::create([
+            'name' => 'Klarna',
+            'balance' => 7403.69,
+            'original_balance' => 7403.69,
+            'interest_rate' => 0.00,
+            'minimum_payment' => 749.59,
         ]);
     }
 }

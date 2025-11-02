@@ -103,4 +103,17 @@ return [
     'monthly_payment_timeline' => 'Monthly Payment Timeline',
     'debt' => 'Debt',
     'kr_remaining' => 'kr remaining',
+
+    // Payment Tracking
+    'mark_as_paid' => 'Mark as paid',
+    'mark_all_as_paid' => 'Mark all as paid',
+    'unmark_all_as_paid' => 'Unmark all',
+    'save_payments' => 'Save payments',
+    'edit_amount' => 'Edit amount',
+    'payment_saved' => 'Payment saved',
+    'payment_deleted' => 'Payment deleted',
+    'payments_saved' => 'Payments saved',
+    'payments_deleted' => 'Payments deleted',
+    'already_paid' => 'Already paid',
+    'paid' => 'Paid',
 ];

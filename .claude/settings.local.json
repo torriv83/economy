@@ -10,7 +10,8 @@
       "mcp__ClickUp__update_task",
       "mcp__ClickUp__get_workspace_tasks",
       "Bash(php artisan make:test:*)",
-      "Bash(vendor/bin/pint:*)"
+      "Bash(vendor/bin/pint:*)",
+      "Bash(php:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

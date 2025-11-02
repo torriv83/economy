@@ -161,10 +161,10 @@
     <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
         <div class="flex items-center justify-between mb-2">
             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('app.overall_progress') }}</span>
-            <span class="text-sm font-medium text-gray-900 dark:text-white">{{ number_format($this->paymentSchedule[count($this->paymentSchedule) - 1]['progress'], 1) }}%</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white">{{ number_format($this->overallProgress, 1) }}%</span>
         </div>
         <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-            <div class="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-500" style="width: {{ $this->paymentSchedule[count($this->paymentSchedule) - 1]['progress'] }}%"></div>
+            <div class="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-500" style="width: {{ $this->overallProgress }}%"></div>
         </div>
     </div>
 
@@ -354,6 +354,9 @@
                             <th class="px-4 py-3 text-right text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                                 {{ __('app.remaining_balance') }}
                             </th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                {{ __('app.paid') }}
+                            </th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -362,14 +365,32 @@
                                 $rowCount = count($month['payments']);
                                 $allPaidOff = collect($month['payments'])->every(fn($p) => $p['remaining'] <= 0.01);
                                 $rowClass = $allPaidOff ? 'bg-green-50 dark:bg-green-900/20' : ($month['month'] % 2 == 1 ? 'bg-gray-50 dark:bg-gray-700/30' : '');
+                                $debts = \App\Models\Debt::all()->keyBy('name');
                             @endphp
 
                             @foreach ($month['payments'] as $index => $payment)
+                                @php
+                                    $debt = $debts->get($payment['name']);
+                                    $debtId = $debt ? $debt->id : 0;
+                                    $paymentKey = $month['month'] . '_' . $debtId;
+                                    $isPaid = $debt ? app(\App\Services\PaymentService::class)->paymentExists($debtId, $month['month']) : false;
+                                @endphp
                                 <tr wire:key="detail-{{ $month['month'] }}-{{ $index }}" class="{{ $rowClass }}">
                                     @if ($index === 0)
                                         <td rowspan="{{ $rowCount }}" class="px-4 py-3 text-sm font-bold text-gray-900 dark:text-white align-top border-r border-gray-300 dark:border-gray-600">
-                                            {{ $month['month'] }}<br>
-                                            <span class="text-xs font-normal text-gray-500 dark:text-gray-400">{{ \Carbon\Carbon::parse($month['date'])->locale('nb')->translatedFormat('M Y') }}</span>
+                                            <div class="flex flex-col gap-2">
+                                                <div>
+                                                    {{ $month['month'] }}<br>
+                                                    <span class="text-xs font-normal text-gray-500 dark:text-gray-400">{{ \Carbon\Carbon::parse($month['date'])->locale('nb')->translatedFormat('M Y') }}</span>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    wire:click="markMonthAsPaid({{ $month['month'] }})"
+                                                    class="text-xs px-2 py-1 {{ $this->isMonthFullyPaid($month['month']) ? 'bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600' : 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600' }} text-white rounded transition-colors cursor-pointer"
+                                                >
+                                                    {{ $this->isMonthFullyPaid($month['month']) ? __('app.unmark_all_as_paid') : __('app.mark_all_as_paid') }}
+                                                </button>
+                                            </div>
                                         </td>
                                     @endif
                                     <td class="px-4 py-2 text-sm text-gray-900 dark:text-white {{ $payment['remaining'] <= 0.01 ? 'font-medium' : '' }}">
@@ -385,10 +406,40 @@
                                         @endif
                                     </td>
                                     <td class="px-4 py-2 text-sm text-right {{ $payment['isPriority'] ? 'font-semibold text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400' }}">
-                                        {{ number_format($payment['amount'], 0, ',', ' ') }} kr
+                                        @if ($isPaid && $debt)
+                                            @php
+                                                $paymentRecord = app(\App\Services\PaymentService::class)->getPayment($debtId, $month['month']);
+                                                $actualAmount = $paymentRecord ? $paymentRecord->actual_amount : $payment['amount'];
+                                                $key = $month['month'] . '_' . $debtId;
+                                                if (!isset($this->editingPayments[$key])) {
+                                                    $this->editingPayments[$key] = $actualAmount;
+                                                }
+                                            @endphp
+                                            <div class="flex items-center gap-2 justify-end">
+                                                <input
+                                                    type="number"
+                                                    wire:model.live.debounce.500ms="editingPayments.{{ $key }}"
+                                                    wire:blur="updatePaymentAmount({{ $month['month'] }}, {{ $debtId }})"
+                                                    class="w-24 px-2 py-1 text-sm text-right bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded focus:ring-blue-500 dark:focus:ring-blue-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                >
+                                                <span class="text-xs">kr</span>
+                                            </div>
+                                        @else
+                                            {{ number_format($payment['amount'], 0, ',', ' ') }} kr
+                                        @endif
                                     </td>
                                     <td class="px-4 py-2 text-sm text-right {{ $payment['remaining'] <= 0.01 ? 'font-bold text-green-600 dark:text-green-400' : 'font-medium text-gray-900 dark:text-white' }}">
                                         {{ number_format(max(0, $payment['remaining']), 0, ',', ' ') }} kr
+                                    </td>
+                                    <td class="px-4 py-2 text-center">
+                                        @if ($payment['amount'] > 0 && $debt)
+                                            <input
+                                                type="checkbox"
+                                                wire:click="togglePayment({{ $month['month'] }}, {{ $debtId }})"
+                                                @if($isPaid) checked @endif
+                                                class="h-4 w-4 text-blue-600 dark:text-blue-500 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-blue-400 cursor-pointer"
+                                            >
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach
@@ -396,13 +447,14 @@
                             {{-- Separator between months --}}
                             @if (!$loop->last)
                                 <tr>
-                                    <td colspan="4" class="border-b-2 border-gray-300 dark:border-gray-600"></td>
+                                    <td colspan="5" class="border-b-2 border-gray-300 dark:border-gray-600"></td>
                                 </tr>
                             @endif
                         @endforeach
                     </tbody>
                 </table>
             </div>
+
         </div>
 
         {{-- Mobile Card View --}}
@@ -410,27 +462,79 @@
             @foreach ($this->detailedSchedule as $month)
                 <div wire:key="detail-mobile-{{ $month['month'] }}" class="bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-200 dark:border-gray-700 overflow-hidden">
                     <div class="bg-gray-100 dark:bg-gray-700 px-4 py-3 border-b border-gray-200 dark:border-gray-600">
-                        <div class="font-bold text-gray-900 dark:text-white">{{ __('app.month') }} {{ $month['month'] }}</div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">
-                            {{ \Carbon\Carbon::parse($month['date'])->locale('nb')->translatedFormat('F Y') }}
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="font-bold text-gray-900 dark:text-white">{{ __('app.month') }} {{ $month['month'] }}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                    {{ \Carbon\Carbon::parse($month['date'])->locale('nb')->translatedFormat('F Y') }}
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                wire:click="markMonthAsPaid({{ $month['month'] }})"
+                                class="text-xs px-3 py-1.5 {{ $this->isMonthFullyPaid($month['month']) ? 'bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600' : 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600' }} text-white rounded transition-colors cursor-pointer"
+                            >
+                                {{ $this->isMonthFullyPaid($month['month']) ? __('app.unmark_all_as_paid') : __('app.mark_all_as_paid') }}
+                            </button>
                         </div>
                     </div>
                     <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                        @php
+                            $debts = \App\Models\Debt::all()->keyBy('name');
+                        @endphp
                         @foreach ($month['payments'] as $payment)
+                            @php
+                                $debt = $debts->get($payment['name']);
+                                $debtId = $debt ? $debt->id : 0;
+                                $paymentKey = $month['month'] . '_' . $debtId;
+                                $isPaid = $debt ? app(\App\Services\PaymentService::class)->paymentExists($debtId, $month['month']) : false;
+                            @endphp
                             <div class="p-4">
-                                <div class="font-medium text-gray-900 dark:text-white mb-2">
-                                    {{ $payment['name'] }}
-                                    @if ($payment['remaining'] <= 0.01)
-                                        <span class="ml-2 text-xs text-green-600 dark:text-green-400 font-semibold">{{ __('app.paid_off') }}</span>
-                                    @elseif ($payment['isPriority'])
-                                        <span class="ml-2 text-xs text-blue-600 dark:text-blue-400 font-semibold">{{ __('app.now_priority') }}</span>
+                                <div class="flex items-start justify-between gap-3 mb-2">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900 dark:text-white">
+                                            {{ $payment['name'] }}
+                                            @if ($payment['remaining'] <= 0.01)
+                                                <span class="ml-2 text-xs text-green-600 dark:text-green-400 font-semibold">{{ __('app.paid_off') }}</span>
+                                            @elseif ($payment['isPriority'])
+                                                <span class="ml-2 text-xs text-blue-600 dark:text-blue-400 font-semibold">{{ __('app.now_priority') }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    @if ($payment['amount'] > 0 && $debt)
+                                        <input
+                                            type="checkbox"
+                                            wire:click="togglePayment({{ $month['month'] }}, {{ $debtId }})"
+                                            @if($isPaid) checked @endif
+                                            class="h-4 w-4 mt-0.5 text-blue-600 dark:text-blue-500 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-blue-400 cursor-pointer"
+                                        >
                                     @endif
                                 </div>
                                 <div class="flex justify-between text-sm mb-1">
                                     <span class="text-gray-600 dark:text-gray-400">{{ __('app.payment') }}:</span>
-                                    <span class="{{ $payment['isPriority'] ? 'font-semibold text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400' }}">
-                                        {{ number_format($payment['amount'], 0, ',', ' ') }} kr
-                                    </span>
+                                    @if ($isPaid && $debt)
+                                        @php
+                                            $paymentRecord = app(\App\Services\PaymentService::class)->getPayment($debtId, $month['month']);
+                                            $actualAmount = $paymentRecord ? $paymentRecord->actual_amount : $payment['amount'];
+                                            $key = $month['month'] . '_' . $debtId;
+                                            if (!isset($this->editingPayments[$key])) {
+                                                $this->editingPayments[$key] = $actualAmount;
+                                            }
+                                        @endphp
+                                        <div class="flex items-center gap-2">
+                                            <input
+                                                type="number"
+                                                wire:model.live.debounce.500ms="editingPayments.{{ $key }}"
+                                                wire:blur="updatePaymentAmount({{ $month['month'] }}, {{ $debtId }})"
+                                                class="w-24 px-2 py-1 text-sm text-right bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded focus:ring-blue-500 dark:focus:ring-blue-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                            >
+                                            <span class="text-xs">kr</span>
+                                        </div>
+                                    @else
+                                        <span class="{{ $payment['isPriority'] ? 'font-semibold text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400' }}">
+                                            {{ number_format($payment['amount'], 0, ',', ' ') }} kr
+                                        </span>
+                                    @endif
                                 </div>
                                 <div class="flex justify-between text-sm">
                                     <span class="text-gray-600 dark:text-gray-400">{{ __('app.remaining_balance') }}:</span>

@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Debt;
 use App\Services\DebtCalculationService;
+use App\Services\PaymentService;
 use Livewire\Component;
 
 class PaymentPlan extends Component
@@ -14,7 +15,11 @@ class PaymentPlan extends Component
 
     public int $visibleMonths = 12;
 
+    public array $editingPayments = [];
+
     protected DebtCalculationService $calculationService;
+
+    protected PaymentService $paymentService;
 
     public function rules(): array
     {
@@ -38,9 +43,10 @@ class PaymentPlan extends Component
         $this->validate(['extraPayment' => $this->rules()['extraPayment']]);
     }
 
-    public function boot(DebtCalculationService $service): void
+    public function boot(DebtCalculationService $service, PaymentService $paymentService): void
     {
         $this->calculationService = $service;
+        $this->paymentService = $paymentService;
     }
 
     public function getPaymentScheduleProperty(): array
@@ -136,6 +142,154 @@ class PaymentPlan extends Component
         );
 
         return $schedule['totalInterest'];
+    }
+
+    public function getOverallProgressProperty(): float
+    {
+        return $this->paymentService->calculateOverallProgress();
+    }
+
+    public function togglePayment(int $monthNumber, int $debtId): void
+    {
+        // Check if already paid - if so, delete it (undo)
+        if ($this->paymentService->paymentExists($debtId, $monthNumber)) {
+            $this->paymentService->deletePayment($debtId, $monthNumber);
+            session()->flash('message', __('app.payment_deleted'));
+
+            return;
+        }
+
+        $schedule = $this->detailedSchedule;
+        $monthData = collect($schedule)->firstWhere('month', $monthNumber);
+
+        if (! $monthData) {
+            return;
+        }
+
+        $debt = Debt::find($debtId);
+        if (! $debt) {
+            return;
+        }
+
+        $payment = collect($monthData['payments'])->firstWhere('name', $debt->name);
+
+        if (! $payment || $payment['amount'] <= 0) {
+            return;
+        }
+
+        $paymentMonth = now()->addMonths($monthNumber - 1)->format('Y-m');
+
+        $this->paymentService->recordPayment(
+            $debt,
+            $payment['amount'],
+            $payment['amount'],
+            $monthNumber,
+            $paymentMonth
+        );
+
+        $this->paymentService->updateDebtBalances();
+
+        session()->flash('message', __('app.payment_saved'));
+    }
+
+    public function markMonthAsPaid(int $monthNumber): void
+    {
+        $schedule = $this->detailedSchedule;
+        $monthData = collect($schedule)->firstWhere('month', $monthNumber);
+
+        if (! $monthData) {
+            return;
+        }
+
+        $debts = Debt::all()->keyBy('name');
+        $debtIds = [];
+
+        foreach ($monthData['payments'] as $payment) {
+            $debt = $debts->get($payment['name']);
+            if ($debt && $payment['amount'] > 0) {
+                $debtIds[] = $debt->id;
+            }
+        }
+
+        // Check if all payments are already paid
+        if ($this->paymentService->isMonthFullyPaid($monthNumber, $debtIds)) {
+            // Unmark all
+            $this->paymentService->deleteMonthPayments($monthNumber);
+            session()->flash('message', __('app.payments_deleted'));
+
+            return;
+        }
+
+        // Mark all as paid
+        $payments = [];
+        $paymentMonth = now()->addMonths($monthNumber - 1)->format('Y-m');
+
+        foreach ($monthData['payments'] as $payment) {
+            $debt = $debts->get($payment['name']);
+
+            if ($debt && $payment['amount'] > 0) {
+                // Skip if payment already exists
+                if ($this->paymentService->paymentExists($debt->id, $monthNumber)) {
+                    continue;
+                }
+
+                $payments[] = [
+                    'debt_id' => $debt->id,
+                    'planned_amount' => $payment['amount'],
+                    'actual_amount' => $payment['amount'],
+                ];
+            }
+        }
+
+        if (! empty($payments)) {
+            $this->paymentService->recordMonthPayments($payments, $paymentMonth, $monthNumber);
+            session()->flash('message', __('app.payments_saved'));
+        }
+    }
+
+    public function isMonthFullyPaid(int $monthNumber): bool
+    {
+        $schedule = $this->detailedSchedule;
+        $monthData = collect($schedule)->firstWhere('month', $monthNumber);
+
+        if (! $monthData) {
+            return false;
+        }
+
+        $debts = Debt::all()->keyBy('name');
+        $debtIds = [];
+
+        foreach ($monthData['payments'] as $payment) {
+            $debt = $debts->get($payment['name']);
+            if ($debt && $payment['amount'] > 0) {
+                $debtIds[] = $debt->id;
+            }
+        }
+
+        return $this->paymentService->isMonthFullyPaid($monthNumber, $debtIds);
+    }
+
+    public function updatePaymentAmount(int $monthNumber, int $debtId): void
+    {
+        $key = "{$monthNumber}_{$debtId}";
+
+        if (! isset($this->editingPayments[$key])) {
+            return;
+        }
+
+        $amount = (float) $this->editingPayments[$key];
+
+        if ($amount <= 0) {
+            session()->flash('error', 'Beløpet må være større enn 0');
+
+            return;
+        }
+
+        $this->paymentService->updatePaymentAmount($debtId, $monthNumber, $amount);
+
+        unset($this->editingPayments[$key]);
+
+        session()->flash('message', __('app.payment_saved'));
     }
 
     public function render()

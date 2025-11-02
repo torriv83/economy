@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Debt extends Model
 {
@@ -13,6 +14,7 @@ class Debt extends Model
     protected $fillable = [
         'name',
         'balance',
+        'original_balance',
         'interest_rate',
         'minimum_payment',
     ];
@@ -20,9 +22,15 @@ class Debt extends Model
     protected function casts(): array
     {
         return [
-            'balance' => 'decimal:2',
-            'interest_rate' => 'decimal:2',
-            'minimum_payment' => 'decimal:2',
+            'balance' => 'float',
+            'original_balance' => 'float',
+            'interest_rate' => 'float',
+            'minimum_payment' => 'float',
         ];
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
     }
 }
