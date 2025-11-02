@@ -140,9 +140,8 @@ class DebtCalculationService
 
                 $totalPayment = min($totalPayment, $debt['balance']);
 
-                $newBalance = $debt['balance'] - $totalPayment;
-                $interest = $this->calculateMonthlyInterest($newBalance, $debt['interest_rate']);
-                $newBalance += $interest;
+                $interest = $this->calculateMonthlyInterest($debt['balance'], $debt['interest_rate']);
+                $newBalance = $debt['balance'] + $interest - $totalPayment;
 
                 $totalInterest += $interest;
                 $totalPaidThisMonth += $totalPayment;
