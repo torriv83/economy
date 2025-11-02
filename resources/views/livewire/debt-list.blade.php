@@ -19,7 +19,7 @@
             </a>
         </div>
 
-        @if (count($debts) > 0)
+        @if (count($this->debts) > 0)
             {{-- Summary Cards --}}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                 {{-- Total Debt Card --}}
@@ -71,7 +71,7 @@
 
             {{-- Debt Cards Grid --}}
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                @foreach ($debts as $debt)
+                @foreach ($this->debts as $debt)
                     <div wire:key="debt-{{ $debt['id'] }}"
                          class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
                         <div class="p-6">

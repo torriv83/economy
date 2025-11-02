@@ -76,47 +76,20 @@
                         {{ __('app.payment_order') }}
                     </h3>
                     <div class="space-y-3">
-                        {{-- Debt 1 --}}
-                        <div class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
-                            <div class="flex items-center gap-3">
-                                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 text-xs font-bold">
-                                    1
-                                </span>
-                                <span class="font-medium text-gray-900 dark:text-white">Kredittkort</span>
+                        @foreach ($this->orderedDebts['snowball'] as $index => $debt)
+                            <div wire:key="snowball-{{ $index }}" class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                                <div class="flex items-center gap-3">
+                                    <span class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 text-xs font-bold">
+                                        {{ $index + 1 }}
+                                    </span>
+                                    <span class="font-medium text-gray-900 dark:text-white">{{ $debt['name'] }}</span>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-semibold text-gray-900 dark:text-white">{{ number_format($debt['balance'], 0, ',', ' ') }} kr</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">{{ number_format($debt['interestRate'], 1, ',', ' ') }}%</div>
+                                </div>
                             </div>
-                            <div class="text-right">
-                                <div class="font-semibold text-gray-900 dark:text-white">50 000 kr</div>
-                                <div class="text-sm text-gray-500 dark:text-gray-400">8,5%</div>
-                            </div>
-                        </div>
-
-                        {{-- Debt 2 --}}
-                        <div class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
-                            <div class="flex items-center gap-3">
-                                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 text-xs font-bold">
-                                    2
-                                </span>
-                                <span class="font-medium text-gray-900 dark:text-white">Billån</span>
-                            </div>
-                            <div class="text-right">
-                                <div class="font-semibold text-gray-900 dark:text-white">75 000 kr</div>
-                                <div class="text-sm text-gray-500 dark:text-gray-400">5,0%</div>
-                            </div>
-                        </div>
-
-                        {{-- Debt 3 --}}
-                        <div class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
-                            <div class="flex items-center gap-3">
-                                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 text-xs font-bold">
-                                    3
-                                </span>
-                                <span class="font-medium text-gray-900 dark:text-white">Studielån</span>
-                            </div>
-                            <div class="text-right">
-                                <div class="font-semibold text-gray-900 dark:text-white">200 000 kr</div>
-                                <div class="text-sm text-gray-500 dark:text-gray-400">2,5%</div>
-                            </div>
-                        </div>
+                        @endforeach
                     </div>
                 </div>
 
@@ -124,11 +97,11 @@
                 <div class="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30 px-6 py-4">
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.time_to_debt_free') }}</span>
-                        <span class="font-bold text-gray-900 dark:text-white">29 {{ __('app.months_short') }}</span>
+                        <span class="font-bold text-gray-900 dark:text-white">{{ $this->snowballData['months'] }} {{ __('app.months_short') }}</span>
                     </div>
                     <div class="flex items-center justify-between">
                         <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.total_interest') }}</span>
-                        <span class="font-bold text-gray-900 dark:text-white">25 000 kr</span>
+                        <span class="font-bold text-gray-900 dark:text-white">{{ number_format($this->snowballData['totalInterest'], 0, ',', ' ') }} kr</span>
                     </div>
                 </div>
             </div>
@@ -156,47 +129,20 @@
                         {{ __('app.payment_order') }}
                     </h3>
                     <div class="space-y-3">
-                        {{-- Debt 1 --}}
-                        <div class="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-900/20">
-                            <div class="flex items-center gap-3">
-                                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 text-xs font-bold">
-                                    1
-                                </span>
-                                <span class="font-medium text-gray-900 dark:text-white">Kredittkort</span>
+                        @foreach ($this->orderedDebts['avalanche'] as $index => $debt)
+                            <div wire:key="avalanche-{{ $index }}" class="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-900/20">
+                                <div class="flex items-center gap-3">
+                                    <span class="flex items-center justify-center w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 text-xs font-bold">
+                                        {{ $index + 1 }}
+                                    </span>
+                                    <span class="font-medium text-gray-900 dark:text-white">{{ $debt['name'] }}</span>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-semibold text-gray-900 dark:text-white">{{ number_format($debt['balance'], 0, ',', ' ') }} kr</div>
+                                    <div class="text-sm text-green-700 dark:text-green-400 font-medium">{{ number_format($debt['interestRate'], 1, ',', ' ') }}%</div>
+                                </div>
                             </div>
-                            <div class="text-right">
-                                <div class="font-semibold text-gray-900 dark:text-white">50 000 kr</div>
-                                <div class="text-sm text-green-700 dark:text-green-400 font-medium">8,5%</div>
-                            </div>
-                        </div>
-
-                        {{-- Debt 2 --}}
-                        <div class="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-900/20">
-                            <div class="flex items-center gap-3">
-                                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 text-xs font-bold">
-                                    2
-                                </span>
-                                <span class="font-medium text-gray-900 dark:text-white">Billån</span>
-                            </div>
-                            <div class="text-right">
-                                <div class="font-semibold text-gray-900 dark:text-white">75 000 kr</div>
-                                <div class="text-sm text-green-700 dark:text-green-400 font-medium">5,0%</div>
-                            </div>
-                        </div>
-
-                        {{-- Debt 3 --}}
-                        <div class="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-900/20">
-                            <div class="flex items-center gap-3">
-                                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 text-xs font-bold">
-                                    3
-                                </span>
-                                <span class="font-medium text-gray-900 dark:text-white">Studielån</span>
-                            </div>
-                            <div class="text-right">
-                                <div class="font-semibold text-gray-900 dark:text-white">200 000 kr</div>
-                                <div class="text-sm text-green-700 dark:text-green-400 font-medium">2,5%</div>
-                            </div>
-                        </div>
+                        @endforeach
                     </div>
                 </div>
 
@@ -204,16 +150,16 @@
                 <div class="border-t border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 px-6 py-4">
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.time_to_debt_free') }}</span>
-                        <span class="font-bold text-gray-900 dark:text-white">27 {{ __('app.months_short') }}</span>
+                        <span class="font-bold text-gray-900 dark:text-white">{{ $this->avalancheData['months'] }} {{ __('app.months_short') }}</span>
                     </div>
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.total_interest') }}</span>
-                        <span class="font-bold text-gray-900 dark:text-white">22 500 kr</span>
+                        <span class="font-bold text-gray-900 dark:text-white">{{ number_format($this->avalancheData['totalInterest'], 0, ',', ' ') }} kr</span>
                     </div>
                     <div class="pt-3 border-t border-green-200 dark:border-green-800">
                         <div class="flex items-center justify-between">
                             <span class="text-sm font-semibold text-green-700 dark:text-green-400">{{ __('app.money_saved') }}</span>
-                            <span class="text-lg font-bold text-green-700 dark:text-green-400">2 500 kr {{ __('app.vs_snowball') }}</span>
+                            <span class="text-lg font-bold text-green-700 dark:text-green-400">{{ number_format($this->avalancheData['savings'], 0, ',', ' ') }} kr {{ __('app.vs_snowball') }}</span>
                         </div>
                     </div>
                 </div>

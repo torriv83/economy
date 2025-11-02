@@ -523,6 +523,7 @@ The application uses SQLite and stores debt records with:
 - Always verify calculation accuracy with financial edge cases
 
 ## Important Notes
+**ALWAYS Run subagents unless the change is a one liner** 
 
 - This is a **personal single-user application** for local use only
 - Financial calculations must be precise - always test with edge cases

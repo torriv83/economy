@@ -2,29 +2,42 @@
 
 namespace App\Livewire;
 
+use App\Models\Debt;
 use Livewire\Component;
 
 class DebtList extends Component
 {
-    public array $debts = [
-        ['id' => 1, 'name' => 'Kredittkort', 'balance' => 50000, 'interestRate' => 8.5, 'minimumPayment' => 500],
-        ['id' => 2, 'name' => 'Studielån', 'balance' => 200000, 'interestRate' => 2.5, 'minimumPayment' => null],
-        ['id' => 3, 'name' => 'Billån', 'balance' => 75000, 'interestRate' => 5.0, 'minimumPayment' => 1200],
-    ];
-
-    public function getTotalDebtProperty(): int
+    public function getDebtsProperty(): array
     {
-        return array_sum(array_column($this->debts, 'balance'));
+        return Debt::all()->map(function ($debt) {
+            return [
+                'id' => $debt->id,
+                'name' => $debt->name,
+                'balance' => $debt->balance,
+                'interestRate' => $debt->interest_rate,
+                'minimumPayment' => $debt->minimum_payment,
+            ];
+        })->toArray();
+    }
+
+    public function getTotalDebtProperty(): float
+    {
+        return Debt::all()->sum('balance');
     }
 
     public function getDebtsCountProperty(): int
     {
-        return count($this->debts);
+        return Debt::count();
     }
 
     public function deleteDebt(int $id): void
     {
-        $this->debts = array_values(array_filter($this->debts, fn ($debt) => $debt['id'] !== $id));
+        $debt = Debt::find($id);
+
+        if ($debt) {
+            $debt->delete();
+            session()->flash('message', 'Gjeld slettet.');
+        }
     }
 
     public function render()
