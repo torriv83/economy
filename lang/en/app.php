@@ -15,6 +15,7 @@ return [
 
     // Create Debt Form
     'create_debt' => 'Add New Debt',
+    'edit_debt' => 'Edit Debt',
     'debt_name' => 'Debt Name',
     'debt_name_placeholder' => 'e.g., Credit Card, Student Loan, Mortgage',
     'balance' => 'Current Balance',
@@ -25,7 +26,9 @@ return [
     'minimum_payment_placeholder' => 'Optional - enter amount in NOK',
     'minimum_payment_help' => 'Leave empty if there is no required minimum payment',
     'save_debt' => 'Save Debt',
+    'update_debt' => 'Update Debt',
     'saving' => 'Saving',
+    'updating' => 'Updating',
     'cancel' => 'Cancel',
     'debt_saved' => 'Debt saved successfully!',
     'debt_saved_message' => 'Your debt has been added to your overview.',
@@ -42,6 +45,7 @@ return [
     'edit' => 'Edit',
     'delete' => 'Delete',
     'deleting' => 'Deleting',
+    'confirm_delete_debt' => 'Are you sure you want to delete this debt? This action cannot be undone.',
     'debt_free_in' => 'Debt-free in',
     'years' => 'year|years',
     'months' => 'month|months',
@@ -90,4 +94,9 @@ return [
     'continues_for_months' => 'continues for :months months',
     'now_priority' => 'NOW PRIORITY',
     'from_debt' => 'from :debt',
+    'load_more' => 'Load more',
+    'show_all' => 'Show all',
+    'showing_all_months' => 'Showing all months',
+    'loading' => 'Loading',
+    'debt_name' => 'Debt name',
 ];

@@ -142,7 +142,7 @@
                                         {{ number_format($month['payments'][0]['amount'], 0, ',', ' ') }} kr
                                     </div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400">
-                                        {{ __('app.minimum_payment') }}: 500 kr + {{ __('app.extra_payment') }}: {{ number_format($this->extraPayment, 0, ',', ' ') }} kr
+                                        {{ __('app.minimum_payment') }}: {{ number_format($month['payments'][0]['minimum'], 0, ',', ' ') }} kr + {{ __('app.extra_payment') }}: {{ number_format($month['payments'][0]['extra'], 0, ',', ' ') }} kr
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right">
@@ -219,7 +219,7 @@
                                 <span class="font-bold text-gray-900 dark:text-white">{{ number_format($month['payments'][0]['remaining'], 0, ',', ' ') }} kr</span>
                             </div>
                             <div class="text-xs text-gray-500 dark:text-gray-400 pt-1">
-                                {{ __('app.minimum_payment') }}: 500 kr + {{ __('app.extra_payment') }}: {{ number_format($this->extraPayment, 0, ',', ' ') }} kr
+                                {{ __('app.minimum_payment') }}: {{ number_format($month['payments'][0]['minimum'], 0, ',', ' ') }} kr + {{ __('app.extra_payment') }}: {{ number_format($month['payments'][0]['extra'], 0, ',', ' ') }} kr
                             </div>
                         </div>
                     </div>
@@ -256,7 +256,7 @@
         </div>
     </div>
 
-    {{-- Complete Repayment Schedule - Every Debt, Every Month --}}
+    {{-- Detailed Repayment Schedule - Every Debt, Every Month --}}
     <div class="mt-12">
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
             {{ __('app.complete_repayment_schedule') }}
@@ -283,166 +283,49 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                        {{-- Month 1 --}}
-                        <tr class="bg-gray-50 dark:bg-gray-700/30">
-                            <td rowspan="3" class="px-4 py-3 text-sm font-bold text-gray-900 dark:text-white align-top border-r border-gray-300 dark:border-gray-600">
-                                1<br><span class="text-xs font-normal text-gray-500 dark:text-gray-400">Jan 2025</span>
-                            </td>
-                            <td class="px-4 py-2 text-sm text-gray-900 dark:text-white">Kredittkort</td>
-                            <td class="px-4 py-2 text-sm text-right font-semibold text-green-600 dark:text-green-400">2 500 kr</td>
-                            <td class="px-4 py-2 text-sm text-right font-medium text-gray-900 dark:text-white">47 500 kr</td>
-                        </tr>
-                        <tr class="bg-gray-50 dark:bg-gray-700/30">
-                            <td class="px-4 py-2 text-sm text-gray-900 dark:text-white">Studielån</td>
-                            <td class="px-4 py-2 text-sm text-right text-gray-600 dark:text-gray-400">0 kr</td>
-                            <td class="px-4 py-2 text-sm text-right text-gray-600 dark:text-gray-400">200 000 kr</td>
-                        </tr>
-                        <tr class="bg-gray-50 dark:bg-gray-700/30 border-b-2 border-gray-300 dark:border-gray-600">
-                            <td class="px-4 py-2 text-sm text-gray-900 dark:text-white">Billån</td>
-                            <td class="px-4 py-2 text-sm text-right text-gray-600 dark:text-gray-400">1 200 kr</td>
-                            <td class="px-4 py-2 text-sm text-right text-gray-600 dark:text-gray-400">73 800 kr</td>
-                        </tr>
+                        @foreach ($this->detailedSchedule as $month)
+                            @php
+                                $rowCount = count($month['payments']);
+                                $allPaidOff = collect($month['payments'])->every(fn($p) => $p['remaining'] <= 0.01);
+                                $rowClass = $allPaidOff ? 'bg-green-50 dark:bg-green-900/20' : ($month['month'] % 2 == 1 ? 'bg-gray-50 dark:bg-gray-700/30' : '');
+                            @endphp
 
-                        {{-- Month 2 --}}
-                        <tr>
-                            <td rowspan="3" class="px-4 py-3 text-sm font-bold text-gray-900 dark:text-white align-top border-r border-gray-300 dark:border-gray-600">
-                                2<br><span class="text-xs font-normal text-gray-500 dark:text-gray-400">Feb 2025</span>
-                            </td>
-                            <td class="px-4 py-2 text-sm text-gray-900 dark:text-white">Kredittkort</td>
-                            <td class="px-4 py-2 text-sm text-right font-semibold text-green-600 dark:text-green-400">2 500 kr</td>
-                            <td class="px-4 py-2 text-sm text-right font-medium text-gray-900 dark:text-white">45 000 kr</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-2 text-sm text-gray-900 dark:text-white">Studielån</td>
-                            <td class="px-4 py-2 text-sm text-right text-gray-600 dark:text-gray-400">0 kr</td>
-                            <td class="px-4 py-2 text-sm text-right text-gray-600 dark:text-gray-400">200 000 kr</td>
-                        </tr>
-                        <tr class="border-b-2 border-gray-300 dark:border-gray-600">
-                            <td class="px-4 py-2 text-sm text-gray-900 dark:text-white">Billån</td>
-                            <td class="px-4 py-2 text-sm text-right text-gray-600 dark:text-gray-400">1 200 kr</td>
-                            <td class="px-4 py-2 text-sm text-right text-gray-600 dark:text-gray-400">72 600 kr</td>
-                        </tr>
+                            @foreach ($month['payments'] as $index => $payment)
+                                <tr wire:key="detail-{{ $month['month'] }}-{{ $index }}" class="{{ $rowClass }}">
+                                    @if ($index === 0)
+                                        <td rowspan="{{ $rowCount }}" class="px-4 py-3 text-sm font-bold text-gray-900 dark:text-white align-top border-r border-gray-300 dark:border-gray-600">
+                                            {{ $month['month'] }}<br>
+                                            <span class="text-xs font-normal text-gray-500 dark:text-gray-400">{{ \Carbon\Carbon::parse($month['date'])->locale('nb')->translatedFormat('M Y') }}</span>
+                                        </td>
+                                    @endif
+                                    <td class="px-4 py-2 text-sm text-gray-900 dark:text-white {{ $payment['remaining'] <= 0.01 ? 'font-medium' : '' }}">
+                                        {{ $payment['name'] }}
+                                        @if ($payment['remaining'] <= 0.01)
+                                            <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-green-600 dark:bg-green-700 text-white">
+                                                {{ __('app.paid_off') }}!
+                                            </span>
+                                        @elseif ($payment['isPriority'])
+                                            <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-blue-600 dark:bg-blue-500 text-white">
+                                                {{ __('app.now_priority') }}
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-2 text-sm text-right {{ $payment['isPriority'] ? 'font-semibold text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400' }}">
+                                        {{ number_format($payment['amount'], 0, ',', ' ') }} kr
+                                    </td>
+                                    <td class="px-4 py-2 text-sm text-right {{ $payment['remaining'] <= 0.01 ? 'font-bold text-green-600 dark:text-green-400' : 'font-medium text-gray-900 dark:text-white' }}">
+                                        {{ number_format(max(0, $payment['remaining']), 0, ',', ' ') }} kr
+                                    </td>
+                                </tr>
+                            @endforeach
 
-                        {{-- Month 3-6 showing progression --}}
-                        <tr class="bg-gray-50 dark:bg-gray-700/30">
-                            <td rowspan="3" class="px-4 py-3 text-sm font-bold text-gray-900 dark:text-white align-top border-r border-gray-300 dark:border-gray-600">
-                                3<br><span class="text-xs font-normal text-gray-500 dark:text-gray-400">Mar 2025</span>
-                            </td>
-                            <td class="px-4 py-2 text-sm text-gray-900 dark:text-white">Kredittkort</td>
-                            <td class="px-4 py-2 text-sm text-right font-semibold text-green-600 dark:text-green-400">2 500 kr</td>
-                            <td class="px-4 py-2 text-sm text-right font-medium text-gray-900 dark:text-white">42 500 kr</td>
-                        </tr>
-                        <tr class="bg-gray-50 dark:bg-gray-700/30">
-                            <td class="px-4 py-2 text-sm text-gray-900 dark:text-white">Studielån</td>
-                            <td class="px-4 py-2 text-sm text-right text-gray-600 dark:text-gray-400">0 kr</td>
-                            <td class="px-4 py-2 text-sm text-right text-gray-600 dark:text-gray-400">200 000 kr</td>
-                        </tr>
-                        <tr class="bg-gray-50 dark:bg-gray-700/30 border-b-2 border-gray-300 dark:border-gray-600">
-                            <td class="px-4 py-2 text-sm text-gray-900 dark:text-white">Billån</td>
-                            <td class="px-4 py-2 text-sm text-right text-gray-600 dark:text-gray-400">1 200 kr</td>
-                            <td class="px-4 py-2 text-sm text-right text-gray-600 dark:text-gray-400">71 400 kr</td>
-                        </tr>
-
-                        {{-- Month 20 - Kredittkort paid off --}}
-                        <tr class="bg-green-50 dark:bg-green-900/20">
-                            <td rowspan="3" class="px-4 py-3 text-sm font-bold text-gray-900 dark:text-white align-top border-r border-gray-300 dark:border-gray-600">
-                                20<br><span class="text-xs font-normal text-gray-500 dark:text-gray-400">Aug 2026</span>
-                            </td>
-                            <td class="px-4 py-2 text-sm text-gray-900 dark:text-white font-medium">
-                                Kredittkort
-                                <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-green-600 dark:bg-green-700 text-white">
-                                    {{ __('app.paid_off') }}!
-                                </span>
-                            </td>
-                            <td class="px-4 py-2 text-sm text-right font-semibold text-green-600 dark:text-green-400">2 500 kr</td>
-                            <td class="px-4 py-2 text-sm text-right font-bold text-green-600 dark:text-green-400">0 kr</td>
-                        </tr>
-                        <tr class="bg-green-50 dark:bg-green-900/20">
-                            <td class="px-4 py-2 text-sm text-gray-900 dark:text-white">Studielån</td>
-                            <td class="px-4 py-2 text-sm text-right text-gray-600 dark:text-gray-400">0 kr</td>
-                            <td class="px-4 py-2 text-sm text-right text-gray-600 dark:text-gray-400">200 000 kr</td>
-                        </tr>
-                        <tr class="bg-green-50 dark:bg-green-900/20 border-b-2 border-gray-300 dark:border-gray-600">
-                            <td class="px-4 py-2 text-sm text-gray-900 dark:text-white">Billån</td>
-                            <td class="px-4 py-2 text-sm text-right text-gray-600 dark:text-gray-400">1 200 kr</td>
-                            <td class="px-4 py-2 text-sm text-right text-gray-600 dark:text-gray-400">45 000 kr</td>
-                        </tr>
-
-                        {{-- Month 21 - Payment rolls over to next debt (SNOWBALL EFFECT) --}}
-                        <tr class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 dark:border-blue-400">
-                            <td rowspan="3" class="px-4 py-3 text-sm font-bold text-gray-900 dark:text-white align-top border-r border-gray-300 dark:border-gray-600">
-                                21<br><span class="text-xs font-normal text-gray-500 dark:text-gray-400">Sep 2026</span>
-                            </td>
-                            <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 line-through">
-                                Kredittkort
-                            </td>
-                            <td class="px-4 py-2 text-sm text-right text-gray-400 dark:text-gray-500 line-through">0 kr</td>
-                            <td class="px-4 py-2 text-sm text-right text-gray-400 dark:text-gray-500">0 kr</td>
-                        </tr>
-                        <tr class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 dark:border-blue-400">
-                            <td class="px-4 py-2 text-sm text-gray-900 dark:text-white">Studielån</td>
-                            <td class="px-4 py-2 text-sm text-right text-gray-600 dark:text-gray-400">0 kr</td>
-                            <td class="px-4 py-2 text-sm text-right text-gray-600 dark:text-gray-400">200 000 kr</td>
-                        </tr>
-                        <tr class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 dark:border-blue-400 border-b-2 border-gray-300 dark:border-gray-600">
-                            <td class="px-4 py-2 text-sm">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-gray-900 dark:text-white font-medium">Billån</span>
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-blue-600 dark:bg-blue-500 text-white">
-                                        {{ __('app.now_priority') }}
-                                    </span>
-                                </div>
-                            </td>
-                            <td class="px-4 py-2 text-sm text-right">
-                                <div class="flex flex-col items-end gap-1">
-                                    <span class="font-bold text-blue-600 dark:text-blue-400 text-base">3 700 kr</span>
-                                    <div class="flex items-center gap-1 text-xs">
-                                        <svg class="h-3 w-3 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12" />
-                                        </svg>
-                                        <span class="text-green-600 dark:text-green-400 font-semibold">+2 500 kr</span>
-                                        <span class="text-gray-500 dark:text-gray-400">{{ __('app.from_debt', ['debt' => 'Kredittkort']) }}</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-4 py-2 text-sm text-right font-medium text-gray-900 dark:text-white">41 300 kr</td>
-                        </tr>
-
-                        {{-- Continuing pattern with ... indicator --}}
-                        <tr>
-                            <td colspan="4" class="px-4 py-3 text-center text-sm text-gray-500 dark:text-gray-400 italic">
-                                ... {{ __('app.continues_for_months', ['months' => 4]) }} ...
-                            </td>
-                        </tr>
-
-                        {{-- Final Month (Month 27) --}}
-                        <tr class="bg-green-50 dark:bg-green-900/20">
-                            <td rowspan="3" class="px-4 py-3 text-sm font-bold text-gray-900 dark:text-white align-top border-r border-gray-300 dark:border-gray-600">
-                                27<br><span class="text-xs font-normal text-gray-500 dark:text-gray-400">Mar 2027</span>
-                            </td>
-                            <td class="px-4 py-2 text-sm text-gray-900 dark:text-white font-medium">
-                                Kredittkort
-                                <span class="ml-2 text-xs text-green-600 dark:text-green-400 font-semibold">{{ __('app.paid_off') }}</span>
-                            </td>
-                            <td class="px-4 py-2 text-sm text-right text-gray-400 dark:text-gray-500 line-through">0 kr</td>
-                            <td class="px-4 py-2 text-sm text-right font-bold text-green-600 dark:text-green-400">0 kr</td>
-                        </tr>
-                        <tr class="bg-green-50 dark:bg-green-900/20">
-                            <td class="px-4 py-2 text-sm text-gray-900 dark:text-white font-medium">
-                                Studielån
-                                <span class="ml-2 text-xs text-green-600 dark:text-green-400 font-semibold">{{ __('app.paid_off') }}</span>
-                            </td>
-                            <td class="px-4 py-2 text-sm text-right text-gray-400 dark:text-gray-500 line-through">0 kr</td>
-                            <td class="px-4 py-2 text-sm text-right font-bold text-green-600 dark:text-green-400">0 kr</td>
-                        </tr>
-                        <tr class="bg-green-50 dark:bg-green-900/20">
-                            <td class="px-4 py-2 text-sm text-gray-900 dark:text-white font-medium">
-                                Billån
-                                <span class="ml-2 text-xs text-green-600 dark:text-green-400 font-semibold">{{ __('app.paid_off') }}</span>
-                            </td>
-                            <td class="px-4 py-2 text-sm text-right text-gray-400 dark:text-gray-500 line-through">0 kr</td>
-                            <td class="px-4 py-2 text-sm text-right font-bold text-green-600 dark:text-green-400">0 kr</td>
-                        </tr>
+                            {{-- Separator between months --}}
+                            @if (!$loop->last)
+                                <tr>
+                                    <td colspan="4" class="border-b-2 border-gray-300 dark:border-gray-600"></td>
+                                </tr>
+                            @endif
+                        @endforeach
                     </tbody>
                 </table>
             </div>
@@ -450,74 +333,89 @@
 
         {{-- Mobile Card View --}}
         <div class="md:hidden space-y-6">
-            {{-- Month 1-3 samples --}}
-            @foreach ([1, 2, 3] as $monthNum)
-                <div class="bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-200 dark:border-gray-700 overflow-hidden">
+            @foreach ($this->detailedSchedule as $month)
+                <div wire:key="detail-mobile-{{ $month['month'] }}" class="bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-200 dark:border-gray-700 overflow-hidden">
                     <div class="bg-gray-100 dark:bg-gray-700 px-4 py-3 border-b border-gray-200 dark:border-gray-600">
-                        <div class="font-bold text-gray-900 dark:text-white">{{ __('app.month') }} {{ $monthNum }}</div>
+                        <div class="font-bold text-gray-900 dark:text-white">{{ __('app.month') }} {{ $month['month'] }}</div>
                         <div class="text-xs text-gray-500 dark:text-gray-400">
-                            @if($monthNum == 1) Januar 2025
-                            @elseif($monthNum == 2) Februar 2025
-                            @else Mars 2025 @endif
+                            {{ \Carbon\Carbon::parse($month['date'])->locale('nb')->translatedFormat('F Y') }}
                         </div>
                     </div>
                     <div class="divide-y divide-gray-200 dark:divide-gray-700">
-                        <div class="p-4">
-                            <div class="font-medium text-gray-900 dark:text-white mb-2">Kredittkort</div>
-                            <div class="flex justify-between text-sm mb-1">
-                                <span class="text-gray-600 dark:text-gray-400">{{ __('app.payment') }}:</span>
-                                <span class="font-semibold text-green-600 dark:text-green-400">2 500 kr</span>
+                        @foreach ($month['payments'] as $payment)
+                            <div class="p-4">
+                                <div class="font-medium text-gray-900 dark:text-white mb-2">
+                                    {{ $payment['name'] }}
+                                    @if ($payment['remaining'] <= 0.01)
+                                        <span class="ml-2 text-xs text-green-600 dark:text-green-400 font-semibold">{{ __('app.paid_off') }}</span>
+                                    @elseif ($payment['isPriority'])
+                                        <span class="ml-2 text-xs text-blue-600 dark:text-blue-400 font-semibold">{{ __('app.now_priority') }}</span>
+                                    @endif
+                                </div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-600 dark:text-gray-400">{{ __('app.payment') }}:</span>
+                                    <span class="{{ $payment['isPriority'] ? 'font-semibold text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400' }}">
+                                        {{ number_format($payment['amount'], 0, ',', ' ') }} kr
+                                    </span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600 dark:text-gray-400">{{ __('app.remaining_balance') }}:</span>
+                                    <span class="font-medium {{ $payment['remaining'] <= 0.01 ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-white' }}">
+                                        {{ number_format(max(0, $payment['remaining']), 0, ',', ' ') }} kr
+                                    </span>
+                                </div>
                             </div>
-                            <div class="flex justify-between text-sm">
-                                <span class="text-gray-600 dark:text-gray-400">{{ __('app.remaining_balance') }}:</span>
-                                <span class="font-medium text-gray-900 dark:text-white">{{ number_format(50000 - ($monthNum * 2500), 0, ',', ' ') }} kr</span>
-                            </div>
-                        </div>
-                        <div class="p-4">
-                            <div class="font-medium text-gray-900 dark:text-white mb-2">Studielån</div>
-                            <div class="flex justify-between text-sm mb-1">
-                                <span class="text-gray-600 dark:text-gray-400">{{ __('app.payment') }}:</span>
-                                <span class="text-gray-600 dark:text-gray-400">0 kr</span>
-                            </div>
-                            <div class="flex justify-between text-sm">
-                                <span class="text-gray-600 dark:text-gray-400">{{ __('app.remaining_balance') }}:</span>
-                                <span class="text-gray-600 dark:text-gray-400">200 000 kr</span>
-                            </div>
-                        </div>
-                        <div class="p-4">
-                            <div class="font-medium text-gray-900 dark:text-white mb-2">Billån</div>
-                            <div class="flex justify-between text-sm mb-1">
-                                <span class="text-gray-600 dark:text-gray-400">{{ __('app.payment') }}:</span>
-                                <span class="text-gray-600 dark:text-gray-400">1 200 kr</span>
-                            </div>
-                            <div class="flex justify-between text-sm">
-                                <span class="text-gray-600 dark:text-gray-400">{{ __('app.remaining_balance') }}:</span>
-                                <span class="text-gray-600 dark:text-gray-400">{{ number_format(75000 - ($monthNum * 1200), 0, ',', ' ') }} kr</span>
-                            </div>
-                        </div>
+                        @endforeach
                     </div>
                 </div>
             @endforeach
+        </div>
 
-            {{-- Indicator for more months --}}
-            <div class="text-center py-4">
-                <p class="text-sm text-gray-500 dark:text-gray-400 italic">
-                    ... {{ __('app.continues_for_months', ['months' => 24]) }} ...
+        {{-- Load More / Show All Buttons --}}
+        @if ($this->visibleMonths < $this->totalMonths)
+            <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                    type="button"
+                    wire:click="loadMoreMonths"
+                    wire:loading.attr="disabled"
+                    class="inline-flex items-center justify-center px-6 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+                >
+                    <span wire:loading.remove wire:target="loadMoreMonths">
+                        {{ __('app.load_more') }} ({{ min(12, $this->totalMonths - $this->visibleMonths) }} {{ trans_choice('app.months', min(12, $this->totalMonths - $this->visibleMonths)) }})
+                    </span>
+                    <span wire:loading wire:target="loadMoreMonths" class="inline-flex items-center">
+                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        {{ __('app.loading') }}...
+                    </span>
+                </button>
+                <button
+                    type="button"
+                    wire:click="showAllMonths"
+                    wire:loading.attr="disabled"
+                    class="inline-flex items-center justify-center px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors disabled:opacity-50"
+                >
+                    <span wire:loading.remove wire:target="showAllMonths">
+                        {{ __('app.show_all') }} ({{ $this->totalMonths }} {{ trans_choice('app.months', $this->totalMonths) }})
+                    </span>
+                    <span wire:loading wire:target="showAllMonths" class="inline-flex items-center">
+                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        {{ __('app.loading') }}...
+                    </span>
+                </button>
+            </div>
+        @else
+            <div class="mt-8 text-center">
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                    {{ __('app.showing_all_months') }} ({{ $this->totalMonths }} {{ trans_choice('app.months', $this->totalMonths) }})
                 </p>
             </div>
-        </div>
+        @endif
     </div>
 
-    {{-- Info Notice --}}
-    <div class="mt-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-        <div class="flex gap-3">
-            <svg class="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div class="text-sm text-blue-900 dark:text-blue-300">
-                <p class="font-medium mb-1">Mock Data for UI Design</p>
-                <p>This payment plan shows sample data for visualization purposes. The actual calculations will be implemented when the debt payoff logic is added.</p>
-            </div>
-        </div>
-    </div>
 </div>

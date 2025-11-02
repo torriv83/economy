@@ -32,10 +32,11 @@
                             <p class="text-3xl font-bold text-gray-900 dark:text-white">
                                 {{ number_format($this->totalDebt, 0, ',', ' ') }} kr
                             </p>
-                            {{-- Mock data for UI/UX design - will be dynamic when YNAB sync is implemented --}}
-                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                                {{ __('app.last_updated') }}: {{ __('app.today_at') }} 14:32
-                            </p>
+                            @if ($this->lastUpdated)
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                                    {{ __('app.last_updated') }}: {{ $this->lastUpdated }}
+                                </p>
+                            @endif
                         </div>
                         <div class="h-16 w-16 bg-red-100 dark:bg-red-900/20 rounded-lg flex items-center justify-center">
                             <svg class="h-8 w-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,13 +53,26 @@
                             <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">
                                 {{ __('app.debt_free_in') }}
                             </p>
-                            {{-- Mock data for UI/UX design - real calculation will be implemented later --}}
-                            <p class="text-3xl font-bold text-gray-900 dark:text-white">
-                                2 {{ trans_choice('app.years', 2) }} 5 {{ trans_choice('app.months', 5) }}
-                            </p>
-                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                                {{ __('app.with_minimum_payments') }}
-                            </p>
+                            @if ($this->payoffEstimate)
+                                <p class="text-3xl font-bold text-gray-900 dark:text-white">
+                                    @if ($this->payoffEstimate['years'] > 0)
+                                        {{ $this->payoffEstimate['years'] }} {{ trans_choice('app.years', $this->payoffEstimate['years']) }}
+                                    @endif
+                                    @if ($this->payoffEstimate['months'] > 0)
+                                        {{ $this->payoffEstimate['months'] }} {{ trans_choice('app.months', $this->payoffEstimate['months']) }}
+                                    @endif
+                                </p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                                    {{ __('app.with_minimum_payments') }}
+                                </p>
+                            @else
+                                <p class="text-2xl font-bold text-gray-500 dark:text-gray-400">
+                                    {{ __('app.unable_to_calculate') }}
+                                </p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                                    {{ __('app.add_minimum_payments') }}
+                                </p>
+                            @endif
                         </div>
                         <div class="h-16 w-16 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
                             <svg class="h-8 w-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,12 +120,12 @@
 
                             {{-- Actions --}}
                             <div class="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-                                <button type="button"
-                                        class="flex-1 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors">
+                                <a href="/debts/{{ $debt['id'] }}/edit"
+                                   class="flex-1 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors text-center">
                                     {{ __('app.edit') }}
-                                </button>
+                                </a>
                                 <button type="button"
-                                        wire:click="deleteDebt({{ $debt['id'] }})"
+                                        x-on:click="if (confirm('{{ __('app.confirm_delete_debt') }}')) $wire.deleteDebt({{ $debt['id'] }})"
                                         wire:loading.attr="disabled"
                                         wire:loading.class="opacity-50"
                                         class="flex-1 px-3 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 rounded-lg transition-colors">

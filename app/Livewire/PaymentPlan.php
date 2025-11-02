@@ -12,6 +12,8 @@ class PaymentPlan extends Component
 
     public string $strategy = 'avalanche';
 
+    public int $visibleMonths = 12;
+
     protected DebtCalculationService $calculationService;
 
     public function boot(DebtCalculationService $service): void
@@ -34,6 +36,33 @@ class PaymentPlan extends Component
         );
 
         return array_slice($fullSchedule['schedule'], 0, 6);
+    }
+
+    public function getDetailedScheduleProperty(): array
+    {
+        $debts = Debt::all();
+
+        if ($debts->isEmpty()) {
+            return [];
+        }
+
+        $fullSchedule = $this->calculationService->generatePaymentSchedule(
+            $debts,
+            $this->extraPayment,
+            $this->strategy
+        );
+
+        return array_slice($fullSchedule['schedule'], 0, $this->visibleMonths);
+    }
+
+    public function loadMoreMonths(): void
+    {
+        $this->visibleMonths += 12;
+    }
+
+    public function showAllMonths(): void
+    {
+        $this->visibleMonths = $this->totalMonths;
     }
 
     public function getTotalMonthsProperty(): int

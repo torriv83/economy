@@ -15,6 +15,7 @@ return [
 
     // Create Debt Form
     'create_debt' => 'Legg til ny gjeld',
+    'edit_debt' => 'Rediger gjeld',
     'debt_name' => 'Gjeldsnavn',
     'debt_name_placeholder' => 'f.eks. Kredittkort, Studielån, Boliglån',
     'balance' => 'Nåværende saldo',
@@ -25,7 +26,9 @@ return [
     'minimum_payment_placeholder' => 'Valgfritt - skriv inn beløp i NOK',
     'minimum_payment_help' => 'La stå tomt hvis det ikke er krav til minstebetaling',
     'save_debt' => 'Lagre gjeld',
+    'update_debt' => 'Oppdater gjeld',
     'saving' => 'Lagrer',
+    'updating' => 'Oppdaterer',
     'cancel' => 'Avbryt',
     'debt_saved' => 'Gjeld lagret!',
     'debt_saved_message' => 'Gjelden din har blitt lagt til i oversikten.',
@@ -42,6 +45,7 @@ return [
     'edit' => 'Rediger',
     'delete' => 'Slett',
     'deleting' => 'Sletter',
+    'confirm_delete_debt' => 'Er du sikker på at du vil slette denne gjelden? Dette kan ikke angres.',
     'debt_free_in' => 'Gjeldsfri om',
     'years' => 'år|år',
     'months' => 'mnd|mnd',
@@ -90,4 +94,9 @@ return [
     'continues_for_months' => 'fortsetter i :months måneder',
     'now_priority' => 'NÅ PRIORITET',
     'from_debt' => 'fra :debt',
+    'load_more' => 'Last inn flere',
+    'show_all' => 'Vis alle',
+    'showing_all_months' => 'Viser alle måneder',
+    'loading' => 'Laster',
+    'debt_name' => 'Gjeldsnavn',
 ];

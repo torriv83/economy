@@ -2,6 +2,7 @@
 
 use App\Livewire\CreateDebt;
 use App\Livewire\DebtList;
+use App\Livewire\EditDebt;
 use App\Livewire\PaymentPlan;
 use App\Livewire\StrategyComparison;
 use Illuminate\Support\Facades\Route;
@@ -9,6 +10,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', DebtList::class)->name('home');
 
 Route::get('/debts/create', CreateDebt::class)->name('debts.create');
+
+Route::get('/debts/{debt}/edit', EditDebt::class)->name('debts.edit');
 
 Route::get('/strategies', StrategyComparison::class)->name('strategies');
 
