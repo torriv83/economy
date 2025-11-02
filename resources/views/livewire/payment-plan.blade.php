@@ -49,10 +49,50 @@
                 </div>
             </div>
 
-            {{-- Extra Monthly Payment Display --}}
-            <div class="flex items-center gap-2">
-                <span class="text-sm font-medium text-blue-900 dark:text-blue-300">{{ __('app.extra_monthly_payment') }}:</span>
-                <span class="text-blue-900 dark:text-blue-300 font-bold">{{ number_format($this->extraPayment, 0, ',', ' ') }} kr</span>
+            {{-- Extra Monthly Payment Input --}}
+            <div class="flex-1">
+                <label for="extraPayment" class="text-sm font-medium text-blue-900 dark:text-blue-300 mb-2 block">
+                    {{ __('app.extra_monthly_payment') }}
+                </label>
+                <div class="flex items-center gap-2">
+                    <button
+                        type="button"
+                        wire:click="$set('extraPayment', {{ max(0, $this->extraPayment - 500) }})"
+                        class="h-10 w-10 flex items-center justify-center bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors cursor-pointer"
+                        aria-label="Decrease by 500"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                        </svg>
+                    </button>
+                    <div class="relative flex-1 min-w-[160px]">
+                        <input
+                            type="number"
+                            id="extraPayment"
+                            wire:model.live.debounce.300ms="extraPayment"
+                            min="0"
+                            max="1000000"
+                            step="100"
+                            class="w-full px-4 py-2 pr-10 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 rounded-lg text-blue-900 dark:text-blue-100 font-bold text-center focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all"
+                        >
+                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-blue-600 dark:text-blue-400 font-medium pointer-events-none">
+                            kr
+                        </span>
+                    </div>
+                    <button
+                        type="button"
+                        wire:click="$set('extraPayment', {{ $this->extraPayment + 500 }})"
+                        class="h-10 w-10 flex items-center justify-center bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors cursor-pointer"
+                        aria-label="Increase by 500"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                    </button>
+                </div>
+                @error('extraPayment')
+                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                @enderror
             </div>
         </div>
     </div>
@@ -120,7 +160,7 @@
     {{-- Overall Progress Bar --}}
     <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
         <div class="flex items-center justify-between mb-2">
-            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Overall Progress</span>
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('app.overall_progress') }}</span>
             <span class="text-sm font-medium text-gray-900 dark:text-white">{{ number_format($this->paymentSchedule[count($this->paymentSchedule) - 1]['progress'], 1) }}%</span>
         </div>
         <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
@@ -130,7 +170,7 @@
 
     {{-- Payment Schedule Timeline --}}
     <div class="space-y-4">
-        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Monthly Payment Timeline</h2>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">{{ __('app.monthly_payment_timeline') }}</h2>
 
         {{-- Desktop Table View --}}
         <div class="hidden lg:block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -241,7 +281,7 @@
                         </div>
                         <div class="space-y-2">
                             <div class="flex justify-between items-baseline">
-                                <span class="text-sm text-gray-600 dark:text-gray-400">Debt:</span>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.debt') }}:</span>
                                 <span class="font-bold text-gray-900 dark:text-white">{{ $month['priorityDebt'] }}</span>
                             </div>
                             <div class="flex justify-between items-baseline">
@@ -267,7 +307,7 @@
                                     <div wire:key="month-{{ $month['month'] }}-payment-{{ $loop->index }}" class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
                                         <div>
                                             <div class="font-medium text-gray-900 dark:text-white text-sm">{{ $payment['name'] }}</div>
-                                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ number_format($payment['remaining'], 0, ',', ' ') }} kr remaining</div>
+                                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ number_format($payment['remaining'], 0, ',', ' ') }} {{ __('app.kr_remaining') }}</div>
                                         </div>
                                         <div class="text-sm font-medium text-gray-900 dark:text-white">
                                             {{ number_format($payment['amount'], 0, ',', ' ') }} kr

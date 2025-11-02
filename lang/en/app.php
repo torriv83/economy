@@ -99,4 +99,8 @@ return [
     'showing_all_months' => 'Showing all months',
     'loading' => 'Loading',
     'debt_name' => 'Debt name',
+    'overall_progress' => 'Overall Progress',
+    'monthly_payment_timeline' => 'Monthly Payment Timeline',
+    'debt' => 'Debt',
+    'kr_remaining' => 'kr remaining',
 ];

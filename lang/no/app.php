@@ -99,4 +99,8 @@ return [
     'showing_all_months' => 'Viser alle måneder',
     'loading' => 'Laster',
     'debt_name' => 'Gjeldsnavn',
+    'overall_progress' => 'Total fremdrift',
+    'monthly_payment_timeline' => 'Månedlig betalingsplan',
+    'debt' => 'Gjeld',
+    'kr_remaining' => 'kr gjenstår',
 ];
