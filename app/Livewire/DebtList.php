@@ -57,7 +57,7 @@ class DebtList extends Component
             return null;
         }
 
-        $service = new DebtCalculationService;
+        $service = app(DebtCalculationService::class);
         $schedule = $service->generatePaymentSchedule($debts, 0, 'avalanche');
 
         $months = $schedule['months'];

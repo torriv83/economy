@@ -44,7 +44,7 @@ class StrategyComparison extends Component
             ];
         }
 
-        $service = new DebtCalculationService;
+        $service = app(DebtCalculationService::class);
         $comparison = $service->compareStrategies($debts, $this->extraPayment);
 
         return $comparison['snowball'];
@@ -63,7 +63,7 @@ class StrategyComparison extends Component
             ];
         }
 
-        $service = new DebtCalculationService;
+        $service = app(DebtCalculationService::class);
         $comparison = $service->compareStrategies($debts, $this->extraPayment);
 
         return $comparison['avalanche'];
@@ -80,7 +80,7 @@ class StrategyComparison extends Component
             ];
         }
 
-        $service = new DebtCalculationService;
+        $service = app(DebtCalculationService::class);
 
         return [
             'snowball' => $service->orderBySnowball($debts)->map(function ($debt) {
