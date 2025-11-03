@@ -101,6 +101,8 @@ return [
     'debt_name' => 'Debt name',
     'overall_progress' => 'Overall Progress',
     'monthly_payment_timeline' => 'Monthly Payment Timeline',
+    'debt_payoff_overview' => 'Debt Payoff Overview',
+    'current_balance' => 'Current Balance',
     'debt' => 'Debt',
     'kr_remaining' => 'kr remaining',
 

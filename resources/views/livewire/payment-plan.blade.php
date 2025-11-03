@@ -168,82 +168,48 @@
         </div>
     </div>
 
-    {{-- Payment Schedule Timeline --}}
+    {{-- Debt Payoff Overview --}}
     <div class="space-y-4">
-        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">{{ __('app.monthly_payment_timeline') }}</h2>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">{{ __('app.debt_payoff_overview') }}</h2>
 
         {{-- Desktop Table View --}}
-        <div class="hidden lg:block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="hidden md:block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-gray-50 dark:bg-gray-700">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                                {{ __('app.month') }}
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                                {{ __('app.priority_debt') }}
+                                {{ __('app.debt_name') }}
                             </th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                                {{ __('app.payment') }}
+                                {{ __('app.current_balance') }}
                             </th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                                {{ __('app.remaining_balance') }}
-                            </th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                                {{ __('app.total_paid') }}
+                                {{ __('app.payoff_date') }}
                             </th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                        @foreach ($this->paymentSchedule as $month)
-                            <tr wire:key="month-{{ $month['month'] }}" class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                        @foreach ($this->debtPayoffSchedule as $debt)
+                            <tr wire:key="payoff-{{ $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center gap-3">
-                                        <div class="shrink-0 h-10 w-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                                            <span class="text-blue-600 dark:text-blue-400 font-bold text-sm">{{ $month['month'] }}</span>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $debt['name'] }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                        {{ number_format($debt['balance'], 0, ',', ' ') }} kr
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right">
+                                    @if ($debt['payoff_date'])
+                                        <div class="text-sm font-medium text-green-600 dark:text-green-400">
+                                            {{ $debt['payoff_date'] }}
                                         </div>
-                                        <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $month['monthName'] }}</div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-sm font-semibold rounded-full">
-                                        {{ $month['priorityDebt'] }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">
-                                        {{ number_format($month['payments'][0]['amount'], 0, ',', ' ') }} kr
-                                    </div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">
-                                        {{ __('app.minimum_payment') }}: {{ number_format($month['payments'][0]['minimum'], 0, ',', ' ') }} kr + {{ __('app.extra_payment') }}: {{ number_format($month['payments'][0]['extra'], 0, ',', ' ') }} kr
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">
-                                        {{ number_format($month['payments'][0]['remaining'], 0, ',', ' ') }} kr
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">
-                                        {{ number_format($month['totalPaid'], 0, ',', ' ') }} kr
-                                    </div>
-                                </td>
-                            </tr>
-                            {{-- Show other debts detail row --}}
-                            <tr wire:key="month-{{ $month['month'] }}-details" class="bg-gray-50 dark:bg-gray-700/30">
-                                <td colspan="5" class="px-6 py-3">
-                                    <div class="text-xs text-gray-600 dark:text-gray-400">
-                                        <span class="font-semibold">{{ __('app.other_debts') }}:</span>
-                                        @foreach ($month['payments'] as $payment)
-                                            @if (!$payment['isPriority'])
-                                                <span class="ml-4">
-                                                    {{ $payment['name'] }}: {{ number_format($payment['amount'], 0, ',', ' ') }} kr
-                                                    ({{ __('app.remaining_balance') }}: {{ number_format($payment['remaining'], 0, ',', ' ') }} kr)
-                                                </span>
-                                            @endif
-                                        @endforeach
-                                    </div>
+                                    @else
+                                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                                            -
+                                        </div>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
@@ -253,76 +219,24 @@
         </div>
 
         {{-- Mobile Card View --}}
-        <div class="lg:hidden space-y-4">
-            @foreach ($this->paymentSchedule as $month)
-                <div wire:key="month-card-{{ $month['month'] }}" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                    {{-- Month Header --}}
-                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 px-4 py-3">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="h-8 w-8 bg-white/20 rounded-full flex items-center justify-center">
-                                    <span class="text-white font-bold text-sm">{{ $month['month'] }}</span>
-                                </div>
-                                <h3 class="text-white font-bold">{{ $month['monthName'] }}</h3>
-                            </div>
-                            <div class="text-white text-sm font-medium">
-                                {{ number_format($month['progress'], 1) }}%
-                            </div>
-                        </div>
+        <div class="md:hidden space-y-4">
+            @foreach ($this->debtPayoffSchedule as $debt)
+                <div wire:key="payoff-card-{{ $loop->index }}" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="font-bold text-gray-900 dark:text-white">{{ $debt['name'] }}</div>
                     </div>
-
-                    {{-- Priority Debt Section --}}
-                    <div class="p-4 bg-green-50 dark:bg-green-900/10 border-b border-green-100 dark:border-green-900/30">
-                        <div class="flex items-center gap-2 mb-3">
-                            <svg class="h-5 w-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                            </svg>
-                            <span class="text-sm font-bold text-green-900 dark:text-green-300">{{ __('app.priority_debt') }}</span>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-baseline">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.current_balance') }}:</span>
+                            <span class="font-medium text-gray-900 dark:text-white">{{ number_format($debt['balance'], 0, ',', ' ') }} kr</span>
                         </div>
-                        <div class="space-y-2">
-                            <div class="flex justify-between items-baseline">
-                                <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.debt') }}:</span>
-                                <span class="font-bold text-gray-900 dark:text-white">{{ $month['priorityDebt'] }}</span>
-                            </div>
-                            <div class="flex justify-between items-baseline">
-                                <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.payment') }}:</span>
-                                <span class="font-bold text-green-600 dark:text-green-400">{{ number_format($month['payments'][0]['amount'], 0, ',', ' ') }} kr</span>
-                            </div>
-                            <div class="flex justify-between items-baseline">
-                                <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.remaining_balance') }}:</span>
-                                <span class="font-bold text-gray-900 dark:text-white">{{ number_format($month['payments'][0]['remaining'], 0, ',', ' ') }} kr</span>
-                            </div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400 pt-1">
-                                {{ __('app.minimum_payment') }}: {{ number_format($month['payments'][0]['minimum'], 0, ',', ' ') }} kr + {{ __('app.extra_payment') }}: {{ number_format($month['payments'][0]['extra'], 0, ',', ' ') }} kr
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Other Debts Section --}}
-                    <div class="p-4">
-                        <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">{{ __('app.other_debts') }}</h4>
-                        <div class="space-y-3">
-                            @foreach ($month['payments'] as $payment)
-                                @if (!$payment['isPriority'])
-                                    <div wire:key="month-{{ $month['month'] }}-payment-{{ $loop->index }}" class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
-                                        <div>
-                                            <div class="font-medium text-gray-900 dark:text-white text-sm">{{ $payment['name'] }}</div>
-                                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ number_format($payment['remaining'], 0, ',', ' ') }} {{ __('app.kr_remaining') }}</div>
-                                        </div>
-                                        <div class="text-sm font-medium text-gray-900 dark:text-white">
-                                            {{ number_format($payment['amount'], 0, ',', ' ') }} kr
-                                        </div>
-                                    </div>
-                                @endif
-                            @endforeach
-                        </div>
-                    </div>
-
-                    {{-- Total Paid This Month --}}
-                    <div class="px-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700">
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm font-bold text-gray-700 dark:text-gray-300">{{ __('app.total_paid') }}</span>
-                            <span class="text-lg font-bold text-gray-900 dark:text-white">{{ number_format($month['totalPaid'], 0, ',', ' ') }} kr</span>
+                        <div class="flex justify-between items-baseline">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.payoff_date') }}:</span>
+                            @if ($debt['payoff_date'])
+                                <span class="font-medium text-green-600 dark:text-green-400">{{ $debt['payoff_date'] }}</span>
+                            @else
+                                <span class="text-sm text-gray-500 dark:text-gray-400">-</span>
+                            @endif
                         </div>
                     </div>
                 </div>

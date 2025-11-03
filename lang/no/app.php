@@ -101,6 +101,8 @@ return [
     'debt_name' => 'Gjeldsnavn',
     'overall_progress' => 'Total fremdrift',
     'monthly_payment_timeline' => 'Månedlig betalingsplan',
+    'debt_payoff_overview' => 'Nedbetalingsoversikt',
+    'current_balance' => 'Nåværende saldo',
     'debt' => 'Gjeld',
     'kr_remaining' => 'kr gjenstår',
 

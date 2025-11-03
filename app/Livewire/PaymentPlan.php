@@ -149,6 +149,45 @@ class PaymentPlan extends Component
         return $this->paymentService->calculateOverallProgress();
     }
 
+    public function getDebtPayoffScheduleProperty(): array
+    {
+        $debts = Debt::all();
+
+        if ($debts->isEmpty()) {
+            return [];
+        }
+
+        $fullSchedule = $this->calculationService->generatePaymentSchedule(
+            $debts,
+            $this->extraPayment,
+            $this->strategy
+        );
+
+        $payoffDates = [];
+
+        foreach ($debts as $debt) {
+            $payoffMonth = null;
+
+            foreach ($fullSchedule['schedule'] as $month) {
+                foreach ($month['payments'] as $payment) {
+                    if ($payment['name'] === $debt->name && $payment['remaining'] <= 0.01) {
+                        $payoffMonth = $month;
+                        break 2;
+                    }
+                }
+            }
+
+            $payoffDates[] = [
+                'name' => $debt->name,
+                'balance' => $debt->balance,
+                'payoff_month' => $payoffMonth ? $payoffMonth['month'] : null,
+                'payoff_date' => $payoffMonth ? $payoffMonth['monthName'] : null,
+            ];
+        }
+
+        return collect($payoffDates)->sortBy('payoff_month')->values()->toArray();
+    }
+
     public function togglePayment(int $monthNumber, int $debtId): void
     {
         // Check if already paid - if so, delete it (undo)
