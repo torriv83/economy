@@ -277,8 +277,17 @@
                         @foreach ($this->detailedSchedule as $month)
                             @php
                                 $rowCount = count($month['payments']);
+                                $isHistorical = isset($month['isHistorical']) && $month['isHistorical'];
                                 $allPaidOff = collect($month['payments'])->every(fn($p) => $p['remaining'] <= 0.01);
-                                $rowClass = $allPaidOff ? 'bg-green-50 dark:bg-green-900/20' : ($month['month'] % 2 == 1 ? 'bg-gray-50 dark:bg-gray-700/30' : '');
+
+                                if ($isHistorical) {
+                                    $rowClass = 'bg-blue-50 dark:bg-blue-900/10';
+                                } elseif ($allPaidOff) {
+                                    $rowClass = 'bg-green-50 dark:bg-green-900/20';
+                                } else {
+                                    $rowClass = $month['month'] % 2 == 1 ? 'bg-gray-50 dark:bg-gray-700/30' : '';
+                                }
+
                                 $debts = \App\Models\Debt::all()->keyBy('name');
                             @endphp
 
@@ -296,14 +305,19 @@
                                                 <div>
                                                     {{ $month['month'] }}<br>
                                                     <span class="text-xs font-normal text-gray-500 dark:text-gray-400">{{ \Carbon\Carbon::parse($month['date'])->locale('nb')->translatedFormat('M Y') }}</span>
+                                                    @if ($isHistorical)
+                                                        <span class="block mt-1 text-xs font-semibold text-blue-600 dark:text-blue-400">{{ __('app.historical') }}</span>
+                                                    @endif
                                                 </div>
-                                                <button
-                                                    type="button"
-                                                    wire:click="markMonthAsPaid({{ $month['month'] }})"
-                                                    class="text-xs px-2 py-1 {{ $this->isMonthFullyPaid($month['month']) ? 'bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600' : 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600' }} text-white rounded transition-colors cursor-pointer"
-                                                >
-                                                    {{ $this->isMonthFullyPaid($month['month']) ? __('app.unmark_all_as_paid') : __('app.mark_all_as_paid') }}
-                                                </button>
+                                                @if (!$isHistorical)
+                                                    <button
+                                                        type="button"
+                                                        wire:click="markMonthAsPaid({{ $month['month'] }})"
+                                                        class="text-xs px-2 py-1 {{ $this->isMonthFullyPaid($month['month']) ? 'bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600' : 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600' }} text-white rounded transition-colors cursor-pointer"
+                                                    >
+                                                        {{ $this->isMonthFullyPaid($month['month']) ? __('app.unmark_all_as_paid') : __('app.mark_all_as_paid') }}
+                                                    </button>
+                                                @endif
                                             </div>
                                         </td>
                                     @endif
@@ -346,13 +360,17 @@
                                         {{ number_format(max(0, $payment['remaining']), 0, ',', ' ') }} kr
                                     </td>
                                     <td class="px-4 py-2 text-center">
-                                        @if ($payment['amount'] > 0 && $debt)
+                                        @if ($payment['amount'] > 0 && $debt && !$isHistorical)
                                             <input
                                                 type="checkbox"
                                                 wire:click="togglePayment({{ $month['month'] }}, {{ $debtId }})"
                                                 @if($isPaid) checked @endif
                                                 class="h-4 w-4 text-blue-600 dark:text-blue-500 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-blue-400 cursor-pointer"
                                             >
+                                        @elseif ($isHistorical && $isPaid)
+                                            <svg class="h-4 w-4 text-green-600 dark:text-green-400 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                            </svg>
                                         @endif
                                     </td>
                                 </tr>
@@ -374,22 +392,30 @@
         {{-- Mobile Card View --}}
         <div class="md:hidden space-y-6">
             @foreach ($this->detailedSchedule as $month)
-                <div wire:key="detail-mobile-{{ $month['month'] }}" class="bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-200 dark:border-gray-700 overflow-hidden">
-                    <div class="bg-gray-100 dark:bg-gray-700 px-4 py-3 border-b border-gray-200 dark:border-gray-600">
+                @php
+                    $isHistorical = isset($month['isHistorical']) && $month['isHistorical'];
+                @endphp
+                <div wire:key="detail-mobile-{{ $month['month'] }}" class="bg-white dark:bg-gray-800 rounded-lg border-2 {{ $isHistorical ? 'border-blue-300 dark:border-blue-700' : 'border-gray-200 dark:border-gray-700' }} overflow-hidden">
+                    <div class="{{ $isHistorical ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-gray-100 dark:bg-gray-700' }} px-4 py-3 border-b border-gray-200 dark:border-gray-600">
                         <div class="flex items-center justify-between">
                             <div>
                                 <div class="font-bold text-gray-900 dark:text-white">{{ __('app.month') }} {{ $month['month'] }}</div>
                                 <div class="text-xs text-gray-500 dark:text-gray-400">
                                     {{ \Carbon\Carbon::parse($month['date'])->locale('nb')->translatedFormat('F Y') }}
                                 </div>
+                                @if ($isHistorical)
+                                    <span class="text-xs font-semibold text-blue-600 dark:text-blue-400">{{ __('app.historical') }}</span>
+                                @endif
                             </div>
-                            <button
-                                type="button"
-                                wire:click="markMonthAsPaid({{ $month['month'] }})"
-                                class="text-xs px-3 py-1.5 {{ $this->isMonthFullyPaid($month['month']) ? 'bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600' : 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600' }} text-white rounded transition-colors cursor-pointer"
-                            >
-                                {{ $this->isMonthFullyPaid($month['month']) ? __('app.unmark_all_as_paid') : __('app.mark_all_as_paid') }}
-                            </button>
+                            @if (!$isHistorical)
+                                <button
+                                    type="button"
+                                    wire:click="markMonthAsPaid({{ $month['month'] }})"
+                                    class="text-xs px-3 py-1.5 {{ $this->isMonthFullyPaid($month['month']) ? 'bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600' : 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600' }} text-white rounded transition-colors cursor-pointer"
+                                >
+                                    {{ $this->isMonthFullyPaid($month['month']) ? __('app.unmark_all_as_paid') : __('app.mark_all_as_paid') }}
+                                </button>
+                            @endif
                         </div>
                     </div>
                     <div class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -415,13 +441,17 @@
                                             @endif
                                         </div>
                                     </div>
-                                    @if ($payment['amount'] > 0 && $debt)
+                                    @if ($payment['amount'] > 0 && $debt && !$isHistorical)
                                         <input
                                             type="checkbox"
                                             wire:click="togglePayment({{ $month['month'] }}, {{ $debtId }})"
                                             @if($isPaid) checked @endif
                                             class="h-4 w-4 mt-0.5 text-blue-600 dark:text-blue-500 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-blue-400 cursor-pointer"
                                         >
+                                    @elseif ($isHistorical && $isPaid)
+                                        <svg class="h-4 w-4 mt-0.5 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                        </svg>
                                     @endif
                                 </div>
                                 <div class="flex justify-between text-sm mb-1">

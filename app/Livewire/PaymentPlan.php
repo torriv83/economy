@@ -74,13 +74,25 @@ class PaymentPlan extends Component
             return [];
         }
 
+        $historicalPayments = $this->paymentService->getHistoricalPayments();
+
         $fullSchedule = $this->calculationService->generatePaymentSchedule(
             $debts,
             $this->extraPayment,
             $this->strategy
         );
 
-        return array_slice($fullSchedule['schedule'], 0, $this->visibleMonths);
+        $highestHistoricalMonth = count($historicalPayments);
+
+        $futureSchedule = array_map(function ($month) use ($highestHistoricalMonth) {
+            $month['month'] = $month['month'] + $highestHistoricalMonth;
+
+            return $month;
+        }, $fullSchedule['schedule']);
+
+        $combined = array_merge($historicalPayments, $futureSchedule);
+
+        return array_slice($combined, 0, $this->visibleMonths + count($historicalPayments));
     }
 
     public function loadMoreMonths(): void

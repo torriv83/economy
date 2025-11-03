@@ -193,4 +193,50 @@ class PaymentService
 
         return true;
     }
+
+    /**
+     * Get all historical payments grouped by month
+     */
+    public function getHistoricalPayments(): array
+    {
+        $currentMonth = now()->format('Y-m');
+
+        $payments = Payment::with('debt')
+            ->where('payment_month', '<', $currentMonth)
+            ->orderBy('payment_month')
+            ->orderBy('debt_id')
+            ->get();
+
+        $groupedPayments = [];
+        $monthMapping = [];
+
+        foreach ($payments as $payment) {
+            $paymentMonth = $payment->payment_month;
+
+            if (! isset($monthMapping[$paymentMonth])) {
+                $monthNumber = collect($monthMapping)->count() + 1;
+                $monthMapping[$paymentMonth] = $monthNumber;
+            }
+
+            $monthNumber = $monthMapping[$paymentMonth];
+
+            if (! isset($groupedPayments[$paymentMonth])) {
+                $groupedPayments[$paymentMonth] = [
+                    'month' => $monthNumber,
+                    'date' => $paymentMonth.'-01',
+                    'isHistorical' => true,
+                    'payments' => [],
+                ];
+            }
+
+            $groupedPayments[$paymentMonth]['payments'][] = [
+                'name' => $payment->debt->name,
+                'amount' => $payment->actual_amount,
+                'remaining' => 0,
+                'isPriority' => false,
+            ];
+        }
+
+        return array_values($groupedPayments);
+    }
 }

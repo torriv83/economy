@@ -118,4 +118,5 @@ return [
     'payments_deleted' => 'Payments deleted',
     'already_paid' => 'Already paid',
     'paid' => 'Paid',
+    'historical' => 'Historical',
 ];

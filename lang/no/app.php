@@ -118,4 +118,5 @@ return [
     'payments_deleted' => 'Betalinger angret',
     'already_paid' => 'Allerede betalt',
     'paid' => 'Betalt',
+    'historical' => 'Historisk',
 ];
