@@ -2,10 +2,15 @@
 
 namespace App\Services;
 
+use App\Models\Debt;
 use Illuminate\Support\Collection;
 
 class DebtCalculationService
 {
+    public function __construct(
+        protected PaymentService $paymentService
+    ) {}
+
     /**
      * Order debts by lowest balance first (Snowball method).
      * This method provides psychological wins by paying off smaller debts first.
@@ -85,14 +90,26 @@ class DebtCalculationService
         return round(max(0, $totalInterest), 2);
     }
 
-    /**
-     * Generate a complete month-by-month payment schedule with snowball effect.
-     *
-     * @param  Collection  $debts  Collection of Debt models
-     * @param  float  $extraPayment  Extra monthly payment beyond minimums
-     * @param  string  $strategy  Payment strategy: 'avalanche' or 'snowball'
-     * @return array Complete payment schedule with monthly details
-     */
+    protected function getActualPaymentsByMonth(Collection $debts): array
+    {
+        $payments = [];
+
+        foreach ($debts as $debt) {
+            foreach ($debt->payments as $payment) {
+                $monthNumber = $payment->month_number;
+                $debtName = $debt->name;
+
+                if (! isset($payments[$monthNumber])) {
+                    $payments[$monthNumber] = [];
+                }
+
+                $payments[$monthNumber][$debtName] = $payment->actual_amount;
+            }
+        }
+
+        return $payments;
+    }
+
     public function generatePaymentSchedule(Collection $debts, float $extraPayment, string $strategy = 'avalanche'): array
     {
         if ($debts->isEmpty()) {
@@ -104,14 +121,21 @@ class DebtCalculationService
             ];
         }
 
+        // Eager load payments for all debts
+        $debts = $debts->load('payments');
+
+        // Get all actual payments organized by month and debt
+        $actualPayments = $this->getActualPaymentsByMonth($debts);
+
         $orderedDebts = $strategy === 'snowball'
             ? $this->orderBySnowball($debts)
             : $this->orderByAvalanche($debts);
 
         $remainingDebts = $orderedDebts->map(function ($debt) {
             return [
+                'id' => $debt->id,
                 'name' => $debt->name,
-                'balance' => $debt->balance,
+                'balance' => $debt->original_balance ?? $debt->balance,
                 'interest_rate' => $debt->interest_rate,
                 'minimum_payment' => $debt->minimum_payment ?? $this->calculateMonthlyInterest($debt->balance, $debt->interest_rate),
             ];
@@ -128,37 +152,6 @@ class DebtCalculationService
             $month++;
             $monthDate = now()->addMonths($month - 1);
 
-            $monthlyPayments = [];
-            $totalPaidThisMonth = 0;
-            $priorityDebtName = $remainingDebts[0]['name'] ?? null;
-
-            foreach ($remainingDebts as $index => $debt) {
-                $isPriority = $index === 0;
-                $minimumPayment = $debt['minimum_payment'];
-                $extraForThisDebt = $isPriority ? $availableExtraPayment : 0;
-                $totalPayment = $minimumPayment + $extraForThisDebt;
-
-                $totalPayment = min($totalPayment, $debt['balance']);
-
-                $interest = $this->calculateMonthlyInterest($debt['balance'], $debt['interest_rate']);
-                $newBalance = $debt['balance'] + $interest - $totalPayment;
-
-                $totalInterest += $interest;
-                $totalPaidThisMonth += $totalPayment;
-
-                $monthlyPayments[] = [
-                    'name' => $debt['name'],
-                    'amount' => round($totalPayment, 2),
-                    'minimum' => round($minimumPayment, 2),
-                    'extra' => round($extraForThisDebt, 2),
-                    'interest' => round($interest, 2),
-                    'remaining' => round(max(0, $newBalance), 2),
-                    'isPriority' => $isPriority,
-                ];
-
-                $remainingDebts[$index]['balance'] = max(0, $newBalance);
-            }
-
             $paidOffDebts = [];
             foreach ($remainingDebts as $index => $debt) {
                 if ($debt['balance'] <= 0.01) {
@@ -172,6 +165,66 @@ class DebtCalculationService
             }
 
             $remainingDebts = array_values($remainingDebts);
+
+            if (count($remainingDebts) === 0) {
+                break;
+            }
+
+            $monthlyPayments = [];
+            $totalPaidThisMonth = 0;
+            $priorityDebtName = $remainingDebts[0]['name'] ?? null;
+
+            $hasActualPayments = isset($actualPayments[$month]);
+
+            foreach ($remainingDebts as $index => $debt) {
+                if ($debt['balance'] <= 0.01) {
+                    continue;
+                }
+
+                $isPriority = $index === 0;
+                $debtName = $debt['name'];
+
+                $interest = $this->calculateMonthlyInterest($debt['balance'], $debt['interest_rate']);
+
+                if ($hasActualPayments && isset($actualPayments[$month][$debtName])) {
+                    $actualAmount = $actualPayments[$month][$debtName];
+                    $totalPayment = $actualAmount;
+                    $minimumPayment = $debt['minimum_payment'];
+                    $extraForThisDebt = max(0, $actualAmount - $minimumPayment);
+                } else {
+                    $minimumPayment = $debt['minimum_payment'];
+                    $extraForThisDebt = $isPriority ? $availableExtraPayment : 0;
+                    $totalPayment = $minimumPayment + $extraForThisDebt;
+                }
+
+                $maxPayment = $debt['balance'] + $interest;
+                $totalPayment = min($totalPayment, $maxPayment);
+
+                if ($maxPayment - $totalPayment > 0 && $maxPayment - $totalPayment <= 1) {
+                    $totalPayment = $maxPayment;
+                }
+
+                if ($totalPayment >= $maxPayment - 0.01) {
+                    $newBalance = 0;
+                } else {
+                    $newBalance = $debt['balance'] + $interest - $totalPayment;
+                }
+
+                $totalInterest += $interest;
+                $totalPaidThisMonth += $totalPayment;
+
+                $monthlyPayments[] = [
+                    'name' => $debt['name'],
+                    'amount' => round($totalPayment, 2),
+                    'minimum' => round($minimumPayment, 2),
+                    'extra' => round($extraForThisDebt, 2),
+                    'interest' => round($interest, 2),
+                    'remaining' => round($newBalance, 2),
+                    'isPriority' => $isPriority,
+                ];
+
+                $remainingDebts[$index]['balance'] = $newBalance;
+            }
 
             $totalRemaining = array_sum(array_column($remainingDebts, 'balance'));
             $progress = $originalTotal > 0 ? round((($originalTotal - $totalRemaining) / $originalTotal) * 100, 1) : 100;

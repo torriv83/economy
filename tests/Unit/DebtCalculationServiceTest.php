@@ -2,9 +2,11 @@
 
 use App\Models\Debt;
 use App\Services\DebtCalculationService;
+use App\Services\PaymentService;
 
 beforeEach(function () {
-    $this->service = new DebtCalculationService;
+    $this->paymentService = new PaymentService;
+    $this->service = new DebtCalculationService($this->paymentService);
 });
 
 describe('orderBySnowball', function () {
@@ -255,6 +257,114 @@ describe('generatePaymentSchedule', function () {
 
         $lastMonth = end($result['schedule']);
         expect($lastMonth['progress'])->toBeGreaterThanOrEqual(99);
+    });
+
+    it('uses original_balance when generating schedule', function () {
+        $debt = Debt::factory()->create([
+            'name' => 'Test Debt',
+            'original_balance' => 10000,
+            'balance' => 5000,
+            'interest_rate' => 10,
+            'minimum_payment' => 500,
+        ]);
+
+        $debts = collect([$debt]);
+        $result = $this->service->generatePaymentSchedule($debts, 0);
+
+        // First month should start with original_balance, not current balance
+        $firstMonthPayment = collect($result['schedule'][0]['payments'])->firstWhere('name', 'Test Debt');
+        expect($firstMonthPayment['remaining'])->toBeGreaterThan(5000);
+    });
+
+    it('integrates actual payments into schedule', function () {
+        $debt = Debt::factory()->create([
+            'name' => 'Test Debt',
+            'original_balance' => 7404,
+            'balance' => 750,
+            'interest_rate' => 12,
+            'minimum_payment' => 800,
+        ]);
+
+        // Record an actual payment for month 1
+        $debt->payments()->create([
+            'planned_amount' => 750,
+            'actual_amount' => 6654,
+            'payment_date' => now(),
+            'month_number' => 1,
+            'payment_month' => now()->format('Y-m'),
+        ]);
+
+        $debts = collect([$debt->fresh('payments')]);
+        $result = $this->service->generatePaymentSchedule($debts, 0);
+
+        // Month 1 should use the actual payment amount (6654)
+        $month1Payment = collect($result['schedule'][0]['payments'])->firstWhere('name', 'Test Debt');
+        expect($month1Payment['amount'])->toBe(6654.0);
+    });
+
+    it('calculates remaining balance correctly after actual payment', function () {
+        $debt = Debt::factory()->create([
+            'name' => 'Klarna',
+            'original_balance' => 7404,
+            'balance' => 750,
+            'interest_rate' => 12,
+            'minimum_payment' => 800,
+        ]);
+
+        // Record actual payment for month 1
+        $debt->payments()->create([
+            'planned_amount' => 750,
+            'actual_amount' => 6654,
+            'payment_date' => now(),
+            'month_number' => 1,
+            'payment_month' => now()->format('Y-m'),
+        ]);
+
+        $debts = collect([$debt->fresh('payments')]);
+        $result = $this->service->generatePaymentSchedule($debts, 0);
+
+        // Month 1: original_balance (7404) + interest - actual_payment (6654)
+        $month1Payment = collect($result['schedule'][0]['payments'])->firstWhere('name', 'Klarna');
+        $expectedInterest = round(7404 * (12 / 100) / 12, 2); // Monthly interest
+        $expectedRemaining = round(7404 + $expectedInterest - 6654, 2);
+
+        expect($month1Payment['remaining'])->toBe($expectedRemaining);
+    });
+
+    it('continues calculation from adjusted balance after actual payment', function () {
+        $debt = Debt::factory()->create([
+            'name' => 'Test',
+            'original_balance' => 1000,
+            'balance' => 500,
+            'interest_rate' => 12,
+            'minimum_payment' => 100,
+        ]);
+
+        // Actual payment in month 1
+        $debt->payments()->create([
+            'planned_amount' => 100,
+            'actual_amount' => 500,
+            'payment_date' => now(),
+            'month_number' => 1,
+            'payment_month' => now()->format('Y-m'),
+        ]);
+
+        $debts = collect([$debt->fresh('payments')]);
+        $result = $this->service->generatePaymentSchedule($debts, 0);
+
+        // Month 1 uses actual payment
+        $month1 = collect($result['schedule'][0]['payments'])->firstWhere('name', 'Test');
+        expect($month1['amount'])->toBe(500.0);
+
+        // Month 2 should calculate from the balance after month 1's actual payment
+        $month1Remaining = $month1['remaining'];
+        if (isset($result['schedule'][1])) {
+            $month2 = collect($result['schedule'][1]['payments'])->firstWhere('name', 'Test');
+            $expectedMonth2Interest = round($month1Remaining * (12 / 100) / 12, 2);
+            $expectedMonth2Payment = min(100, $month1Remaining);
+
+            expect($month2['amount'])->toBe($expectedMonth2Payment);
+        }
     });
 });
 

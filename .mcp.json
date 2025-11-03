@@ -30,6 +30,10 @@
                 "CLICKUP_TEAM_ID": "37435332",
                 "DOCUMENT_SUPPORT": "true"
             }
+        },
+        "chrome-devtools": {
+            "command": "npx",
+            "args": ["-y", "chrome-devtools-mcp@latest"]
         }
     }
 }

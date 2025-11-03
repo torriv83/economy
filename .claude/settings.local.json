@@ -11,7 +11,11 @@
       "mcp__ClickUp__get_workspace_tasks",
       "Bash(php artisan make:test:*)",
       "Bash(vendor/bin/pint:*)",
-      "Bash(php:*)"
+      "Bash(php:*)",
+      "mcp__chrome-devtools__navigate_page",
+      "mcp__chrome-devtools__take_snapshot",
+      "mcp__chrome-devtools__list_pages",
+      "mcp__laravel-boost__database-query"
     ]
   },
   "enableAllProjectMcpServers": true,
