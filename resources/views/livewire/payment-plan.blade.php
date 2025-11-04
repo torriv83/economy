@@ -287,16 +287,14 @@
                                 } else {
                                     $rowClass = $month['month'] % 2 == 1 ? 'bg-gray-50 dark:bg-gray-700/30' : '';
                                 }
-
-                                $debts = \App\Models\Debt::all()->keyBy('name');
                             @endphp
 
                             @foreach ($month['payments'] as $index => $payment)
                                 @php
-                                    $debt = $debts->get($payment['name']);
+                                    $debt = $this->debts->get($payment['name']);
                                     $debtId = $debt ? $debt->id : 0;
                                     $paymentKey = $month['month'] . '_' . $debtId;
-                                    $isPaid = $debt ? app(\App\Services\PaymentService::class)->paymentExists($debtId, $month['month']) : false;
+                                    $isPaid = $debt ? $this->paymentService->paymentExists($debtId, $month['month']) : false;
                                 @endphp
                                 <tr wire:key="detail-{{ $month['month'] }}-{{ $index }}" class="{{ $rowClass }}">
                                     @if ($index === 0)
@@ -336,7 +334,7 @@
                                     <td class="px-4 py-2 text-sm text-right {{ $payment['isPriority'] ? 'font-semibold text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400' }}">
                                         @if ($isPaid && $debt)
                                             @php
-                                                $paymentRecord = app(\App\Services\PaymentService::class)->getPayment($debtId, $month['month']);
+                                                $paymentRecord = $this->paymentService->getPayment($debtId, $month['month']);
                                                 $actualAmount = $paymentRecord ? $paymentRecord->actual_amount : $payment['amount'];
                                                 $key = $month['month'] . '_' . $debtId;
                                                 if (!isset($this->editingPayments[$key])) {
@@ -419,15 +417,12 @@
                         </div>
                     </div>
                     <div class="divide-y divide-gray-200 dark:divide-gray-700">
-                        @php
-                            $debts = \App\Models\Debt::all()->keyBy('name');
-                        @endphp
                         @foreach ($month['payments'] as $payment)
                             @php
-                                $debt = $debts->get($payment['name']);
+                                $debt = $this->debts->get($payment['name']);
                                 $debtId = $debt ? $debt->id : 0;
                                 $paymentKey = $month['month'] . '_' . $debtId;
-                                $isPaid = $debt ? app(\App\Services\PaymentService::class)->paymentExists($debtId, $month['month']) : false;
+                                $isPaid = $debt ? $this->paymentService->paymentExists($debtId, $month['month']) : false;
                             @endphp
                             <div class="p-4">
                                 <div class="flex items-start justify-between gap-3 mb-2">
@@ -458,7 +453,7 @@
                                     <span class="text-gray-600 dark:text-gray-400">{{ __('app.payment') }}:</span>
                                     @if ($isPaid && $debt)
                                         @php
-                                            $paymentRecord = app(\App\Services\PaymentService::class)->getPayment($debtId, $month['month']);
+                                            $paymentRecord = $this->paymentService->getPayment($debtId, $month['month']);
                                             $actualAmount = $paymentRecord ? $paymentRecord->actual_amount : $payment['amount'];
                                             $key = $month['month'] . '_' . $debtId;
                                             if (!isset($this->editingPayments[$key])) {

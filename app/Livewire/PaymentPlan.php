@@ -51,7 +51,7 @@ class PaymentPlan extends Component
 
     public function getPaymentScheduleProperty(): array
     {
-        $debts = Debt::all();
+        $debts = Debt::with('payments')->get();
 
         if ($debts->isEmpty()) {
             return [];
@@ -68,7 +68,7 @@ class PaymentPlan extends Component
 
     public function getDetailedScheduleProperty(): array
     {
-        $debts = Debt::all();
+        $debts = Debt::with('payments')->get();
 
         if ($debts->isEmpty()) {
             return [];
@@ -107,7 +107,7 @@ class PaymentPlan extends Component
 
     public function getTotalMonthsProperty(): int
     {
-        $debts = Debt::all();
+        $debts = Debt::with('payments')->get();
 
         if ($debts->isEmpty()) {
             return 0;
@@ -124,7 +124,7 @@ class PaymentPlan extends Component
 
     public function getPayoffDateProperty(): string
     {
-        $debts = Debt::all();
+        $debts = Debt::with('payments')->get();
 
         if ($debts->isEmpty()) {
             return now()->locale('nb')->translatedFormat('F Y');
@@ -141,7 +141,7 @@ class PaymentPlan extends Component
 
     public function getTotalInterestProperty(): float
     {
-        $debts = Debt::all();
+        $debts = Debt::with('payments')->get();
 
         if ($debts->isEmpty()) {
             return 0;
@@ -161,9 +161,14 @@ class PaymentPlan extends Component
         return $this->paymentService->calculateOverallProgress();
     }
 
+    public function getDebtsProperty()
+    {
+        return Debt::with('payments')->get()->keyBy('name');
+    }
+
     public function getDebtPayoffScheduleProperty(): array
     {
-        $debts = Debt::all();
+        $debts = Debt::with('payments')->get();
 
         if ($debts->isEmpty()) {
             return [];
@@ -252,7 +257,7 @@ class PaymentPlan extends Component
             return;
         }
 
-        $debts = Debt::all()->keyBy('name');
+        $debts = Debt::with('payments')->get()->keyBy('name');
         $debtIds = [];
 
         foreach ($monthData['payments'] as $payment) {
@@ -307,7 +312,7 @@ class PaymentPlan extends Component
             return false;
         }
 
-        $debts = Debt::all()->keyBy('name');
+        $debts = Debt::with('payments')->get()->keyBy('name');
         $debtIds = [];
 
         foreach ($monthData['payments'] as $payment) {
