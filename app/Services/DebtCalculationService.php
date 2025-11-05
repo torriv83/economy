@@ -121,9 +121,6 @@ class DebtCalculationService
             ];
         }
 
-        // Eager load payments for all debts
-        $debts = $debts->load('payments');
-
         // Get all actual payments organized by month and debt
         $actualPayments = $this->getActualPaymentsByMonth($debts);
 

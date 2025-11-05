@@ -153,14 +153,8 @@ Week 3 (Medium Priority - 8 hours)
 1. BCMath for Financial Calculations (8 hours)
    - Eliminates floating-point precision errors
    - Industry best practice for money calculations
-2. Money Library Integration (16+ hours)
-   - Type-safe monetary calculations
-   - Consider for v2.0
-3. Browser Test Suite (12 hours)
+2. Browser Test Suite (12 hours)
    - Leverage Pest 4's browser testing capabilities
    - Test full user workflows
-4. Performance Monitoring (4 hours)
-   - Add logging for calculation performance
-   - Track N+1 queries in development
 
   ---

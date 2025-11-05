@@ -373,6 +373,7 @@ describe('deletePayment', function () {
         DB::shouldReceive('transaction')->once()->andReturnUsing(function ($callback) {
             return $callback();
         });
+        DB::shouldReceive('update')->andReturn(1);
 
         $this->service->deletePayment($debt->id, 1);
     });
@@ -426,6 +427,7 @@ describe('deleteMonthPayments', function () {
         DB::shouldReceive('transaction')->once()->andReturnUsing(function ($callback) {
             return $callback();
         });
+        DB::shouldReceive('update')->andReturn(1);
 
         $this->service->deleteMonthPayments(1);
     });
@@ -498,6 +500,7 @@ describe('updatePaymentAmount', function () {
         DB::shouldReceive('transaction')->once()->andReturnUsing(function ($callback) {
             return $callback();
         });
+        DB::shouldReceive('update')->andReturn(1);
 
         $this->service->updatePaymentAmount($debt->id, 1, 2500);
     });

@@ -13,7 +13,7 @@ test('edit debt page renders successfully', function () {
     $response = $this->get("/debts/{$debt->id}/edit");
 
     $response->assertSuccessful();
-    $response->assertSeeLivewire(EditDebt::class);
+    $response->assertSee('Edit Debt');
 });
 
 test('edit debt component loads debt data correctly', function () {

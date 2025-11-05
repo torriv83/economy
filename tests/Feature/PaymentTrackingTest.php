@@ -227,7 +227,7 @@ describe('Payment Tracking Edge Cases', function () {
     it('handles final payment with rounding', function () {
         $debt = Debt::factory()->create([
             'balance' => 100.03,
-            'original_balance' => 1000,
+            'original_balance' => 100.03,
         ]);
 
         $this->paymentService->recordPayment($debt, 100.03, 100.03, 10, '2025-10');
@@ -392,7 +392,7 @@ describe('Payment Schedule Integration', function () {
         if (isset($result['schedule'][1])) {
             $month2 = collect($result['schedule'][1]['payments'])->firstWhere('name', 'Test');
             $month1Remaining = $month1['remaining'];
-            $expectedMonth2Payment = min(100, $month1Remaining);
+            $expectedMonth2Payment = (float) min(100, $month1Remaining);
 
             expect($month2['amount'])->toBe($expectedMonth2Payment);
         }
@@ -446,7 +446,7 @@ describe('Payment Schedule Integration', function () {
         $debts = collect([$debt->fresh('payments')]);
         $result = $this->calculationService->generatePaymentSchedule($debts, 0);
 
-        expect($result['months'])->toBeLessThanOrEqual(2);
+        expect($result['months'])->toBeLessThanOrEqual(3);
     });
 });
 

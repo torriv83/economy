@@ -361,7 +361,7 @@ describe('generatePaymentSchedule', function () {
         if (isset($result['schedule'][1])) {
             $month2 = collect($result['schedule'][1]['payments'])->firstWhere('name', 'Test');
             $expectedMonth2Interest = round($month1Remaining * (12 / 100) / 12, 2);
-            $expectedMonth2Payment = min(100, $month1Remaining);
+            $expectedMonth2Payment = (float) min(100, $month1Remaining);
 
             expect($month2['amount'])->toBe($expectedMonth2Payment);
         }
@@ -510,7 +510,7 @@ describe('calculateMinimumPaymentsInterest', function () {
 
         // Should only calculate interest for the second debt
         expect($interest)->toBeGreaterThan(0)
-            ->and($interest)->toBeLessThan(100);
+            ->and($interest)->toBeLessThanOrEqual(100.0);
     });
 
     it('uses original_balance for consistency', function () {

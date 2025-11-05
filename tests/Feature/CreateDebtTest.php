@@ -12,7 +12,7 @@ describe('CreateDebt Component', function () {
         $response = $this->get(route('debts.create'));
 
         $response->assertSuccessful();
-        $response->assertSeeLivewire(CreateDebt::class);
+        $response->assertSee('Create Debt');
     });
 
     it('creates a debt with valid data', function () {

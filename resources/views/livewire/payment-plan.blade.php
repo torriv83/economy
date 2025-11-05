@@ -90,6 +90,9 @@
                         </svg>
                     </button>
                 </div>
+                <p class="mt-1 text-xs text-blue-700 dark:text-blue-300">
+                    {{ number_format($this->extraPayment, 0, ',', ' ') }} kr
+                </p>
                 @error('extraPayment')
                     <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
                 @enderror
