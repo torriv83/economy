@@ -8,6 +8,13 @@ use Livewire\Component;
 
 class DebtList extends Component
 {
+    protected DebtCalculationService $calculationService;
+
+    public function boot(DebtCalculationService $service): void
+    {
+        $this->calculationService = $service;
+    }
+
     public function getDebtsProperty(): array
     {
         return Debt::all()->map(function ($debt) {
@@ -57,8 +64,7 @@ class DebtList extends Component
             return null;
         }
 
-        $service = app(DebtCalculationService::class);
-        $schedule = $service->generatePaymentSchedule($debts, 0, 'avalanche');
+        $schedule = $this->calculationService->generatePaymentSchedule($debts, 0, 'avalanche');
 
         $months = $schedule['months'];
         $years = floor($months / 12);

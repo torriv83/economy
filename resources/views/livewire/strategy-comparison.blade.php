@@ -1,7 +1,6 @@
-<div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {{-- Header Section --}}
-        <div class="mb-8">
+<div>
+    {{-- Header Section --}}
+    <div class="mb-8">
             <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                 {{ __('app.payoff_strategies') }}
             </h1>
@@ -40,7 +39,7 @@
                         <button
                             type="button"
                             wire:click="$set('extraPayment', {{ max(0, $this->extraPayment - 500) }})"
-                            class="h-12 w-12 flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                            class="h-12 w-12 flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
                             aria-label="Decrease by 500"
                         >
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -55,7 +54,7 @@
                                 min="0"
                                 max="1000000"
                                 step="100"
-                                class="w-full px-4 py-3 pr-14 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                class="w-full px-4 py-3 pr-14 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             >
                             <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
                                 <span class="text-gray-500 dark:text-gray-400 text-sm font-medium">kr</span>
@@ -64,7 +63,7 @@
                         <button
                             type="button"
                             wire:click="$set('extraPayment', {{ $this->extraPayment + 500 }})"
-                            class="h-12 w-12 flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                            class="h-12 w-12 flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
                             aria-label="Increase by 500"
                         >
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -193,5 +192,4 @@
                 </div>
             </div>
         </div>
-    </div>
 </div>

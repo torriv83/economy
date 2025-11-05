@@ -1,7 +1,6 @@
-<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {{-- Header --}}
-        <div class="flex items-start justify-between mb-8">
+<div>
+    {{-- Header --}}
+    <div class="flex items-start justify-between mb-8">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                     {{ __('app.debts_overview') }}
@@ -11,7 +10,7 @@
                 </p>
             </div>
             <a href="/debts/create"
-               class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium rounded-lg transition-colors">
+               class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
@@ -121,14 +120,15 @@
                             {{-- Actions --}}
                             <div class="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
                                 <a href="/debts/{{ $debt['id'] }}/edit"
-                                   class="flex-1 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors text-center">
+                                   class="flex-1 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors text-center focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2">
                                     {{ __('app.edit') }}
                                 </a>
                                 <button type="button"
                                         x-on:click="if (confirm('{{ __('app.confirm_delete_debt') }}')) $wire.deleteDebt({{ $debt['id'] }})"
                                         wire:loading.attr="disabled"
                                         wire:loading.class="opacity-50"
-                                        class="flex-1 px-3 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 rounded-lg transition-colors cursor-pointer">
+                                        aria-label="{{ __('app.delete_debt', ['name' => $debt['name']]) }}"
+                                        class="flex-1 px-3 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400 focus:ring-offset-2">
                                     <span wire:loading.remove wire:target="deleteDebt({{ $debt['id'] }})">
                                         {{ __('app.delete') }}
                                     </span>
@@ -161,7 +161,7 @@
                         {{ __('app.no_debts_message') }}
                     </p>
                     <a href="/debts/create"
-                       class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium rounded-lg transition-colors">
+                       class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2">
                         {{ __('app.add_first_debt') }}
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -170,5 +170,4 @@
                 </div>
             </div>
         @endif
-    </div>
 </div>

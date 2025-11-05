@@ -21,7 +21,7 @@
                     <button
                         type="button"
                         wire:click="$set('strategy', 'avalanche')"
-                        class="px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer {{ $this->strategy === 'avalanche' ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-sm' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}"
+                        class="px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 {{ $this->strategy === 'avalanche' ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-sm' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}"
                     >
                         <span class="flex items-center gap-2">
                             @if ($this->strategy === 'avalanche')
@@ -35,7 +35,7 @@
                     <button
                         type="button"
                         wire:click="$set('strategy', 'snowball')"
-                        class="px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer {{ $this->strategy === 'snowball' ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-sm' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}"
+                        class="px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 {{ $this->strategy === 'snowball' ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-sm' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}"
                     >
                         <span class="flex items-center gap-2">
                             @if ($this->strategy === 'snowball')
@@ -58,7 +58,7 @@
                     <button
                         type="button"
                         wire:click="$set('extraPayment', {{ max(0, $this->extraPayment - 500) }})"
-                        class="h-10 w-10 flex items-center justify-center bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors cursor-pointer"
+                        class="h-10 w-10 flex items-center justify-center bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
                         aria-label="Decrease by 500"
                     >
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -73,7 +73,7 @@
                             min="0"
                             max="1000000"
                             step="100"
-                            class="w-full px-4 py-2 pr-10 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 rounded-lg text-blue-900 dark:text-blue-100 font-bold text-center focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all"
+                            class="w-full px-4 py-2 pr-10 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 rounded-lg text-blue-900 dark:text-blue-100 font-bold text-center focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all"
                         >
                         <span class="absolute right-3 top-1/2 -translate-y-1/2 text-blue-600 dark:text-blue-400 font-medium pointer-events-none">
                             kr
@@ -82,7 +82,7 @@
                     <button
                         type="button"
                         wire:click="$set('extraPayment', {{ $this->extraPayment + 500 }})"
-                        class="h-10 w-10 flex items-center justify-center bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors cursor-pointer"
+                        class="h-10 w-10 flex items-center justify-center bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
                         aria-label="Increase by 500"
                     >
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -311,7 +311,8 @@
                                                     <button
                                                         type="button"
                                                         wire:click="markMonthAsPaid({{ $month['month'] }})"
-                                                        class="text-xs px-2 py-1 {{ $this->isMonthFullyPaid($month['month']) ? 'bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600' : 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600' }} text-white rounded transition-colors cursor-pointer"
+                                                        aria-label="{{ $this->isMonthFullyPaid($month['month']) ? __('app.unmark_all_as_paid') : __('app.mark_all_as_paid') }}"
+                                                        class="text-xs px-2 py-1 {{ $this->isMonthFullyPaid($month['month']) ? 'bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600' : 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600' }} text-white rounded transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
                                                     >
                                                         {{ $this->isMonthFullyPaid($month['month']) ? __('app.unmark_all_as_paid') : __('app.mark_all_as_paid') }}
                                                     </button>
@@ -409,7 +410,8 @@
                                 <button
                                     type="button"
                                     wire:click="markMonthAsPaid({{ $month['month'] }})"
-                                    class="text-xs px-3 py-1.5 {{ $this->isMonthFullyPaid($month['month']) ? 'bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600' : 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600' }} text-white rounded transition-colors cursor-pointer"
+                                    aria-label="{{ $this->isMonthFullyPaid($month['month']) ? __('app.unmark_all_as_paid') : __('app.mark_all_as_paid') }}"
+                                    class="text-xs px-3 py-1.5 {{ $this->isMonthFullyPaid($month['month']) ? 'bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600' : 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600' }} text-white rounded transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
                                 >
                                     {{ $this->isMonthFullyPaid($month['month']) ? __('app.unmark_all_as_paid') : __('app.mark_all_as_paid') }}
                                 </button>
@@ -495,7 +497,7 @@
                     type="button"
                     wire:click="loadMoreMonths"
                     wire:loading.attr="disabled"
-                    class="inline-flex items-center justify-center px-6 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
+                    class="inline-flex items-center justify-center px-6 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
                 >
                     <span wire:loading.remove wire:target="loadMoreMonths">
                         {{ __('app.load_more') }} ({{ min(12, $this->totalMonths - $this->visibleMonths) }} {{ trans_choice('app.months', min(12, $this->totalMonths - $this->visibleMonths)) }})
@@ -512,7 +514,7 @@
                     type="button"
                     wire:click="showAllMonths"
                     wire:loading.attr="disabled"
-                    class="inline-flex items-center justify-center px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
+                    class="inline-flex items-center justify-center px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors disabled:opacity-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
                 >
                     <span wire:loading.remove wire:target="showAllMonths">
                         {{ __('app.show_all') }} ({{ $this->totalMonths }} {{ trans_choice('app.months', $this->totalMonths) }})

@@ -61,16 +61,28 @@ class PaymentService
 
     /**
      * Update all debt balances based on recorded payments
+     * Uses atomic database operations to prevent race conditions
      */
     public function updateDebtBalances(): void
     {
-        $debts = Debt::with('payments')->get();
+        // Get all debt IDs that have payments or need balance updates
+        $debtIds = Debt::pluck('id');
 
-        foreach ($debts as $debt) {
-            $totalPaid = $debt->payments->sum('actual_amount');
-            $newBalance = max(0, $debt->original_balance - $totalPaid);
-
-            $debt->update(['balance' => $newBalance]);
+        foreach ($debtIds as $debtId) {
+            // Update balance atomically using a single SQL query
+            // This prevents race conditions by calculating everything at the database level
+            // Note: Using MAX instead of GREATEST for SQLite compatibility
+            DB::update('
+                UPDATE debts
+                SET balance = MAX(
+                    original_balance - COALESCE(
+                        (SELECT SUM(actual_amount) FROM payments WHERE debt_id = ?),
+                        0
+                    ),
+                    0
+                )
+                WHERE id = ?
+            ', [$debtId, $debtId]);
         }
     }
 
@@ -81,7 +93,7 @@ class PaymentService
     {
         $totalOriginal = Debt::sum('original_balance');
 
-        if ($totalOriginal == 0) {
+        if (abs($totalOriginal) < 0.01) {
             return 0.0;
         }
 

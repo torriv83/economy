@@ -44,6 +44,7 @@ return [
     'add_new_debt' => 'Legg til ny gjeld',
     'edit' => 'Rediger',
     'delete' => 'Slett',
+    'delete_debt' => 'Slett :name',
     'deleting' => 'Sletter',
     'confirm_delete_debt' => 'Er du sikker på at du vil slette denne gjelden? Dette kan ikke angres.',
     'debt_free_in' => 'Gjeldsfri om',
@@ -119,4 +120,12 @@ return [
     'already_paid' => 'Allerede betalt',
     'paid' => 'Betalt',
     'historical' => 'Historisk',
+
+    // Navigation
+    'toggle_dark_mode' => 'Endre mørkmodus',
+    'toggle_menu' => 'Åpne/lukk meny',
+    'language' => 'Språk',
+    'skip_to_content' => 'Hopp til innhold',
+    'switch_to_english' => 'Bytt til engelsk',
+    'switch_to_norwegian' => 'Bytt til norsk',
 ];

@@ -44,6 +44,7 @@ return [
     'add_new_debt' => 'Add new debt',
     'edit' => 'Edit',
     'delete' => 'Delete',
+    'delete_debt' => 'Delete :name',
     'deleting' => 'Deleting',
     'confirm_delete_debt' => 'Are you sure you want to delete this debt? This action cannot be undone.',
     'debt_free_in' => 'Debt-free in',
@@ -119,4 +120,12 @@ return [
     'already_paid' => 'Already paid',
     'paid' => 'Paid',
     'historical' => 'Historical',
+
+    // Navigation
+    'toggle_dark_mode' => 'Toggle dark mode',
+    'toggle_menu' => 'Toggle menu',
+    'language' => 'Language',
+    'skip_to_content' => 'Skip to content',
+    'switch_to_english' => 'Switch to English',
+    'switch_to_norwegian' => 'Switch to Norwegian',
 ];

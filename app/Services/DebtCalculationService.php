@@ -63,7 +63,7 @@ class DebtCalculationService
             return PHP_INT_MAX;
         }
 
-        if ($interestRate == 0) {
+        if (abs($interestRate) < 0.01) {
             return (int) ceil($balance / $monthlyPayment);
         }
 

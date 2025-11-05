@@ -53,6 +53,7 @@ class CreateDebt extends Component
         Debt::create([
             'name' => $validated['name'],
             'balance' => $validated['balance'],
+            'original_balance' => $validated['balance'],
             'interest_rate' => $validated['interestRate'],
             'minimum_payment' => $validated['minimumPayment'] ?: null,
         ]);

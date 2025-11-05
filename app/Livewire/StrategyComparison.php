@@ -10,6 +10,13 @@ class StrategyComparison extends Component
 {
     public float $extraPayment = 2000;
 
+    protected DebtCalculationService $calculationService;
+
+    public function boot(DebtCalculationService $service): void
+    {
+        $this->calculationService = $service;
+    }
+
     public function rules(): array
     {
         return [
@@ -44,8 +51,7 @@ class StrategyComparison extends Component
             ];
         }
 
-        $service = app(DebtCalculationService::class);
-        $comparison = $service->compareStrategies($debts, $this->extraPayment);
+        $comparison = $this->calculationService->compareStrategies($debts, $this->extraPayment);
 
         return $comparison['snowball'];
     }
@@ -63,8 +69,7 @@ class StrategyComparison extends Component
             ];
         }
 
-        $service = app(DebtCalculationService::class);
-        $comparison = $service->compareStrategies($debts, $this->extraPayment);
+        $comparison = $this->calculationService->compareStrategies($debts, $this->extraPayment);
 
         return $comparison['avalanche'];
     }
@@ -80,17 +85,15 @@ class StrategyComparison extends Component
             ];
         }
 
-        $service = app(DebtCalculationService::class);
-
         return [
-            'snowball' => $service->orderBySnowball($debts)->map(function ($debt) {
+            'snowball' => $this->calculationService->orderBySnowball($debts)->map(function ($debt) {
                 return [
                     'name' => $debt->name,
                     'balance' => $debt->balance,
                     'interestRate' => $debt->interest_rate,
                 ];
             })->toArray(),
-            'avalanche' => $service->orderByAvalanche($debts)->map(function ($debt) {
+            'avalanche' => $this->calculationService->orderByAvalanche($debts)->map(function ($debt) {
                 return [
                     'name' => $debt->name,
                     'balance' => $debt->balance,
