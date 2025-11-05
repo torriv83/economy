@@ -281,4 +281,42 @@ class DebtCalculationService
             ],
         ];
     }
+
+    /**
+     * Calculate payoff time with true minimum payments only.
+     * Each debt is paid independently with NO reallocation of freed-up payments.
+     * This is different from snowball/avalanche which reallocate freed-up minimum payments.
+     *
+     * @param  Collection  $debts  Collection of Debt models
+     * @return int Maximum months to pay off all debts (the longest-running debt)
+     */
+    public function calculateMinimumPaymentsOnly(Collection $debts): int
+    {
+        if ($debts->isEmpty()) {
+            return 0;
+        }
+
+        $maxMonths = 0;
+
+        foreach ($debts as $debt) {
+            $balance = $debt->balance;
+            $interestRate = $debt->interest_rate;
+            $minimumPayment = $debt->minimum_payment;
+
+            // Skip if no minimum payment set or if balance is already zero
+            if ($minimumPayment === null || $minimumPayment <= 0 || $balance <= 0.01) {
+                continue;
+            }
+
+            // Calculate months for this specific debt independently
+            $months = $this->calculatePayoffMonths($balance, $interestRate, $minimumPayment);
+
+            // Track the longest payoff time
+            if ($months > $maxMonths) {
+                $maxMonths = $months;
+            }
+        }
+
+        return $maxMonths;
+    }
 }

@@ -64,9 +64,9 @@ class DebtList extends Component
             return null;
         }
 
-        $schedule = $this->calculationService->generatePaymentSchedule($debts, 0, 'avalanche');
+        // Calculate true minimum payments only (no reallocation of freed-up payments)
+        $months = $this->calculationService->calculateMinimumPaymentsOnly($debts);
 
-        $months = $schedule['months'];
         $years = floor($months / 12);
         $remainingMonths = $months % 12;
 
