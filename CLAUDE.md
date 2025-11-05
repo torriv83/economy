@@ -476,7 +476,7 @@ php artisan test tests/Feature/ExampleTest.php # Run tests in specific file
 
 ### Code Quality
 ```bash
-vendor/bin/pint --dirty   # Format changed files (always run before finalizing)
+php vendor/bin/pint --dirty   # Format changed files (always run before finalizing)
 ```
 
 ### Database

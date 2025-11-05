@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Debt;
 use App\Services\DebtCalculationService;
+use Illuminate\Support\Collection;
 use Livewire\Component;
 
 class StrategyComparison extends Component
@@ -39,9 +40,18 @@ class StrategyComparison extends Component
         $this->validate(['extraPayment' => $this->rules()['extraPayment']]);
     }
 
+    /**
+     * Get all debts with caching to prevent N+1 queries.
+     * Uses Laravel's once() helper to cache within a single request.
+     */
+    protected function getDebts(): Collection
+    {
+        return once(fn () => Debt::all());
+    }
+
     public function getSnowballDataProperty(): array
     {
-        $debts = Debt::all();
+        $debts = $this->getDebts();
 
         if ($debts->isEmpty()) {
             return [
@@ -58,7 +68,7 @@ class StrategyComparison extends Component
 
     public function getAvalancheDataProperty(): array
     {
-        $debts = Debt::all();
+        $debts = $this->getDebts();
 
         if ($debts->isEmpty()) {
             return [
@@ -74,9 +84,75 @@ class StrategyComparison extends Component
         return $comparison['avalanche'];
     }
 
+    /**
+     * Get the number of months to pay off all debts using only minimum payments.
+     * Each debt is calculated independently with no reallocation of freed-up payments.
+     */
+    public function getMinimumPaymentMonthsProperty(): int
+    {
+        $debts = $this->getDebts();
+
+        if ($debts->isEmpty()) {
+            return 0;
+        }
+
+        return $this->calculationService->calculateMinimumPaymentsOnly($debts);
+    }
+
+    /**
+     * Get the total interest paid when using only minimum payments.
+     * Each debt is calculated independently with no reallocation of freed-up payments.
+     */
+    public function getMinimumPaymentInterestProperty(): float
+    {
+        $debts = $this->getDebts();
+
+        if ($debts->isEmpty()) {
+            return 0.0;
+        }
+
+        return $this->calculationService->calculateMinimumPaymentsInterest($debts);
+    }
+
+    /**
+     * Get savings data for Snowball strategy compared to minimum payments.
+     *
+     * @return array{monthsSaved: int, yearsSaved: int, remainingMonths: int, interestSaved: float}
+     */
+    public function getSnowballSavingsProperty(): array
+    {
+        $monthsSaved = max(0, $this->minimumPaymentMonths - $this->snowballData['months']);
+        $interestSaved = max(0, $this->minimumPaymentInterest - $this->snowballData['totalInterest']);
+
+        return [
+            'monthsSaved' => $monthsSaved,
+            'yearsSaved' => (int) floor($monthsSaved / 12),
+            'remainingMonths' => $monthsSaved % 12,
+            'interestSaved' => $interestSaved,
+        ];
+    }
+
+    /**
+     * Get savings data for Avalanche strategy compared to minimum payments.
+     *
+     * @return array{monthsSaved: int, yearsSaved: int, remainingMonths: int, interestSaved: float}
+     */
+    public function getAvalancheSavingsProperty(): array
+    {
+        $monthsSaved = max(0, $this->minimumPaymentMonths - $this->avalancheData['months']);
+        $interestSaved = max(0, $this->minimumPaymentInterest - $this->avalancheData['totalInterest']);
+
+        return [
+            'monthsSaved' => $monthsSaved,
+            'yearsSaved' => (int) floor($monthsSaved / 12),
+            'remainingMonths' => $monthsSaved % 12,
+            'interestSaved' => $interestSaved,
+        ];
+    }
+
     public function getOrderedDebtsProperty(): array
     {
-        $debts = Debt::all();
+        $debts = $this->getDebts();
 
         if ($debts->isEmpty()) {
             return [

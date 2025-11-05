@@ -405,3 +405,138 @@ describe('compareStrategies', function () {
             ->and($result['avalanche']['savings'])->toBe(0.0);
     });
 });
+
+describe('calculateMinimumPaymentsOnly', function () {
+    it('calculates payoff time for single debt with minimum payments', function () {
+        $debt = new Debt([
+            'balance' => 1000,
+            'interest_rate' => 12,
+            'minimum_payment' => 100,
+        ]);
+
+        $months = $this->service->calculateMinimumPaymentsOnly(collect([$debt]));
+
+        expect($months)->toBeInt()
+            ->and($months)->toBeGreaterThan(0)
+            ->and($months)->toBeLessThan(100); // Should be around 11 months
+    });
+
+    it('returns longest payoff time for multiple debts', function () {
+        $debts = collect([
+            new Debt(['balance' => 1000, 'interest_rate' => 10, 'minimum_payment' => 200]), // ~5-6 months
+            new Debt(['balance' => 5000, 'interest_rate' => 15, 'minimum_payment' => 150]), // ~40+ months
+        ]);
+
+        $months = $this->service->calculateMinimumPaymentsOnly($debts);
+
+        // Should return the longest payoff time (the second debt)
+        expect($months)->toBeGreaterThan(30);
+    });
+
+    it('returns zero for empty collection', function () {
+        $months = $this->service->calculateMinimumPaymentsOnly(collect([]));
+
+        expect($months)->toBe(0);
+    });
+
+    it('skips debts without minimum payment', function () {
+        $debts = collect([
+            new Debt(['balance' => 5000, 'interest_rate' => 10, 'minimum_payment' => null]),
+            new Debt(['balance' => 1000, 'interest_rate' => 5, 'minimum_payment' => 100]),
+        ]);
+
+        $months = $this->service->calculateMinimumPaymentsOnly($debts);
+
+        // Should only calculate for the second debt
+        expect($months)->toBeGreaterThan(0)
+            ->and($months)->toBeLessThan(20);
+    });
+
+    it('uses original_balance when available', function () {
+        $debt = new Debt([
+            'original_balance' => 10000,
+            'balance' => 5000, // Partially paid down
+            'interest_rate' => 10,
+            'minimum_payment' => 200,
+        ]);
+
+        $months = $this->service->calculateMinimumPaymentsOnly(collect([$debt]));
+
+        // Should calculate based on original_balance (10000), not current balance (5000)
+        expect($months)->toBeGreaterThan(40);
+    });
+});
+
+describe('calculateMinimumPaymentsInterest', function () {
+    it('calculates total interest for single debt with minimum payments', function () {
+        $debt = new Debt([
+            'balance' => 1000,
+            'interest_rate' => 12,
+            'minimum_payment' => 100,
+        ]);
+
+        $interest = $this->service->calculateMinimumPaymentsInterest(collect([$debt]));
+
+        expect($interest)->toBeFloat()
+            ->and($interest)->toBeGreaterThan(0)
+            ->and($interest)->toBeLessThan(200); // Should be reasonable amount
+    });
+
+    it('calculates total interest for multiple debts', function () {
+        $debts = collect([
+            new Debt(['balance' => 1000, 'interest_rate' => 10, 'minimum_payment' => 100]),
+            new Debt(['balance' => 2000, 'interest_rate' => 15, 'minimum_payment' => 150]),
+        ]);
+
+        $interest = $this->service->calculateMinimumPaymentsInterest($debts);
+
+        expect($interest)->toBeFloat()
+            ->and($interest)->toBeGreaterThan(0);
+    });
+
+    it('returns zero for empty collection', function () {
+        $interest = $this->service->calculateMinimumPaymentsInterest(collect([]));
+
+        expect($interest)->toBe(0.0);
+    });
+
+    it('skips debts without minimum payment', function () {
+        $debts = collect([
+            new Debt(['balance' => 5000, 'interest_rate' => 10, 'minimum_payment' => null]),
+            new Debt(['balance' => 1000, 'interest_rate' => 5, 'minimum_payment' => 100]),
+        ]);
+
+        $interest = $this->service->calculateMinimumPaymentsInterest($debts);
+
+        // Should only calculate interest for the second debt
+        expect($interest)->toBeGreaterThan(0)
+            ->and($interest)->toBeLessThan(100);
+    });
+
+    it('uses original_balance for consistency', function () {
+        $debt = new Debt([
+            'original_balance' => 10000,
+            'balance' => 5000, // Partially paid down
+            'interest_rate' => 10,
+            'minimum_payment' => 200,
+        ]);
+
+        $interest = $this->service->calculateMinimumPaymentsInterest(collect([$debt]));
+
+        // Should calculate based on original_balance (10000), not current balance (5000)
+        expect($interest)->toBeGreaterThan(500);
+    });
+
+    it('handles zero interest rate', function () {
+        $debt = new Debt([
+            'balance' => 1000,
+            'interest_rate' => 0,
+            'minimum_payment' => 100,
+        ]);
+
+        $interest = $this->service->calculateMinimumPaymentsInterest(collect([$debt]));
+
+        // Zero interest rate should result in zero interest
+        expect($interest)->toBe(0.0);
+    });
+});

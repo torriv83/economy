@@ -126,10 +126,29 @@
                         <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.time_to_debt_free') }}</span>
                         <span class="font-bold text-gray-900 dark:text-white">{{ $this->snowballData['months'] }} {{ __('app.months_short') }}</span>
                     </div>
-                    <div class="flex items-center justify-between">
+                    <div class="flex items-center justify-between mb-2">
                         <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.total_interest') }}</span>
                         <span class="font-bold text-gray-900 dark:text-white">{{ number_format($this->snowballData['totalInterest'], 0, ',', ' ') }} kr</span>
                     </div>
+                    @if ($this->minimumPaymentMonths > 0 && $this->snowballSavings['monthsSaved'] > 0)
+                        <div class="flex items-center justify-between mb-2 text-blue-600 dark:text-blue-400">
+                            <span class="text-sm font-medium">{{ __('app.faster_than_minimum') }}</span>
+                            <span class="text-sm font-bold">
+                                @if ($this->snowballSavings['yearsSaved'] > 0)
+                                    {{ $this->snowballSavings['yearsSaved'] }} {{ trans_choice('app.years', $this->snowballSavings['yearsSaved']) }}
+                                @endif
+                                @if ($this->snowballSavings['remainingMonths'] > 0)
+                                    {{ $this->snowballSavings['remainingMonths'] }} {{ trans_choice('app.months', $this->snowballSavings['remainingMonths']) }}
+                                @endif
+                            </span>
+                        </div>
+                        @if ($this->snowballSavings['interestSaved'] > 0)
+                            <div class="flex items-center justify-between text-blue-600 dark:text-blue-400">
+                                <span class="text-sm font-medium">{{ __('app.interest_saved') }}</span>
+                                <span class="text-sm font-bold">{{ number_format($this->snowballSavings['interestSaved'], 0, ',', ' ') }} kr {{ __('app.vs_minimum') }}</span>
+                            </div>
+                        @endif
+                    @endif
                 </div>
             </div>
 
@@ -179,10 +198,29 @@
                         <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.time_to_debt_free') }}</span>
                         <span class="font-bold text-gray-900 dark:text-white">{{ $this->avalancheData['months'] }} {{ __('app.months_short') }}</span>
                     </div>
-                    <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center justify-between mb-2">
                         <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.total_interest') }}</span>
                         <span class="font-bold text-gray-900 dark:text-white">{{ number_format($this->avalancheData['totalInterest'], 0, ',', ' ') }} kr</span>
                     </div>
+                    @if ($this->minimumPaymentMonths > 0 && $this->avalancheSavings['monthsSaved'] > 0)
+                        <div class="flex items-center justify-between mb-2 text-green-600 dark:text-green-400">
+                            <span class="text-sm font-medium">{{ __('app.faster_than_minimum') }}</span>
+                            <span class="text-sm font-bold">
+                                @if ($this->avalancheSavings['yearsSaved'] > 0)
+                                    {{ $this->avalancheSavings['yearsSaved'] }} {{ trans_choice('app.years', $this->avalancheSavings['yearsSaved']) }}
+                                @endif
+                                @if ($this->avalancheSavings['remainingMonths'] > 0)
+                                    {{ $this->avalancheSavings['remainingMonths'] }} {{ trans_choice('app.months', $this->avalancheSavings['remainingMonths']) }}
+                                @endif
+                            </span>
+                        </div>
+                        @if ($this->avalancheSavings['interestSaved'] > 0)
+                            <div class="flex items-center justify-between mb-3 text-green-600 dark:text-green-400">
+                                <span class="text-sm font-medium">{{ __('app.interest_saved') }}</span>
+                                <span class="text-sm font-bold">{{ number_format($this->avalancheSavings['interestSaved'], 0, ',', ' ') }} kr {{ __('app.vs_minimum') }}</span>
+                            </div>
+                        @endif
+                    @endif
                     <div class="pt-3 border-t border-green-200 dark:border-green-800">
                         <div class="flex items-center justify-between">
                             <span class="text-sm font-semibold text-green-700 dark:text-green-400">{{ __('app.money_saved') }}</span>

@@ -299,7 +299,8 @@ class DebtCalculationService
         $maxMonths = 0;
 
         foreach ($debts as $debt) {
-            $balance = $debt->balance;
+            // Use original_balance for consistency with generatePaymentSchedule
+            $balance = $debt->original_balance ?? $debt->balance;
             $interestRate = $debt->interest_rate;
             $minimumPayment = $debt->minimum_payment;
 
@@ -318,5 +319,41 @@ class DebtCalculationService
         }
 
         return $maxMonths;
+    }
+
+    /**
+     * Calculate total interest paid with minimum payments only.
+     * Each debt is paid independently with NO reallocation of freed-up payments.
+     *
+     * @param  Collection  $debts  Collection of Debt models
+     * @return float Total interest paid across all debts
+     */
+    public function calculateMinimumPaymentsInterest(Collection $debts): float
+    {
+        if ($debts->isEmpty()) {
+            return 0.0;
+        }
+
+        $totalInterest = 0.0;
+
+        foreach ($debts as $debt) {
+            // Use original_balance for consistency with generatePaymentSchedule
+            $balance = $debt->original_balance ?? $debt->balance;
+            $interestRate = $debt->interest_rate;
+            $minimumPayment = $debt->minimum_payment;
+
+            // Skip if no minimum payment set or if balance is already zero
+            if ($minimumPayment === null || $minimumPayment <= 0 || $balance <= 0.01) {
+                continue;
+            }
+
+            // Calculate months and interest for this specific debt independently
+            $months = $this->calculatePayoffMonths($balance, $interestRate, $minimumPayment);
+            $interest = $this->calculateTotalInterest($balance, $interestRate, $minimumPayment, $months);
+
+            $totalInterest += $interest;
+        }
+
+        return $totalInterest;
     }
 }
