@@ -14,9 +14,9 @@ test('debt list component renders successfully', function () {
 });
 
 test('displays mock debts correctly', function () {
-    Debt::factory()->create(['name' => 'Kredittkort', 'balance' => 50000, 'interest_rate' => 8.5, 'minimum_payment' => 500]);
-    Debt::factory()->create(['name' => 'Studielån', 'balance' => 200000, 'interest_rate' => 2.5, 'minimum_payment' => null]);
-    Debt::factory()->create(['name' => 'Billån', 'balance' => 75000, 'interest_rate' => 5.0, 'minimum_payment' => 1200]);
+    Debt::factory()->create(['name' => 'Kredittkort', 'type' => 'kredittkort', 'balance' => 50000, 'interest_rate' => 8.5, 'minimum_payment' => 1500]);
+    Debt::factory()->create(['name' => 'Studielån', 'type' => 'forbrukslån', 'balance' => 200000, 'interest_rate' => 2.5, 'minimum_payment' => 3500]);
+    Debt::factory()->create(['name' => 'Billån', 'type' => 'forbrukslån', 'balance' => 75000, 'interest_rate' => 5.0, 'minimum_payment' => 1500]);
 
     Livewire::test(DebtList::class)
         ->assertSee('325 000 kr')
@@ -29,22 +29,22 @@ test('displays mock debts correctly', function () {
 });
 
 test('displays debt details correctly', function () {
-    Debt::factory()->create(['name' => 'Kredittkort', 'balance' => 50000, 'interest_rate' => 8.5, 'minimum_payment' => 500]);
-    Debt::factory()->create(['name' => 'Studielån', 'balance' => 200000, 'interest_rate' => 2.5, 'minimum_payment' => null]);
-    Debt::factory()->create(['name' => 'Billån', 'balance' => 75000, 'interest_rate' => 5.0, 'minimum_payment' => 1200]);
+    Debt::factory()->create(['name' => 'Kredittkort', 'type' => 'kredittkort', 'balance' => 50000, 'interest_rate' => 8.5, 'minimum_payment' => 1500]);
+    Debt::factory()->create(['name' => 'Studielån', 'type' => 'forbrukslån', 'balance' => 200000, 'interest_rate' => 2.5, 'minimum_payment' => 3500]);
+    Debt::factory()->create(['name' => 'Billån', 'type' => 'forbrukslån', 'balance' => 75000, 'interest_rate' => 5.0, 'minimum_payment' => 1500]);
 
     Livewire::test(DebtList::class)
         ->assertSee('8,5 %')
         ->assertSee('2,5 %')
         ->assertSee('5,0 %')
-        ->assertSee('500 kr')
-        ->assertSee('1 200 kr');
+        ->assertSee('1 500 kr')
+        ->assertSee('3 500 kr');
 });
 
 test('can delete a debt', function () {
-    Debt::factory()->create(['name' => 'Kredittkort', 'balance' => 50000, 'interest_rate' => 8.5, 'minimum_payment' => 500]);
-    Debt::factory()->create(['name' => 'Studielån', 'balance' => 200000, 'interest_rate' => 2.5, 'minimum_payment' => null]);
-    $billaan = Debt::factory()->create(['name' => 'Billån', 'balance' => 75000, 'interest_rate' => 5.0, 'minimum_payment' => 1200]);
+    Debt::factory()->create(['name' => 'Kredittkort', 'type' => 'kredittkort', 'balance' => 50000, 'interest_rate' => 8.5, 'minimum_payment' => 1500]);
+    Debt::factory()->create(['name' => 'Studielån', 'type' => 'forbrukslån', 'balance' => 200000, 'interest_rate' => 2.5, 'minimum_payment' => 3500]);
+    $billaan = Debt::factory()->create(['name' => 'Billån', 'type' => 'forbrukslån', 'balance' => 75000, 'interest_rate' => 5.0, 'minimum_payment' => 1500]);
 
     Livewire::test(DebtList::class)
         ->assertSee('Billån')
@@ -54,9 +54,9 @@ test('can delete a debt', function () {
 });
 
 test('shows correct debts count with pluralization', function () {
-    Debt::factory()->create(['name' => 'Kredittkort', 'balance' => 50000, 'interest_rate' => 8.5, 'minimum_payment' => 500]);
-    Debt::factory()->create(['name' => 'Studielån', 'balance' => 200000, 'interest_rate' => 2.5, 'minimum_payment' => null]);
-    Debt::factory()->create(['name' => 'Billån', 'balance' => 75000, 'interest_rate' => 5.0, 'minimum_payment' => 1200]);
+    Debt::factory()->create(['name' => 'Kredittkort', 'type' => 'kredittkort', 'balance' => 50000, 'interest_rate' => 8.5, 'minimum_payment' => 1500]);
+    Debt::factory()->create(['name' => 'Studielån', 'type' => 'forbrukslån', 'balance' => 200000, 'interest_rate' => 2.5, 'minimum_payment' => 3500]);
+    Debt::factory()->create(['name' => 'Billån', 'type' => 'forbrukslån', 'balance' => 75000, 'interest_rate' => 5.0, 'minimum_payment' => 1500]);
 
     $component = Livewire::test(DebtList::class);
 
@@ -65,9 +65,9 @@ test('shows correct debts count with pluralization', function () {
 });
 
 test('calculates total debt correctly', function () {
-    Debt::factory()->create(['name' => 'Kredittkort', 'balance' => 50000, 'interest_rate' => 8.5, 'minimum_payment' => 500]);
-    Debt::factory()->create(['name' => 'Studielån', 'balance' => 200000, 'interest_rate' => 2.5, 'minimum_payment' => null]);
-    Debt::factory()->create(['name' => 'Billån', 'balance' => 75000, 'interest_rate' => 5.0, 'minimum_payment' => 1200]);
+    Debt::factory()->create(['name' => 'Kredittkort', 'type' => 'kredittkort', 'balance' => 50000, 'interest_rate' => 8.5, 'minimum_payment' => 1500]);
+    Debt::factory()->create(['name' => 'Studielån', 'type' => 'forbrukslån', 'balance' => 200000, 'interest_rate' => 2.5, 'minimum_payment' => 3500]);
+    Debt::factory()->create(['name' => 'Billån', 'type' => 'forbrukslån', 'balance' => 75000, 'interest_rate' => 5.0, 'minimum_payment' => 1500]);
 
     $component = Livewire::test(DebtList::class);
 

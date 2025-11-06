@@ -17,10 +17,11 @@ test('strategy comparison component renders successfully', function () {
 test('displays minimum payment months when debts exist', function () {
     Debt::factory()->create([
         'name' => 'Credit Card',
+        'type' => 'kredittkort',
         'balance' => 5000,
         'original_balance' => 5000,
         'interest_rate' => 18.0,
-        'minimum_payment' => 150,
+        'minimum_payment' => 300,
     ]);
 
     $component = Livewire::test(StrategyComparison::class);
@@ -34,10 +35,11 @@ test('displays minimum payment months when debts exist', function () {
 test('displays minimum payment interest when debts exist', function () {
     Debt::factory()->create([
         'name' => 'Credit Card',
+        'type' => 'kredittkort',
         'balance' => 5000,
         'original_balance' => 5000,
         'interest_rate' => 18.0,
-        'minimum_payment' => 150,
+        'minimum_payment' => 300,
     ]);
 
     $component = Livewire::test(StrategyComparison::class);
@@ -51,14 +53,16 @@ test('displays minimum payment interest when debts exist', function () {
 test('calculates snowball savings correctly', function () {
     Debt::factory()->create([
         'name' => 'Small Debt',
+        'type' => 'kredittkort',
         'balance' => 2000,
         'original_balance' => 2000,
         'interest_rate' => 15.0,
-        'minimum_payment' => 100,
+        'minimum_payment' => 300,
     ]);
 
     Debt::factory()->create([
         'name' => 'Large Debt',
+        'type' => 'forbrukslån',
         'balance' => 8000,
         'original_balance' => 8000,
         'interest_rate' => 10.0,
@@ -83,18 +87,20 @@ test('calculates snowball savings correctly', function () {
 test('calculates avalanche savings correctly', function () {
     Debt::factory()->create([
         'name' => 'Low Interest',
+        'type' => 'forbrukslån',
         'balance' => 8000,
         'original_balance' => 8000,
         'interest_rate' => 5.0,
-        'minimum_payment' => 200,
+        'minimum_payment' => 170,
     ]);
 
     Debt::factory()->create([
         'name' => 'High Interest',
+        'type' => 'kredittkort',
         'balance' => 3000,
         'original_balance' => 3000,
         'interest_rate' => 20.0,
-        'minimum_payment' => 150,
+        'minimum_payment' => 300,
     ]);
 
     $component = Livewire::test(StrategyComparison::class)
@@ -115,18 +121,20 @@ test('calculates avalanche savings correctly', function () {
 test('avalanche saves more interest than snowball', function () {
     Debt::factory()->create([
         'name' => 'Low Interest Large',
+        'type' => 'forbrukslån',
         'balance' => 10000,
         'original_balance' => 10000,
         'interest_rate' => 5.0,
-        'minimum_payment' => 200,
+        'minimum_payment' => 210,
     ]);
 
     Debt::factory()->create([
         'name' => 'High Interest Small',
+        'type' => 'kredittkort',
         'balance' => 2000,
         'original_balance' => 2000,
         'interest_rate' => 25.0,
-        'minimum_payment' => 100,
+        'minimum_payment' => 300,
     ]);
 
     $component = Livewire::test(StrategyComparison::class)
@@ -151,10 +159,11 @@ test('handles empty debts gracefully', function () {
 test('savings update when extra payment changes', function () {
     Debt::factory()->create([
         'name' => 'Credit Card',
+        'type' => 'kredittkort',
         'balance' => 5000,
         'original_balance' => 5000,
         'interest_rate' => 18.0,
-        'minimum_payment' => 150,
+        'minimum_payment' => 300,
     ]);
 
     $component = Livewire::test(StrategyComparison::class)
@@ -173,10 +182,11 @@ test('savings update when extra payment changes', function () {
 test('years and remaining months are calculated correctly', function () {
     Debt::factory()->create([
         'name' => 'Test Debt',
+        'type' => 'forbrukslån',
         'balance' => 10000,
         'original_balance' => 10000,
         'interest_rate' => 12.0,
-        'minimum_payment' => 200,
+        'minimum_payment' => 250,
     ]);
 
     $component = Livewire::test(StrategyComparison::class)
@@ -192,10 +202,11 @@ test('years and remaining months are calculated correctly', function () {
 test('displays savings in UI when debts exist', function () {
     Debt::factory()->create([
         'name' => 'Credit Card',
+        'type' => 'kredittkort',
         'balance' => 5000,
         'original_balance' => 5000,
         'interest_rate' => 18.0,
-        'minimum_payment' => 150,
+        'minimum_payment' => 300,
     ]);
 
     $component = Livewire::test(StrategyComparison::class)
@@ -210,10 +221,11 @@ test('uses original balance for consistency', function () {
     // Create debt with different balance and original_balance
     Debt::factory()->create([
         'name' => 'Partially Paid',
+        'type' => 'forbrukslån',
         'balance' => 5000,
         'original_balance' => 10000,
         'interest_rate' => 15.0,
-        'minimum_payment' => 200,
+        'minimum_payment' => 250,
     ]);
 
     $component = Livewire::test(StrategyComparison::class);

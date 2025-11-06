@@ -131,4 +131,19 @@ return [
     'skip_to_content' => 'Skip to content',
     'switch_to_english' => 'Switch to English',
     'switch_to_norwegian' => 'Switch to Norwegian',
+
+    // Debt Types & Validation
+    'debt_type' => 'Debt Type',
+    'forbrukslån' => 'Consumer Loan',
+    'kredittkort' => 'Credit Card',
+    'minimum_payment_help_kredittkort' => 'Credit card: Minimum 3% of balance or 300 kr (whichever is higher)',
+    'minimum_payment_help_forbrukslån' => 'Consumer loan: Minimum payment must cover monthly interest',
+    'added_on' => 'Added on',
+    'calculated_minimum' => 'Calculated minimum',
+    'calculated_minimum_required' => 'Calculated minimum required',
+    'non_compliant_minimum' => 'Minimum payment is below regulatory requirements',
+    'minimum_payment_validation_kredittkort' => 'Minimum payment must be at least :minimum kr (3% of balance or 300 kr, whichever is higher).',
+    'minimum_payment_validation_forbrukslån' => 'Minimum payment must be at least :minimum kr to pay off the debt within 5 years.',
+    'original_balance' => 'Initial Balance',
+    'original_balance_help' => 'This is the original debt amount when you first added it.',
 ];

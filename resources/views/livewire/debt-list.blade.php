@@ -89,9 +89,26 @@
                          class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
                         <div class="p-6">
                             {{-- Debt Name --}}
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                                {{ $debt['name'] }}
-                            </h3>
+                            <div class="flex items-start justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                    {{ $debt['name'] }}
+                                </h3>
+                                @if (!$debt['isCompliant'])
+                                    <div class="relative group">
+                                        <div class="flex items-center gap-1 px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 text-xs font-medium rounded">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <!-- Tooltip -->
+                                        <div class="absolute right-0 top-full mt-2 w-64 p-3 bg-gray-900 dark:bg-gray-700 text-white text-sm rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                                            <div class="absolute -top-1 right-4 w-2 h-2 bg-gray-900 dark:bg-gray-700 transform rotate-45"></div>
+                                            <p class="font-medium mb-1">{{ __('app.non_compliant_minimum') }}</p>
+                                            <p class="text-xs text-gray-300 dark:text-gray-400">{{ $debt['warning'] }}</p>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
 
                             {{-- Debt Details --}}
                             <div class="space-y-3 mb-6">
@@ -99,6 +116,12 @@
                                     <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.balance') }}</span>
                                     <span class="text-xl font-bold text-gray-900 dark:text-white">
                                         {{ number_format($debt['balance'], 0, ',', ' ') }} kr
+                                    </span>
+                                </div>
+                                <div class="flex justify-between items-baseline">
+                                    <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.original_balance') }}</span>
+                                    <span class="font-medium text-gray-900 dark:text-white">
+                                        {{ number_format($debt['originalBalance'], 0, ',', ' ') }} kr
                                     </span>
                                 </div>
                                 <div class="flex justify-between items-baseline">
@@ -115,6 +138,12 @@
                                         </span>
                                     </div>
                                 @endif
+                                <div class="flex justify-between items-baseline pt-2 border-t border-gray-200 dark:border-gray-700">
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">{{ __('app.added_on') }}</span>
+                                    <span class="text-xs text-gray-600 dark:text-gray-300">
+                                        {{ $debt['createdAt'] }}
+                                    </span>
+                                </div>
                             </div>
 
                             {{-- Actions --}}

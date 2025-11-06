@@ -131,4 +131,19 @@ return [
     'skip_to_content' => 'Hopp til innhold',
     'switch_to_english' => 'Bytt til engelsk',
     'switch_to_norwegian' => 'Bytt til norsk',
+
+    // Debt Types & Validation
+    'debt_type' => 'Gjeldstype',
+    'forbrukslån' => 'Forbrukslån',
+    'kredittkort' => 'Kredittkort',
+    'minimum_payment_help_kredittkort' => 'Kredittkort: Minimum 3% av saldo eller 300 kr (det høyeste)',
+    'minimum_payment_help_forbrukslån' => 'Forbrukslån: Minimumsbetalingen må dekke månedsrenten',
+    'added_on' => 'Lagt til',
+    'calculated_minimum' => 'Beregnet minimum',
+    'calculated_minimum_required' => 'Beregnet minimum',
+    'non_compliant_minimum' => 'Minimumsbetalingen er lavere enn forskriftskravet',
+    'minimum_payment_validation_kredittkort' => 'Minimumsbetalingen må være minst :minimum kr (3% av saldo eller 300 kr, det høyeste).',
+    'minimum_payment_validation_forbrukslån' => 'Minimumsbetalingen må være minst :minimum kr for å betale ned gjelden innen 5 år.',
+    'original_balance' => 'Opprinnelig saldo',
+    'original_balance_help' => 'Dette er den opprinnelige gjeldsbeløpet da du la det til.',
 ];

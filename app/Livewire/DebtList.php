@@ -21,9 +21,14 @@ class DebtList extends Component
             return [
                 'id' => $debt->id,
                 'name' => $debt->name,
+                'type' => $debt->type,
                 'balance' => $debt->balance,
+                'originalBalance' => $debt->original_balance,
                 'interestRate' => $debt->interest_rate,
                 'minimumPayment' => $debt->minimum_payment,
+                'isCompliant' => $debt->isMinimumPaymentCompliant(),
+                'warning' => $debt->getMinimumPaymentWarning(),
+                'createdAt' => $debt->created_at->locale('nb')->translatedFormat('d. F Y'),
             ];
         })->toArray();
     }

@@ -18,43 +18,40 @@ describe('CreateDebt Component', function () {
     it('creates a debt with valid data', function () {
         Livewire::test(CreateDebt::class)
             ->set('name', 'Kredittkort')
+            ->set('type', 'kredittkort')
             ->set('balance', '50000')
             ->set('interestRate', '8.5')
-            ->set('minimumPayment', '500')
+            ->set('minimumPayment', '1500')
             ->call('save')
             ->assertHasNoErrors()
             ->assertRedirect(route('home'));
 
         $this->assertDatabaseHas('debts', [
             'name' => 'Kredittkort',
+            'type' => 'kredittkort',
             'balance' => 50000,
             'interest_rate' => 8.5,
-            'minimum_payment' => 500,
+            'minimum_payment' => 1500,
         ]);
     });
 
-    it('creates a debt without minimum payment', function () {
+    it('requires minimum payment when creating debt', function () {
         Livewire::test(CreateDebt::class)
             ->set('name', 'Studielån')
+            ->set('type', 'forbrukslån')
             ->set('balance', '200000')
             ->set('interestRate', '2.5')
             ->call('save')
-            ->assertHasNoErrors()
-            ->assertRedirect(route('home'));
-
-        $this->assertDatabaseHas('debts', [
-            'name' => 'Studielån',
-            'balance' => 200000,
-            'interest_rate' => 2.5,
-            'minimum_payment' => null,
-        ]);
+            ->assertHasErrors(['minimumPayment' => 'required']);
     });
 
     it('sets flash message after successful creation', function () {
         Livewire::test(CreateDebt::class)
             ->set('name', 'Billån')
+            ->set('type', 'forbrukslån')
             ->set('balance', '75000')
             ->set('interestRate', '5.0')
+            ->set('minimumPayment', '1500')
             ->call('save')
             ->assertSessionHas('message', 'Gjeld lagt til.');
     });
@@ -62,8 +59,10 @@ describe('CreateDebt Component', function () {
     it('sets original_balance equal to balance on creation', function () {
         Livewire::test(CreateDebt::class)
             ->set('name', 'Test Debt')
+            ->set('type', 'kredittkort')
             ->set('balance', '10000')
             ->set('interestRate', '10')
+            ->set('minimumPayment', '300')
             ->call('save');
 
         $debt = Debt::where('name', 'Test Debt')->first();
@@ -75,8 +74,10 @@ describe('CreateDebt Component', function () {
 describe('CreateDebt Validation', function () {
     it('requires name', function () {
         Livewire::test(CreateDebt::class)
+            ->set('type', 'kredittkort')
             ->set('balance', '50000')
             ->set('interestRate', '8.5')
+            ->set('minimumPayment', '1500')
             ->call('save')
             ->assertHasErrors(['name' => 'required']);
     });
@@ -84,8 +85,10 @@ describe('CreateDebt Validation', function () {
     it('requires name to be max 255 characters', function () {
         Livewire::test(CreateDebt::class)
             ->set('name', str_repeat('a', 256))
+            ->set('type', 'kredittkort')
             ->set('balance', '50000')
             ->set('interestRate', '8.5')
+            ->set('minimumPayment', '1500')
             ->call('save')
             ->assertHasErrors(['name' => 'max']);
     });
@@ -93,7 +96,9 @@ describe('CreateDebt Validation', function () {
     it('requires balance', function () {
         Livewire::test(CreateDebt::class)
             ->set('name', 'Kredittkort')
+            ->set('type', 'kredittkort')
             ->set('interestRate', '8.5')
+            ->set('minimumPayment', '300')
             ->call('save')
             ->assertHasErrors(['balance' => 'required']);
     });
@@ -101,8 +106,10 @@ describe('CreateDebt Validation', function () {
     it('requires balance to be numeric', function () {
         Livewire::test(CreateDebt::class)
             ->set('name', 'Kredittkort')
+            ->set('type', 'kredittkort')
             ->set('balance', 'not-a-number')
             ->set('interestRate', '8.5')
+            ->set('minimumPayment', '300')
             ->call('save')
             ->assertHasErrors(['balance' => 'numeric']);
     });
@@ -110,8 +117,10 @@ describe('CreateDebt Validation', function () {
     it('requires balance to be at least 0.01', function () {
         Livewire::test(CreateDebt::class)
             ->set('name', 'Kredittkort')
+            ->set('type', 'kredittkort')
             ->set('balance', '0')
             ->set('interestRate', '8.5')
+            ->set('minimumPayment', '300')
             ->call('save')
             ->assertHasErrors(['balance' => 'min']);
     });
@@ -119,8 +128,10 @@ describe('CreateDebt Validation', function () {
     it('accepts balance of 0.01', function () {
         Livewire::test(CreateDebt::class)
             ->set('name', 'Kredittkort')
+            ->set('type', 'kredittkort')
             ->set('balance', '0.01')
             ->set('interestRate', '0')
+            ->set('minimumPayment', '300')
             ->call('save')
             ->assertHasNoErrors();
     });
@@ -128,8 +139,10 @@ describe('CreateDebt Validation', function () {
     it('rejects negative balance', function () {
         Livewire::test(CreateDebt::class)
             ->set('name', 'Kredittkort')
+            ->set('type', 'kredittkort')
             ->set('balance', '-100')
             ->set('interestRate', '8.5')
+            ->set('minimumPayment', '300')
             ->call('save')
             ->assertHasErrors(['balance' => 'min']);
     });
@@ -137,7 +150,9 @@ describe('CreateDebt Validation', function () {
     it('requires interest rate', function () {
         Livewire::test(CreateDebt::class)
             ->set('name', 'Kredittkort')
+            ->set('type', 'kredittkort')
             ->set('balance', '50000')
+            ->set('minimumPayment', '1500')
             ->call('save')
             ->assertHasErrors(['interestRate' => 'required']);
     });
@@ -145,8 +160,10 @@ describe('CreateDebt Validation', function () {
     it('requires interest rate to be numeric', function () {
         Livewire::test(CreateDebt::class)
             ->set('name', 'Kredittkort')
+            ->set('type', 'kredittkort')
             ->set('balance', '50000')
             ->set('interestRate', 'not-a-number')
+            ->set('minimumPayment', '1500')
             ->call('save')
             ->assertHasErrors(['interestRate' => 'numeric']);
     });
@@ -154,8 +171,10 @@ describe('CreateDebt Validation', function () {
     it('requires interest rate to be at least 0', function () {
         Livewire::test(CreateDebt::class)
             ->set('name', 'Kredittkort')
+            ->set('type', 'kredittkort')
             ->set('balance', '50000')
             ->set('interestRate', '-1')
+            ->set('minimumPayment', '1500')
             ->call('save')
             ->assertHasErrors(['interestRate' => 'min']);
     });
@@ -163,8 +182,10 @@ describe('CreateDebt Validation', function () {
     it('accepts zero interest rate', function () {
         Livewire::test(CreateDebt::class)
             ->set('name', 'No Interest Debt')
+            ->set('type', 'kredittkort')
             ->set('balance', '10000')
             ->set('interestRate', '0')
+            ->set('minimumPayment', '300')
             ->call('save')
             ->assertHasNoErrors();
     });
@@ -172,8 +193,10 @@ describe('CreateDebt Validation', function () {
     it('requires interest rate to be max 100', function () {
         Livewire::test(CreateDebt::class)
             ->set('name', 'Kredittkort')
+            ->set('type', 'kredittkort')
             ->set('balance', '50000')
             ->set('interestRate', '101')
+            ->set('minimumPayment', '1500')
             ->call('save')
             ->assertHasErrors(['interestRate' => 'max']);
     });
@@ -181,25 +204,29 @@ describe('CreateDebt Validation', function () {
     it('accepts 100 percent interest rate', function () {
         Livewire::test(CreateDebt::class)
             ->set('name', 'High Rate Debt')
+            ->set('type', 'kredittkort')
             ->set('balance', '10000')
             ->set('interestRate', '100')
+            ->set('minimumPayment', '300')
             ->call('save')
             ->assertHasNoErrors();
     });
 
-    it('allows minimum payment to be optional', function () {
+    it('requires minimum payment to meet Norwegian regulations for kredittkort', function () {
         Livewire::test(CreateDebt::class)
             ->set('name', 'Kredittkort')
+            ->set('type', 'kredittkort')
             ->set('balance', '50000')
             ->set('interestRate', '8.5')
-            ->set('minimumPayment', '')
+            ->set('minimumPayment', '200')
             ->call('save')
-            ->assertHasNoErrors();
+            ->assertHasErrors(['minimumPayment']);
     });
 
-    it('requires minimum payment to be numeric if provided', function () {
+    it('requires minimum payment to be numeric', function () {
         Livewire::test(CreateDebt::class)
             ->set('name', 'Kredittkort')
+            ->set('type', 'kredittkort')
             ->set('balance', '50000')
             ->set('interestRate', '8.5')
             ->set('minimumPayment', 'not-a-number')
@@ -207,9 +234,10 @@ describe('CreateDebt Validation', function () {
             ->assertHasErrors(['minimumPayment' => 'numeric']);
     });
 
-    it('requires minimum payment to be at least 0', function () {
+    it('requires minimum payment to be at least 0.01', function () {
         Livewire::test(CreateDebt::class)
             ->set('name', 'Kredittkort')
+            ->set('type', 'kredittkort')
             ->set('balance', '50000')
             ->set('interestRate', '8.5')
             ->set('minimumPayment', '-100')
@@ -217,22 +245,53 @@ describe('CreateDebt Validation', function () {
             ->assertHasErrors(['minimumPayment' => 'min']);
     });
 
-    it('accepts zero minimum payment', function () {
+    it('requires minimum payment to cover monthly interest for forbrukslån', function () {
+        // Monthly interest = 200000 * (10 / 100) / 12 = 1666.6666...
+        // Minimum payment must be greater than monthly interest
         Livewire::test(CreateDebt::class)
-            ->set('name', 'Kredittkort')
-            ->set('balance', '50000')
-            ->set('interestRate', '8.5')
-            ->set('minimumPayment', '0')
+            ->set('name', 'Forbrukslån')
+            ->set('type', 'forbrukslån')
+            ->set('balance', '200000')
+            ->set('interestRate', '10.0')
+            ->set('minimumPayment', '1666.66') // Less than monthly interest, should fail
+            ->call('save')
+            ->assertHasErrors(['minimumPayment']);
+    });
+
+    it('accepts minimum payment that covers monthly interest for forbrukslån', function () {
+        // Monthly interest = 200000 * (10 / 100) / 12 = 1666.67
+        // Minimum payment of 1667 should pass
+        Livewire::test(CreateDebt::class)
+            ->set('name', 'Forbrukslån')
+            ->set('type', 'forbrukslån')
+            ->set('balance', '200000')
+            ->set('interestRate', '10.0')
+            ->set('minimumPayment', '1667')
             ->call('save')
             ->assertHasNoErrors();
+    });
+
+    it('rejects minimum payment below monthly interest for forbrukslån', function () {
+        // Monthly interest = 200000 * (10 / 100) / 12 = 1666.67
+        // Minimum payment of 1000 should fail
+        Livewire::test(CreateDebt::class)
+            ->set('name', 'Forbrukslån')
+            ->set('type', 'forbrukslån')
+            ->set('balance', '200000')
+            ->set('interestRate', '10.0')
+            ->set('minimumPayment', '1000')
+            ->call('save')
+            ->assertHasErrors(['minimumPayment']);
     });
 });
 
 describe('CreateDebt Validation Messages', function () {
     it('shows custom error message for required name', function () {
         Livewire::test(CreateDebt::class)
+            ->set('type', 'kredittkort')
             ->set('balance', '50000')
             ->set('interestRate', '8.5')
+            ->set('minimumPayment', '1500')
             ->call('save')
             ->assertHasErrors(['name'])
             ->assertSee('Navn er påkrevd.');
@@ -241,8 +300,10 @@ describe('CreateDebt Validation Messages', function () {
     it('shows custom error message for minimum balance', function () {
         Livewire::test(CreateDebt::class)
             ->set('name', 'Test')
+            ->set('type', 'kredittkort')
             ->set('balance', '0')
             ->set('interestRate', '8.5')
+            ->set('minimumPayment', '300')
             ->call('save')
             ->assertHasErrors(['balance'])
             ->assertSee('Saldo må være minst 0,01 kr.');
@@ -251,8 +312,10 @@ describe('CreateDebt Validation Messages', function () {
     it('shows custom error message for negative interest rate', function () {
         Livewire::test(CreateDebt::class)
             ->set('name', 'Test')
+            ->set('type', 'kredittkort')
             ->set('balance', '50000')
             ->set('interestRate', '-1')
+            ->set('minimumPayment', '1500')
             ->call('save')
             ->assertHasErrors(['interestRate'])
             ->assertSee('Rente kan ikke være negativ.');
@@ -261,8 +324,10 @@ describe('CreateDebt Validation Messages', function () {
     it('shows custom error message for interest rate over 100%', function () {
         Livewire::test(CreateDebt::class)
             ->set('name', 'Test')
+            ->set('type', 'kredittkort')
             ->set('balance', '50000')
             ->set('interestRate', '101')
+            ->set('minimumPayment', '1500')
             ->call('save')
             ->assertHasErrors(['interestRate'])
             ->assertSee('Rente kan ikke være mer enn 100%.');
@@ -271,24 +336,35 @@ describe('CreateDebt Validation Messages', function () {
 
 describe('CreateDebt Edge Cases', function () {
     it('handles very large balance values', function () {
+        $balance = 9999999999.99;
+        $minimumPayment = max($balance * 0.03, 300); // For kredittkort: 3% or 300, whichever is higher
+
         Livewire::test(CreateDebt::class)
             ->set('name', 'Massive Debt')
-            ->set('balance', '9999999999.99')
+            ->set('type', 'kredittkort')
+            ->set('balance', (string) $balance)
             ->set('interestRate', '5')
+            ->set('minimumPayment', (string) $minimumPayment)
             ->call('save')
             ->assertHasNoErrors();
     });
 
     it('handles decimal balance values', function () {
+        $balance = 12345.67;
+        $minimumPayment = max($balance * 0.03, 300); // For kredittkort: 3% or 300, whichever is higher
+
         Livewire::test(CreateDebt::class)
             ->set('name', 'Precise Debt')
-            ->set('balance', '12345.67')
+            ->set('type', 'kredittkort')
+            ->set('balance', (string) $balance)
             ->set('interestRate', '5.5')
+            ->set('minimumPayment', (string) $minimumPayment)
             ->call('save')
             ->assertHasNoErrors();
 
         $this->assertDatabaseHas('debts', [
             'name' => 'Precise Debt',
+            'type' => 'kredittkort',
             'balance' => 12345.67,
         ]);
     });
@@ -296,13 +372,16 @@ describe('CreateDebt Edge Cases', function () {
     it('handles decimal interest rate values', function () {
         Livewire::test(CreateDebt::class)
             ->set('name', 'Test Debt')
+            ->set('type', 'kredittkort')
             ->set('balance', '10000')
             ->set('interestRate', '8.75')
+            ->set('minimumPayment', '300')
             ->call('save')
             ->assertHasNoErrors();
 
         $this->assertDatabaseHas('debts', [
             'name' => 'Test Debt',
+            'type' => 'kredittkort',
             'interest_rate' => 8.75,
         ]);
     });
@@ -310,8 +389,10 @@ describe('CreateDebt Edge Cases', function () {
     it('trims whitespace from name', function () {
         Livewire::test(CreateDebt::class)
             ->set('name', '  Kredittkort  ')
+            ->set('type', 'kredittkort')
             ->set('balance', '50000')
             ->set('interestRate', '8.5')
+            ->set('minimumPayment', '1500')
             ->call('save')
             ->assertHasNoErrors();
     });

@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Debt;
+use App\Rules\MinimumPaymentRule;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -11,6 +12,8 @@ class EditDebt extends Component
     public Debt $debt;
 
     public string $name = '';
+
+    public string $type = '';
 
     public string $balance = '';
 
@@ -22,18 +25,44 @@ class EditDebt extends Component
     {
         $this->debt = $debt;
         $this->name = $debt->name;
+        $this->type = $debt->type;
         $this->balance = (string) $debt->balance;
         $this->interestRate = (string) $debt->interest_rate;
-        $this->minimumPayment = $debt->minimum_payment ? (string) $debt->minimum_payment : '';
+        $this->minimumPayment = (string) $debt->minimum_payment;
     }
 
     public function rules(): array
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'type' => ['required', 'in:forbrukslån,kredittkort'],
             'balance' => ['required', 'numeric', 'min:0.01'],
             'interestRate' => ['required', 'numeric', 'min:0', 'max:100'],
-            'minimumPayment' => ['nullable', 'numeric', 'min:0'],
+            'minimumPayment' => [
+                'required',
+                'numeric',
+                'min:0.01',
+                function ($attribute, $value, $fail) {
+                    // For kredittkort: use the existing 3% or 300 kr rule
+                    if ($this->type === 'kredittkort') {
+                        $rule = new MinimumPaymentRule(
+                            $this->type,
+                            (float) $this->balance,
+                            (float) $this->interestRate
+                        );
+                        $rule->validate($attribute, $value, $fail);
+                    } else {
+                        // For forbrukslån: just ensure payment > monthly interest
+                        $monthlyInterest = ((float) $this->balance * ((float) $this->interestRate / 100)) / 12;
+
+                        if ((float) $value <= $monthlyInterest) {
+                            $fail(__('validation.minimum_payment_must_cover_interest', [
+                                'interest' => number_format($monthlyInterest, 2, ',', ' '),
+                            ]));
+                        }
+                    }
+                },
+            ],
         ];
     }
 
@@ -43,6 +72,8 @@ class EditDebt extends Component
             'name.required' => 'Navn er påkrevd.',
             'name.string' => 'Navn må være tekst.',
             'name.max' => 'Navn kan ikke være lengre enn 255 tegn.',
+            'type.required' => 'Gjeldstype er påkrevd.',
+            'type.in' => 'Gjeldstype må være enten forbrukslån eller kredittkort.',
             'balance.required' => 'Saldo er påkrevd.',
             'balance.numeric' => 'Saldo må være et tall.',
             'balance.min' => 'Saldo må være minst 0,01 kr.',
@@ -50,8 +81,9 @@ class EditDebt extends Component
             'interestRate.numeric' => 'Rente må være et tall.',
             'interestRate.min' => 'Rente kan ikke være negativ.',
             'interestRate.max' => 'Rente kan ikke være mer enn 100%.',
+            'minimumPayment.required' => 'Minimum betaling er påkrevd.',
             'minimumPayment.numeric' => 'Minimum betaling må være et tall.',
-            'minimumPayment.min' => 'Minimum betaling kan ikke være negativ.',
+            'minimumPayment.min' => 'Minimum betaling må være minst 0,01 kr.',
         ];
     }
 
@@ -61,9 +93,10 @@ class EditDebt extends Component
 
         $this->debt->update([
             'name' => $validated['name'],
+            'type' => $validated['type'],
             'balance' => $validated['balance'],
             'interest_rate' => $validated['interestRate'],
-            'minimum_payment' => $validated['minimumPayment'] ?: null,
+            'minimum_payment' => $validated['minimumPayment'],
         ]);
 
         session()->flash('message', 'Gjeld oppdatert.');

@@ -13,6 +13,7 @@ class Debt extends Model
 
     protected $fillable = [
         'name',
+        'type',
         'balance',
         'original_balance',
         'interest_rate',
@@ -22,11 +23,53 @@ class Debt extends Model
     protected function casts(): array
     {
         return [
+            'type' => 'string',
             'balance' => 'float',
             'original_balance' => 'float',
             'interest_rate' => 'float',
             'minimum_payment' => 'float',
         ];
+    }
+
+    /**
+     * Calculate the regulatory minimum payment for the debt based on its type.
+     */
+    public function calculateMinimumPaymentForType(): float
+    {
+        if ($this->type === 'kredittkort') {
+            // Credit card: 3% of current balance or 300 kr, whichever is higher
+            return max($this->balance * 0.03, 300);
+        }
+
+        // Forbrukslån: Monthly interest + small buffer (10%)
+        // Payment must be greater than monthly interest to prevent debt growth
+        $monthlyInterest = ($this->balance * ($this->interest_rate / 100)) / 12;
+
+        return round($monthlyInterest * 1.1, 2); // 10% buffer above interest
+    }
+
+    /**
+     * Check if the current minimum payment meets Norwegian regulatory requirements.
+     */
+    public function isMinimumPaymentCompliant(): bool
+    {
+        $requiredMinimum = $this->calculateMinimumPaymentForType();
+
+        return $this->minimum_payment >= $requiredMinimum;
+    }
+
+    /**
+     * Get a warning message if the minimum payment is not compliant.
+     */
+    public function getMinimumPaymentWarning(): ?string
+    {
+        if ($this->isMinimumPaymentCompliant()) {
+            return null;
+        }
+
+        $requiredMinimum = number_format($this->calculateMinimumPaymentForType(), 0, ',', ' ');
+
+        return __('app.non_compliant_minimum', ['amount' => $requiredMinimum]);
     }
 
     public function payments(): HasMany

@@ -10,7 +10,7 @@
       "mcp__ClickUp__update_task",
       "mcp__ClickUp__get_workspace_tasks",
       "Bash(php artisan make:test:*)",
-      "Bash(vendor/bin/pint:*)",
+      "Bash(php vendor/bin/pint:*)",
       "Bash(php:*)",
       "mcp__chrome-devtools__navigate_page",
       "mcp__chrome-devtools__take_snapshot",
@@ -19,7 +19,9 @@
       "mcp__chrome-devtools__click",
       "mcp__chrome-devtools__take_screenshot",
       "mcp__laravel-boost__search-docs",
-      "mcp__laravel-boost__tinker"
+      "mcp__laravel-boost__tinker",
+      "Bash(vendor/bin/pint:*)",
+      "mcp__chrome-devtools__fill"
     ]
   },
   "enableAllProjectMcpServers": true,
