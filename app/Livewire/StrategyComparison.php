@@ -192,6 +192,77 @@ class StrategyComparison extends Component
         return $avalancheSavings >= $snowballSavings ? 'avalanche' : 'snowball';
     }
 
+    /**
+     * Get milestone data for Snowball strategy showing when each debt is paid off.
+     *
+     * @return array Array of milestones with debt name and month paid off
+     */
+    public function getSnowballMilestonesProperty(): array
+    {
+        $debts = $this->getDebts();
+
+        if ($debts->isEmpty()) {
+            return [];
+        }
+
+        $schedule = $this->calculationService->generatePaymentSchedule($debts, $this->extraPayment, 'snowball');
+
+        return $this->extractMilestones($schedule['schedule']);
+    }
+
+    /**
+     * Get milestone data for Avalanche strategy showing when each debt is paid off.
+     *
+     * @return array Array of milestones with debt name and month paid off
+     */
+    public function getAvalancheMilestonesProperty(): array
+    {
+        $debts = $this->getDebts();
+
+        if ($debts->isEmpty()) {
+            return [];
+        }
+
+        $schedule = $this->calculationService->generatePaymentSchedule($debts, $this->extraPayment, 'avalanche');
+
+        return $this->extractMilestones($schedule['schedule']);
+    }
+
+    /**
+     * Extract milestone data from payment schedule.
+     * Finds the month when each debt's balance reaches zero.
+     *
+     * @param  array  $schedule  Payment schedule array
+     * @return array Array of milestones [debt_name => month_paid_off]
+     */
+    protected function extractMilestones(array $schedule): array
+    {
+        $milestones = [];
+        $paidOffDebts = [];
+
+        foreach ($schedule as $monthData) {
+            // Skip if payments key doesn't exist
+            if (! isset($monthData['payments']) || ! is_array($monthData['payments'])) {
+                continue;
+            }
+
+            foreach ($monthData['payments'] as $payment) {
+                $debtName = $payment['name'];
+
+                // If debt is paid off this month (remaining balance is 0) and we haven't recorded it yet
+                if ($payment['remaining'] <= 0.01 && ! in_array($debtName, $paidOffDebts)) {
+                    $milestones[] = [
+                        'name' => $debtName,
+                        'month' => $monthData['month'],
+                    ];
+                    $paidOffDebts[] = $debtName;
+                }
+            }
+        }
+
+        return $milestones;
+    }
+
     public function render()
     {
         return view('livewire.strategy-comparison')->layout('components.layouts.app');

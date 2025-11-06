@@ -82,6 +82,12 @@ return [
     'from_ynab' => 'From YNAB',
     'recommended_payment_description' => 'Based on your income and expenses in YNAB',
     'override_recommendation' => 'Or set your own amount',
+    'timeline_comparison' => 'Timeline Comparison',
+    'minimum_payments_only' => 'Minimum Payments Only',
+    'faster' => 'faster',
+    'interest_comparison' => 'Interest Comparison',
+    'saves' => 'Saves',
+    'interest_paid' => 'Interest Paid',
 
     // Payment Plan
     'payment_plan' => 'Payment Plan',

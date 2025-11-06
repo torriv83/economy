@@ -82,6 +82,12 @@ return [
     'from_ynab' => 'Fra YNAB',
     'recommended_payment_description' => 'Basert på dine inntekter og utgifter i YNAB',
     'override_recommendation' => 'Eller sett ditt eget beløp',
+    'timeline_comparison' => 'Tidslinjesammenligning',
+    'minimum_payments_only' => 'Kun minstebetalinger',
+    'faster' => 'raskere',
+    'interest_comparison' => 'Rentesammenligning',
+    'saves' => 'Sparer',
+    'interest_paid' => 'Rente betalt',
 
     // Payment Plan
     'payment_plan' => 'Nedbetalingsplan',
