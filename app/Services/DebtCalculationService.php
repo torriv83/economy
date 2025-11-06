@@ -149,6 +149,7 @@ class DebtCalculationService
                 'balance' => $debt->original_balance ?? $debt->balance,
                 'interest_rate' => $debt->interest_rate,
                 'minimum_payment' => $debt->minimum_payment ?? $this->calculateMonthlyInterest($debt->balance, $debt->interest_rate),
+                'due_day' => $debt->due_day ?? 1,
             ];
         })->toArray();
 
@@ -161,7 +162,9 @@ class DebtCalculationService
 
         while (count($remainingDebts) > 0 && $month < 600) {
             $month++;
-            $monthDate = now()->addMonths($month - 1);
+            // Use the due_day from the priority debt (first in list), defaulting to 1
+            $dueDay = $remainingDebts[0]['due_day'] ?? 1;
+            $monthDate = now()->addMonths($month - 1)->day(min($dueDay, now()->addMonths($month - 1)->daysInMonth));
 
             $paidOffDebts = [];
             foreach ($remainingDebts as $index => $debt) {
@@ -232,6 +235,7 @@ class DebtCalculationService
                     'interest' => round($interest, 2),
                     'remaining' => round($newBalance, 2),
                     'isPriority' => $isPriority,
+                    'due_day' => $debt['due_day'],
                 ];
 
                 $remainingDebts[$index]['balance'] = $newBalance;

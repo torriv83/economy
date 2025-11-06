@@ -221,6 +221,28 @@
                             <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                         @enderror
                     </div>
+
+                    <!-- Payment Due Day -->
+                    <div>
+                        <label for="dueDay" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            {{ __('app.due_day') }}
+                        </label>
+                        <input
+                            type="number"
+                            id="dueDay"
+                            wire:model.blur="dueDay"
+                            min="1"
+                            max="31"
+                            placeholder="{{ __('app.due_day_placeholder') }}"
+                            class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none @error('dueDay') border-red-500 dark:border-red-400 @enderror"
+                        >
+                        <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                            {{ __('app.due_day_help') }}
+                        </p>
+                        @error('dueDay')
+                            <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
 
                 <!-- Form Actions -->

@@ -23,11 +23,11 @@ What's working well:
 
 Key improvements suggested:
 
-1. Strategy Comparison needs visuals - Currently just numbers. Add:
+1. (IMPLEMENTED) Strategy Comparison needs visuals - Currently just numbers. Add:
    - Timeline bar comparing both strategies
    - Visual interest savings comparison
    - Milestone markers
-2. Debt cards could show progress - Add visual progress bars showing how much is paid off
+2. (IMPLEMENTED) Debt cards could show progress - Add visual progress bars showing how much is paid off
 3. Payment schedule is overwhelming - Consider:
    - Collapsible month groupings
    - "Milestones only" view toggle
@@ -39,20 +39,19 @@ Key improvements suggested:
 
 Quick wins (high value, relatively simple):
 - What-if scenarios: Compare 3-5 different extra payment amounts side-by-side
-- Debt payoff milestones: Celebrate 25%, 50%, 75% completion with confetti/badges
 - CSV/PDF export: Download payment plans
 - Snowflake tracking: Log one-time windfalls (tax refunds, bonuses) and see immediate impact
 
 High-value additions:
 - Historical progress charts: Track balance reduction over time (requires monthly snapshots)
-- Payoff calendar: Visual calendar with payment dates and debt-free countdown
+- Payoff calendar: Visual calendar with payment dates and debt-free countdown (IMPLEMENTED)
 - Interest saved meter: Running counter showing savings vs. minimum-only payments
 - Budget tracking: Set monthly debt budget and track adherence
 
 Advanced features:
 - Custom debt grouping: Categories (student, credit card, auto) with subtotals
 - Interest rate change tracking: Update rates and see impact on timeline
-- Notes system: Already have notes field in payments table - add UI for this!
+- Notes system: Already have notes field in payments table - add UI for this! (IMPLEMENTED)
 - Keyboard shortcuts: Alt+H (home), Alt+S (strategies), Alt+P (plan)
 
 Long-term:

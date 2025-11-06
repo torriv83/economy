@@ -286,6 +286,9 @@
                                 {{ __('app.remaining_balance') }}
                             </th>
                             <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                {{ __('app.notes') }}
+                            </th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                                 {{ __('app.paid') }}
                             </th>
                         </tr>
@@ -376,6 +379,40 @@
                                         {{ number_format(max(0, $payment['remaining']), 0, ',', ' ') }} kr
                                     </td>
                                     <td class="px-4 py-2 text-center">
+                                        @if ($isPaid && $debt)
+                                            @php
+                                                $paymentRecord = $this->paymentService->getPayment($debtId, $month['month']);
+                                                $hasNote = $paymentRecord && $paymentRecord->notes;
+                                                $key = $month['month'] . '_' . $debtId;
+                                            @endphp
+                                            @if ($hasNote || (isset($this->showNoteInput[$key]) && $this->showNoteInput[$key]))
+                                                <div class="flex items-center justify-center gap-1">
+                                                    <button
+                                                        type="button"
+                                                        wire:click="toggleNoteInput({{ $month['month'] }}, {{ $debtId }})"
+                                                        class="p-1 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors cursor-pointer"
+                                                        title="{{ $hasNote ? __('app.view_note') : __('app.add_note') }}"
+                                                    >
+                                                        <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            @else
+                                                <button
+                                                    type="button"
+                                                    wire:click="toggleNoteInput({{ $month['month'] }}, {{ $debtId }})"
+                                                    class="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors cursor-pointer"
+                                                    title="{{ __('app.add_note') }}"
+                                                >
+                                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                                    </svg>
+                                                </button>
+                                            @endif
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-2 text-center">
                                         @if ($payment['amount'] > 0 && $debt && !$isHistorical)
                                             <input
                                                 type="checkbox"
@@ -390,12 +427,56 @@
                                         @endif
                                     </td>
                                 </tr>
+                                @if ($isPaid && $debt && isset($this->showNoteInput[$key]) && $this->showNoteInput[$key])
+                                    <tr wire:key="note-{{ $month['month'] }}-{{ $index }}" class="{{ $rowClass }}">
+                                        <td colspan="7" class="px-4 py-3">
+                                            <div class="max-w-2xl">
+                                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                    {{ __('app.payment_notes') }}
+                                                </label>
+                                                <div class="flex items-start gap-2">
+                                                    <textarea
+                                                        wire:model.live="editingNotes.{{ $key }}"
+                                                        rows="2"
+                                                        placeholder="{{ __('app.note_placeholder') }}"
+                                                        class="flex-1 px-3 py-2 text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                                                    ></textarea>
+                                                    <div class="flex flex-col gap-1">
+                                                        <button
+                                                            type="button"
+                                                            wire:click="saveNote({{ $month['month'] }}, {{ $debtId }})"
+                                                            class="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded transition-colors cursor-pointer"
+                                                        >
+                                                            {{ __('app.save_note') }}
+                                                        </button>
+                                                        @if ($hasNote)
+                                                            <button
+                                                                type="button"
+                                                                wire:click="deleteNote({{ $month['month'] }}, {{ $debtId }})"
+                                                                class="px-3 py-1 text-xs bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 text-white rounded transition-colors cursor-pointer"
+                                                            >
+                                                                {{ __('app.delete_note') }}
+                                                            </button>
+                                                        @endif
+                                                        <button
+                                                            type="button"
+                                                            wire:click="toggleNoteInput({{ $month['month'] }}, {{ $debtId }})"
+                                                            class="px-3 py-1 text-xs bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-600 text-white rounded transition-colors cursor-pointer"
+                                                        >
+                                                            {{ __('app.cancel') }}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endif
                             @endforeach
 
                             {{-- Separator between months --}}
                             @if (!$loop->last)
                                 <tr>
-                                    <td colspan="5" class="border-b-2 border-gray-300 dark:border-gray-600"></td>
+                                    <td colspan="6" class="border-b-2 border-gray-300 dark:border-gray-600"></td>
                                 </tr>
                             @endif
                         @endforeach
@@ -500,6 +581,77 @@
                                         {{ number_format(max(0, $payment['remaining']), 0, ',', ' ') }} kr
                                     </span>
                                 </div>
+                                @if ($isPaid && $debt)
+                                    @php
+                                        $paymentRecord = $this->paymentService->getPayment($debtId, $month['month']);
+                                        $hasNote = $paymentRecord && $paymentRecord->notes;
+                                        $key = $month['month'] . '_' . $debtId;
+                                    @endphp
+                                    <div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                                        @if ($hasNote || (isset($this->showNoteInput[$key]) && $this->showNoteInput[$key]))
+                                            @if (isset($this->showNoteInput[$key]) && $this->showNoteInput[$key])
+                                                <div class="space-y-2">
+                                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300">
+                                                        {{ __('app.payment_notes') }}
+                                                    </label>
+                                                    <textarea
+                                                        wire:model.live="editingNotes.{{ $key }}"
+                                                        rows="2"
+                                                        placeholder="{{ __('app.note_placeholder') }}"
+                                                        class="w-full px-3 py-2 text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                                                    ></textarea>
+                                                    <div class="flex gap-2">
+                                                        <button
+                                                            type="button"
+                                                            wire:click="saveNote({{ $month['month'] }}, {{ $debtId }})"
+                                                            class="flex-1 px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded transition-colors cursor-pointer"
+                                                        >
+                                                            {{ __('app.save_note') }}
+                                                        </button>
+                                                        @if ($hasNote)
+                                                            <button
+                                                                type="button"
+                                                                wire:click="deleteNote({{ $month['month'] }}, {{ $debtId }})"
+                                                                class="px-3 py-1.5 text-xs bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 text-white rounded transition-colors cursor-pointer"
+                                                            >
+                                                                {{ __('app.delete_note') }}
+                                                            </button>
+                                                        @endif
+                                                        <button
+                                                            type="button"
+                                                            wire:click="toggleNoteInput({{ $month['month'] }}, {{ $debtId }})"
+                                                            class="px-3 py-1.5 text-xs bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-600 text-white rounded transition-colors cursor-pointer"
+                                                        >
+                                                            {{ __('app.cancel') }}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <button
+                                                    type="button"
+                                                    wire:click="toggleNoteInput({{ $month['month'] }}, {{ $debtId }})"
+                                                    class="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                                                >
+                                                    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                                    </svg>
+                                                    {{ __('app.view_note') }}
+                                                </button>
+                                            @endif
+                                        @else
+                                            <button
+                                                type="button"
+                                                wire:click="toggleNoteInput({{ $month['month'] }}, {{ $debtId }})"
+                                                class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+                                            >
+                                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                                </svg>
+                                                {{ __('app.add_note') }}
+                                            </button>
+                                        @endif
+                                    </div>
+                                @endif
                             </div>
                         @endforeach
                     </div>

@@ -21,7 +21,8 @@
       "mcp__laravel-boost__search-docs",
       "mcp__laravel-boost__tinker",
       "Bash(vendor/bin/pint:*)",
-      "mcp__chrome-devtools__fill"
+      "mcp__chrome-devtools__fill",
+      "mcp__laravel-boost__database-schema"
     ]
   },
   "enableAllProjectMcpServers": true,

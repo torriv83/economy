@@ -19,6 +19,8 @@ class CreateDebt extends Component
 
     public string $minimumPayment = '';
 
+    public ?string $dueDay = null;
+
     public bool $showSuccessMessage = false;
 
     public function rules(): array
@@ -53,6 +55,7 @@ class CreateDebt extends Component
                     }
                 },
             ],
+            'dueDay' => ['nullable', 'integer', 'min:1', 'max:31'],
         ];
     }
 
@@ -92,6 +95,7 @@ class CreateDebt extends Component
             'interest_rate' => $validated['interestRate'],
             'minimum_payment' => $validated['minimumPayment'],
             'custom_priority_order' => $maxPriority + 1,
+            'due_day' => $validated['dueDay'] ?? null,
         ]);
 
         session()->flash('message', 'Gjeld lagt til.');

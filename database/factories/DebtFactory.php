@@ -47,6 +47,7 @@ class DebtFactory extends Factory
             'original_balance' => $balance,
             'interest_rate' => $interestRate,
             'minimum_payment' => round($minimumPayment, 2),
+            'due_day' => fake()->optional(0.7)->numberBetween(1, 28),
         ];
     }
 }

@@ -17,6 +17,10 @@ class PaymentPlan extends Component
 
     public array $editingPayments = [];
 
+    public array $editingNotes = [];
+
+    public array $showNoteInput = [];
+
     protected DebtCalculationService $calculationService;
 
     protected PaymentService $paymentService;
@@ -344,6 +348,48 @@ class PaymentPlan extends Component
         $this->paymentService->updatePaymentAmount($debtId, $monthNumber, $amount);
 
         unset($this->editingPayments[$key]);
+
+        session()->flash('message', __('app.payment_saved'));
+    }
+
+    public function toggleNoteInput(int $monthNumber, int $debtId): void
+    {
+        $key = "{$monthNumber}_{$debtId}";
+
+        if (isset($this->showNoteInput[$key]) && $this->showNoteInput[$key]) {
+            unset($this->showNoteInput[$key]);
+        } else {
+            $this->showNoteInput[$key] = true;
+
+            $payment = $this->paymentService->getPayment($debtId, $monthNumber);
+            if ($payment && $payment->notes) {
+                $this->editingNotes[$key] = $payment->notes;
+            }
+        }
+    }
+
+    public function saveNote(int $monthNumber, int $debtId): void
+    {
+        $key = "{$monthNumber}_{$debtId}";
+
+        $note = isset($this->editingNotes[$key]) ? trim($this->editingNotes[$key]) : '';
+
+        $this->paymentService->updatePaymentNote($debtId, $monthNumber, $note);
+
+        unset($this->showNoteInput[$key]);
+        unset($this->editingNotes[$key]);
+
+        session()->flash('message', __('app.payment_saved'));
+    }
+
+    public function deleteNote(int $monthNumber, int $debtId): void
+    {
+        $key = "{$monthNumber}_{$debtId}";
+
+        $this->paymentService->updatePaymentNote($debtId, $monthNumber, '');
+
+        unset($this->showNoteInput[$key]);
+        unset($this->editingNotes[$key]);
 
         session()->flash('message', __('app.payment_saved'));
     }

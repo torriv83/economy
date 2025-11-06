@@ -184,6 +184,29 @@
                                 @endif
                             </div>
 
+                            {{-- Progress Bar --}}
+                            @if ($debt['progressPercentage'] > 0)
+                                <div class="mb-4">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                            {{ __('app.paid_off_progress') }}
+                                        </span>
+                                        <span class="text-xs font-bold text-blue-600 dark:text-blue-400">
+                                            {{ number_format($debt['progressPercentage'], 1, ',', ' ') }}%
+                                        </span>
+                                    </div>
+                                    <div class="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                        <div
+                                            class="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-full transition-all duration-500"
+                                            style="width: {{ $debt['progressPercentage'] }}%"
+                                        ></div>
+                                    </div>
+                                    <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                        {{ number_format($debt['amountPaid'], 0, ',', ' ') }} kr {{ __('app.of') }} {{ number_format($debt['originalBalance'], 0, ',', ' ') }} kr {{ __('app.paid') }}
+                                    </div>
+                                </div>
+                            @endif
+
                             {{-- Debt Details --}}
                             <div class="space-y-3 mb-6">
                                 <div class="flex justify-between items-baseline">
@@ -209,6 +232,14 @@
                                         <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.minimum_payment') }}</span>
                                         <span class="font-medium text-gray-900 dark:text-white">
                                             {{ number_format($debt['minimumPayment'], 0, ',', ' ') }} kr{{ __('app.per_month') }}
+                                        </span>
+                                    </div>
+                                @endif
+                                @if ($debt['dueDay'])
+                                    <div class="flex justify-between items-baseline">
+                                        <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.payment_due') }}</span>
+                                        <span class="font-medium text-gray-900 dark:text-white">
+                                            {{ __('app.due_on_day', ['day' => $debt['dueDay']]) }}
                                         </span>
                                     </div>
                                 @endif

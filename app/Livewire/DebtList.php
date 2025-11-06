@@ -27,6 +27,11 @@ class DebtList extends Component
         }
 
         return $debts->map(function ($debt) {
+            // Calculate progress percentage (how much has been paid off)
+            $originalBalance = $debt->original_balance ?? $debt->balance;
+            $paidOff = $originalBalance - $debt->balance;
+            $progressPercentage = $originalBalance > 0 ? round(($paidOff / $originalBalance) * 100, 1) : 0;
+
             return [
                 'id' => $debt->id,
                 'name' => $debt->name,
@@ -35,10 +40,13 @@ class DebtList extends Component
                 'originalBalance' => $debt->original_balance,
                 'interestRate' => $debt->interest_rate,
                 'minimumPayment' => $debt->minimum_payment,
+                'dueDay' => $debt->due_day,
                 'isCompliant' => $debt->isMinimumPaymentCompliant(),
                 'warning' => $debt->getMinimumPaymentWarning(),
                 'createdAt' => $debt->created_at->locale('nb')->translatedFormat('d. F Y'),
                 'customPriority' => $debt->custom_priority_order,
+                'progressPercentage' => $progressPercentage,
+                'amountPaid' => $paidOff,
             ];
         })->values()->toArray();
     }

@@ -19,6 +19,7 @@ class Debt extends Model
         'interest_rate',
         'minimum_payment',
         'custom_priority_order',
+        'due_day',
     ];
 
     protected function casts(): array
@@ -30,6 +31,7 @@ class Debt extends Model
             'interest_rate' => 'float',
             'minimum_payment' => 'float',
             'custom_priority_order' => 'integer',
+            'due_day' => 'integer',
         ];
     }
 

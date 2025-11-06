@@ -207,6 +207,22 @@ class PaymentService
     }
 
     /**
+     * Update the note of an existing payment
+     */
+    public function updatePaymentNote(int $debtId, int $monthNumber, string $note): bool
+    {
+        $payment = $this->getPayment($debtId, $monthNumber);
+
+        if (! $payment) {
+            return false;
+        }
+
+        $payment->update(['notes' => $note === '' ? null : $note]);
+
+        return true;
+    }
+
+    /**
      * Get all historical payments grouped by month
      */
     public function getHistoricalPayments(): array
