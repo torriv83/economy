@@ -26,16 +26,16 @@
 
                 <!-- Navigation Links -->
                 <div class="hidden md:flex items-center gap-6">
-                    <a href="{{ route('home') }}" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded px-2 py-1">
+                    <a href="{{ route('home') }}" class="{{ request()->routeIs('home', 'debts.edit') ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }} font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded px-3 py-2">
                         {{ __('app.overview') }}
                     </a>
-                    <a href="{{ route('debts.create') }}" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded px-2 py-1">
+                    <a href="{{ route('debts.create') }}" class="{{ request()->routeIs('debts.create') ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }} font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded px-3 py-2">
                         {{ __('app.add_debt') }}
                     </a>
-                    <a href="{{ route('strategies') }}" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded px-2 py-1">
+                    <a href="{{ route('strategies') }}" class="{{ request()->routeIs('strategies') ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }} font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded px-3 py-2">
                         {{ __('app.strategies') }}
                     </a>
-                    <a href="{{ route('payment-plan') }}" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded px-2 py-1">
+                    <a href="{{ route('payment-plan') }}" class="{{ request()->routeIs('payment-plan') ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }} font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded px-3 py-2">
                         {{ __('app.payment_plan') }}
                     </a>
 
@@ -108,28 +108,28 @@
                 <a
                     href="{{ route('home') }}"
                     @click="mobileMenuOpen = false"
-                    class="block px-3 py-2 rounded-lg text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
+                    class="block px-3 py-2 rounded-lg text-base font-medium {{ request()->routeIs('home', 'debts.edit') ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700' }} transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
                 >
                     {{ __('app.overview') }}
                 </a>
                 <a
                     href="{{ route('debts.create') }}"
                     @click="mobileMenuOpen = false"
-                    class="block px-3 py-2 rounded-lg text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
+                    class="block px-3 py-2 rounded-lg text-base font-medium {{ request()->routeIs('debts.create') ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700' }} transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
                 >
                     {{ __('app.add_debt') }}
                 </a>
                 <a
                     href="{{ route('strategies') }}"
                     @click="mobileMenuOpen = false"
-                    class="block px-3 py-2 rounded-lg text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
+                    class="block px-3 py-2 rounded-lg text-base font-medium {{ request()->routeIs('strategies') ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700' }} transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
                 >
                     {{ __('app.strategies') }}
                 </a>
                 <a
                     href="{{ route('payment-plan') }}"
                     @click="mobileMenuOpen = false"
-                    class="block px-3 py-2 rounded-lg text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
+                    class="block px-3 py-2 rounded-lg text-base font-medium {{ request()->routeIs('payment-plan') ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700' }} transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
                 >
                     {{ __('app.payment_plan') }}
                 </a>
