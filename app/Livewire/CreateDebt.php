@@ -81,6 +81,9 @@ class CreateDebt extends Component
     {
         $validated = $this->validate();
 
+        // Auto-assign priority order: max + 1
+        $maxPriority = Debt::max('custom_priority_order') ?? 0;
+
         Debt::create([
             'name' => $validated['name'],
             'type' => $validated['type'],
@@ -88,6 +91,7 @@ class CreateDebt extends Component
             'original_balance' => $validated['balance'],
             'interest_rate' => $validated['interestRate'],
             'minimum_payment' => $validated['minimumPayment'],
+            'custom_priority_order' => $maxPriority + 1,
         ]);
 
         session()->flash('message', 'Gjeld lagt til.');

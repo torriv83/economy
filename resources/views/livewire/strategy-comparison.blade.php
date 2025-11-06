@@ -84,13 +84,18 @@
         {{-- Strategy Comparison Columns --}}
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {{-- Snowball Method Column --}}
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border {{ $this->bestStrategy === 'snowball' ? 'border-2 border-blue-200 dark:border-blue-800' : 'border border-gray-200 dark:border-gray-700' }} overflow-hidden">
                 {{-- Header --}}
                 <div class="bg-blue-50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-800/30 px-6 py-4">
                     <div class="flex items-center gap-3 mb-2">
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300">
                             {{ __('app.snowball_method') }}
                         </span>
+                        @if ($this->bestStrategy === 'snowball')
+                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-bold bg-blue-600 dark:bg-blue-700 text-white">
+                                {{ __('app.recommended') }}
+                            </span>
+                        @endif
                     </div>
                     <p class="text-sm text-gray-600 dark:text-gray-400">
                         {{ __('app.snowball_description') }}
@@ -131,7 +136,7 @@
                         <span class="font-bold text-gray-900 dark:text-white">{{ number_format($this->snowballData['totalInterest'], 0, ',', ' ') }} kr</span>
                     </div>
                     @if ($this->minimumPaymentMonths > 0 && $this->snowballSavings['monthsSaved'] > 0)
-                        <div class="flex items-center justify-between mb-2 text-blue-600 dark:text-blue-400">
+                        <div class="flex items-center justify-between text-blue-600 dark:text-blue-400">
                             <span class="text-sm font-medium">{{ __('app.faster_than_minimum') }}</span>
                             <span class="text-sm font-bold">
                                 @if ($this->snowballSavings['yearsSaved'] > 0)
@@ -142,27 +147,31 @@
                                 @endif
                             </span>
                         </div>
-                        @if ($this->snowballSavings['interestSaved'] > 0)
-                            <div class="flex items-center justify-between text-blue-600 dark:text-blue-400">
-                                <span class="text-sm font-medium">{{ __('app.interest_saved') }}</span>
-                                <span class="text-sm font-bold">{{ number_format($this->snowballSavings['interestSaved'], 0, ',', ' ') }} kr {{ __('app.vs_minimum') }}</span>
+                    @endif
+                    @if ($this->snowballData['savings'] > 0)
+                        <div class="pt-3 border-t border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-semibold text-blue-700 dark:text-blue-400">{{ __('app.money_saved') }}</span>
+                                <span class="text-lg font-bold text-blue-700 dark:text-blue-400">{{ number_format($this->snowballData['savings'], 0, ',', ' ') }} kr {{ __('app.vs_minimum') }}</span>
                             </div>
-                        @endif
+                        </div>
                     @endif
                 </div>
             </div>
 
             {{-- Avalanche Method Column --}}
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border-2 border-green-200 dark:border-green-800 overflow-hidden">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border {{ $this->bestStrategy === 'avalanche' ? 'border-2 border-green-200 dark:border-green-800' : 'border border-gray-200 dark:border-gray-700' }} overflow-hidden">
                 {{-- Header --}}
                 <div class="bg-green-50 dark:bg-green-900/20 border-b border-green-100 dark:border-green-800/30 px-6 py-4">
                     <div class="flex items-center gap-3 mb-2">
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300">
                             {{ __('app.avalanche_method') }}
                         </span>
-                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-bold bg-green-600 dark:bg-green-700 text-white">
-                            {{ __('app.recommended') }}
-                        </span>
+                        @if ($this->bestStrategy === 'avalanche')
+                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-bold bg-green-600 dark:bg-green-700 text-white">
+                                {{ __('app.recommended') }}
+                            </span>
+                        @endif
                     </div>
                     <p class="text-sm text-gray-600 dark:text-gray-400">
                         {{ __('app.avalanche_description') }}
@@ -203,7 +212,7 @@
                         <span class="font-bold text-gray-900 dark:text-white">{{ number_format($this->avalancheData['totalInterest'], 0, ',', ' ') }} kr</span>
                     </div>
                     @if ($this->minimumPaymentMonths > 0 && $this->avalancheSavings['monthsSaved'] > 0)
-                        <div class="flex items-center justify-between mb-2 text-green-600 dark:text-green-400">
+                        <div class="flex items-center justify-between text-green-600 dark:text-green-400">
                             <span class="text-sm font-medium">{{ __('app.faster_than_minimum') }}</span>
                             <span class="text-sm font-bold">
                                 @if ($this->avalancheSavings['yearsSaved'] > 0)
@@ -214,17 +223,11 @@
                                 @endif
                             </span>
                         </div>
-                        @if ($this->avalancheSavings['interestSaved'] > 0)
-                            <div class="flex items-center justify-between mb-3 text-green-600 dark:text-green-400">
-                                <span class="text-sm font-medium">{{ __('app.interest_saved') }}</span>
-                                <span class="text-sm font-bold">{{ number_format($this->avalancheSavings['interestSaved'], 0, ',', ' ') }} kr {{ __('app.vs_minimum') }}</span>
-                            </div>
-                        @endif
                     @endif
                     <div class="pt-3 border-t border-green-200 dark:border-green-800">
                         <div class="flex items-center justify-between">
                             <span class="text-sm font-semibold text-green-700 dark:text-green-400">{{ __('app.money_saved') }}</span>
-                            <span class="text-lg font-bold text-green-700 dark:text-green-400">{{ number_format($this->avalancheData['savings'], 0, ',', ' ') }} kr {{ __('app.vs_snowball') }}</span>
+                            <span class="text-lg font-bold text-green-700 dark:text-green-400">{{ number_format($this->avalancheData['savings'], 0, ',', ' ') }} kr {{ __('app.vs_minimum') }}</span>
                         </div>
                     </div>
                 </div>

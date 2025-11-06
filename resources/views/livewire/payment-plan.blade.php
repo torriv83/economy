@@ -46,6 +46,20 @@
                             {{ __('app.snowball_method') }}
                         </span>
                     </button>
+                    <button
+                        type="button"
+                        wire:click="$set('strategy', 'custom')"
+                        class="px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 {{ $this->strategy === 'custom' ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-sm' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}"
+                    >
+                        <span class="flex items-center gap-2">
+                            @if ($this->strategy === 'custom')
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            @endif
+                            {{ __('app.custom_order') }}
+                        </span>
+                    </button>
                 </div>
             </div>
 

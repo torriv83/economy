@@ -58,6 +58,7 @@ class StrategyComparison extends Component
                 'months' => 0,
                 'totalInterest' => 0,
                 'order' => [],
+                'savings' => 0,
             ];
         }
 
@@ -177,6 +178,18 @@ class StrategyComparison extends Component
                 ];
             })->toArray(),
         ];
+    }
+
+    /**
+     * Determine which strategy saves the most money compared to minimum payments.
+     * Returns 'snowball' or 'avalanche' based on which has higher savings.
+     */
+    public function getBestStrategyProperty(): string
+    {
+        $snowballSavings = $this->snowballData['savings'] ?? 0;
+        $avalancheSavings = $this->avalancheData['savings'] ?? 0;
+
+        return $avalancheSavings >= $snowballSavings ? 'avalanche' : 'snowball';
     }
 
     public function render()

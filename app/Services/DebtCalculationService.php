@@ -36,6 +36,18 @@ class DebtCalculationService
     }
 
     /**
+     * Order debts by custom priority order set by the user.
+     * This method allows users to choose their own repayment priority.
+     *
+     * @param  Collection  $debts  Collection of Debt models
+     * @return Collection Ordered collection by custom_priority_order (ascending)
+     */
+    public function orderByCustom(Collection $debts): Collection
+    {
+        return $debts->sortBy('custom_priority_order')->values();
+    }
+
+    /**
      * Calculate the monthly interest charge for a debt.
      *
      * @param  float  $balance  Current debt balance
@@ -124,9 +136,11 @@ class DebtCalculationService
         // Get all actual payments organized by month and debt
         $actualPayments = $this->getActualPaymentsByMonth($debts);
 
-        $orderedDebts = $strategy === 'snowball'
-            ? $this->orderBySnowball($debts)
-            : $this->orderByAvalanche($debts);
+        $orderedDebts = match ($strategy) {
+            'snowball' => $this->orderBySnowball($debts),
+            'custom' => $this->orderByCustom($debts),
+            default => $this->orderByAvalanche($debts),
+        };
 
         $remainingDebts = $orderedDebts->map(function ($debt) {
             return [
@@ -248,33 +262,48 @@ class DebtCalculationService
     }
 
     /**
-     * Compare snowball and avalanche strategies.
+     * Compare snowball, avalanche, and custom strategies.
      *
      * @param  Collection  $debts  Collection of Debt models
      * @param  float  $extraPayment  Extra monthly payment beyond minimums
-     * @return array Comparison of both strategies with savings
+     * @return array Comparison of all strategies with savings vs minimum payments
      */
     public function compareStrategies(Collection $debts, float $extraPayment): array
     {
         $snowballSchedule = $this->generatePaymentSchedule($debts, $extraPayment, 'snowball');
         $avalancheSchedule = $this->generatePaymentSchedule($debts, $extraPayment, 'avalanche');
+        $customSchedule = $this->generatePaymentSchedule($debts, $extraPayment, 'custom');
 
         $snowballOrder = $this->orderBySnowball($debts)->pluck('name')->toArray();
         $avalancheOrder = $this->orderByAvalanche($debts)->pluck('name')->toArray();
+        $customOrder = $this->orderByCustom($debts)->pluck('name')->toArray();
 
-        $savings = $snowballSchedule['totalInterest'] - $avalancheSchedule['totalInterest'];
+        // Calculate minimum payment interest as baseline
+        $minimumPaymentInterest = $this->calculateMinimumPaymentsInterest($debts);
+
+        // Calculate savings: positive value means strategy saves money vs minimum payments
+        $snowballSavings = $minimumPaymentInterest - $snowballSchedule['totalInterest'];
+        $avalancheSavings = $minimumPaymentInterest - $avalancheSchedule['totalInterest'];
+        $customSavings = $minimumPaymentInterest - $customSchedule['totalInterest'];
 
         return [
             'snowball' => [
                 'months' => $snowballSchedule['months'],
                 'totalInterest' => $snowballSchedule['totalInterest'],
                 'order' => $snowballOrder,
+                'savings' => round($snowballSavings, 2),
             ],
             'avalanche' => [
                 'months' => $avalancheSchedule['months'],
                 'totalInterest' => $avalancheSchedule['totalInterest'],
                 'order' => $avalancheOrder,
-                'savings' => round($savings, 2),
+                'savings' => round($avalancheSavings, 2),
+            ],
+            'custom' => [
+                'months' => $customSchedule['months'],
+                'totalInterest' => $customSchedule['totalInterest'],
+                'order' => $customOrder,
+                'savings' => round($customSavings, 2),
             ],
         ];
     }

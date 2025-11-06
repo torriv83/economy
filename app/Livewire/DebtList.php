@@ -8,6 +8,8 @@ use Livewire\Component;
 
 class DebtList extends Component
 {
+    public bool $reorderMode = false;
+
     protected DebtCalculationService $calculationService;
 
     public function boot(DebtCalculationService $service): void
@@ -17,7 +19,14 @@ class DebtList extends Component
 
     public function getDebtsProperty(): array
     {
-        return Debt::all()->map(function ($debt) {
+        $debts = Debt::all();
+
+        // If custom priorities are set, sort by them
+        if ($debts->whereNotNull('custom_priority_order')->count() > 0) {
+            $debts = $debts->sortBy('custom_priority_order');
+        }
+
+        return $debts->map(function ($debt) {
             return [
                 'id' => $debt->id,
                 'name' => $debt->name,
@@ -29,8 +38,9 @@ class DebtList extends Component
                 'isCompliant' => $debt->isMinimumPaymentCompliant(),
                 'warning' => $debt->getMinimumPaymentWarning(),
                 'createdAt' => $debt->created_at->locale('nb')->translatedFormat('d. F Y'),
+                'customPriority' => $debt->custom_priority_order,
             ];
-        })->toArray();
+        })->values()->toArray();
     }
 
     public function getTotalDebtProperty(): float
@@ -90,6 +100,28 @@ class DebtList extends Component
             $debt->delete();
             session()->flash('message', 'Gjeld slettet.');
         }
+    }
+
+    public function enableReorderMode(): void
+    {
+        $this->reorderMode = true;
+    }
+
+    public function cancelReorder(): void
+    {
+        $this->reorderMode = false;
+    }
+
+    public function updateOrder(array $orderedIds): void
+    {
+        foreach ($orderedIds as $index => $id) {
+            Debt::where('id', $id)->update([
+                'custom_priority_order' => $index + 1,
+            ]);
+        }
+
+        $this->reorderMode = false;
+        session()->flash('message', 'Prioritetsrekkefølge lagret.');
     }
 
     public function render()

@@ -18,6 +18,7 @@ class Debt extends Model
         'original_balance',
         'interest_rate',
         'minimum_payment',
+        'custom_priority_order',
     ];
 
     protected function casts(): array
@@ -28,6 +29,7 @@ class Debt extends Model
             'original_balance' => 'float',
             'interest_rate' => 'float',
             'minimum_payment' => 'float',
+            'custom_priority_order' => 'integer',
         ];
     }
 
@@ -75,5 +77,21 @@ class Debt extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * Check if this debt has a custom priority order set.
+     */
+    public function hasCustomPriority(): bool
+    {
+        return $this->custom_priority_order !== null;
+    }
+
+    /**
+     * Check if all debts have custom priority orders set.
+     */
+    public static function allHaveCustomPriority(): bool
+    {
+        return static::whereNull('custom_priority_order')->count() === 0;
     }
 }
