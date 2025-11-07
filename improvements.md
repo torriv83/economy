@@ -2,24 +2,11 @@
 
 Overall: Mathematically sound and well-implemented
 
-Your calculations are accurate with proper handling of:
-- Monthly interest calculations (correct formula)
-- Payoff timeline using standard amortization formulas
-- Edge cases (zero interest, payment < interest, etc.)
-- Norwegian regulatory compliance (credit card & forbrukslån minimum payments)
-- Snowball effect reallocation
-
 Minor improvements to consider:
-- Add explicit rounding after each month's balance calculation to prevent floating-point accumulation over 600 iterations (app/Services/DebtCalculationService.php:221)
+- (IMPLEMENTED) Add explicit rounding after each month's balance calculation to prevent floating-point accumulation over 600 iterations (app/Services/DebtCalculationService.php:224)
 - Consider an absolute minimum payment floor (e.g., 100 kr) for forbrukslån edge cases
 
 2. UX ASSESSMENT 🎨
-
-What's working well:
-- Clean dark mode implementation
-- Good responsive design with mobile-specific views
-- Professional color scheme and typography
-- Proper loading states and validation feedback
 
 Key improvements suggested:
 
@@ -32,8 +19,7 @@ Key improvements suggested:
    - Collapsible month groupings
    - "Milestones only" view toggle
    - Quick jump to specific month
-4. Remove/hide mock YNAB data - The static "3 500 kr from YNAB" confuses since it's not integrated yet
-5. Mobile payment tracking - Simplify to "This Month" focused view by default
+4. Mobile payment tracking - Simplify to "This Month" focused view by default
 
 3. FEATURE IDEAS 💡
 
@@ -49,7 +35,6 @@ High-value additions:
 - Budget tracking: Set monthly debt budget and track adherence
 
 Advanced features:
-- Custom debt grouping: Categories (student, credit card, auto) with subtotals
 - Interest rate change tracking: Update rates and see impact on timeline
 - Notes system: Already have notes field in payments table - add UI for this! (IMPLEMENTED)
 - Keyboard shortcuts: Alt+H (home), Alt+S (strategies), Alt+P (plan)
@@ -57,9 +42,15 @@ Advanced features:
 Long-term:
 - YNAB integration (already planned)
 - PWA conversion for offline access + home screen install
-- Bank transaction import via CSV
 - AI recommendations based on payment patterns
 
   ---
 Bottom line: Your calculations are solid, the foundation is excellent, but the UX would benefit significantly from more visual data representation and motivation/gamification elements to make the debt payoff journey feel more tangible and
 rewarding.
+
+
+## The user wishlist: ##
+- Be able to click on one debt, and get more details on that single debt (needs brainstorming)
+  - first idea: have a what/if.. so i put in a sum i want to pay extra to get an idea how much faster the debt is paid off
+- In the calendar, be able to jump to a specific year (IMPLEMENTED)
+- Integrate YNAB so i can add any wishlist or things i need to save for (like an upcoming dental appointment next year), and get help to know how much i can afford to put aside and still keep debt payments on track.

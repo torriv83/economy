@@ -83,6 +83,16 @@ class PayoffCalendar extends Component
         $this->currentYear = (int) now()->year;
     }
 
+    public function getAvailableYearsProperty(): array
+    {
+        $startYear = (int) now()->year;
+        $endYear = $this->debtFreeDate
+            ? (int) Carbon::parse($this->debtFreeDate)->year
+            : $startYear + 5;
+
+        return range($startYear, $endYear);
+    }
+
     protected function getDebts(): Collection
     {
         return once(fn () => Debt::all());

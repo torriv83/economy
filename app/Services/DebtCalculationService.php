@@ -221,7 +221,7 @@ class DebtCalculationService
                 if ($totalPayment >= $maxPayment - 0.01) {
                     $newBalance = 0;
                 } else {
-                    $newBalance = $debt['balance'] + $interest - $totalPayment;
+                    $newBalance = round($debt['balance'] + $interest - $totalPayment, 2);
                 }
 
                 $totalInterest += $interest;

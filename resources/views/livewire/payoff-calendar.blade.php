@@ -208,6 +208,16 @@
                     <h2 class="text-xl font-bold text-gray-900 dark:text-white">
                         {{ $this->currentMonthName }}
                     </h2>
+                    <select
+                        wire:model.live="currentYear"
+                        class="px-3 py-1 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                    >
+                        @foreach ($this->availableYears as $year)
+                            <option value="{{ $year }}">
+                                {{ $year }}
+                            </option>
+                        @endforeach
+                    </select>
                     <button
                         wire:click="goToToday"
                         type="button"
