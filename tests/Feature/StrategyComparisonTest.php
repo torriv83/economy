@@ -8,6 +8,8 @@ use Livewire\Livewire;
 uses(RefreshDatabase::class);
 
 test('strategy comparison component renders successfully', function () {
+    app()->setLocale('en');
+
     $response = $this->get('/strategies');
 
     $response->assertSuccessful();
@@ -200,6 +202,8 @@ test('years and remaining months are calculated correctly', function () {
 });
 
 test('displays savings in UI when debts exist', function () {
+    app()->setLocale('en');
+
     Debt::factory()->create([
         'name' => 'Credit Card',
         'type' => 'kredittkort',
@@ -217,7 +221,7 @@ test('displays savings in UI when debts exist', function () {
         ->assertSee('Interest Saved');
 });
 
-test('uses original balance for consistency', function () {
+test('uses current balance for projections', function () {
     // Create debt with different balance and original_balance
     Debt::factory()->create([
         'name' => 'Partially Paid',
@@ -233,9 +237,12 @@ test('uses original balance for consistency', function () {
     $minimumMonths = $component->get('minimumPaymentMonths');
     $minimumInterest = $component->get('minimumPaymentInterest');
 
-    // Should calculate based on original_balance (10000), not current balance (5000)
-    expect($minimumMonths)->toBeGreaterThan(30)
-        ->and($minimumInterest)->toBeGreaterThan(500);
+    // Should calculate based on current balance (5000), not original_balance (10000)
+    // 5000 at 15% with 250/month ≈ 24 months, interest ≈ 1000
+    expect($minimumMonths)->toBeGreaterThan(20)
+        ->and($minimumMonths)->toBeLessThan(30)
+        ->and($minimumInterest)->toBeGreaterThan(900)
+        ->and($minimumInterest)->toBeLessThan(1100);
 });
 
 test('validates extra payment input', function () {

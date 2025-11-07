@@ -17,6 +17,8 @@ test('edit debt page renders successfully', function () {
 });
 
 test('edit debt component loads debt data correctly', function () {
+    app()->setLocale('en');
+
     $debt = Debt::factory()->create([
         'name' => 'Test Credit Card',
         'type' => 'kredittkort',

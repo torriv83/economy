@@ -133,14 +133,14 @@ class DebtCalculationService
             ];
         }
 
-        // Get all actual payments organized by month and debt
-        $actualPayments = $this->getActualPaymentsByMonth($debts);
-
         $orderedDebts = match ($strategy) {
             'snowball' => $this->orderBySnowball($debts),
             'custom' => $this->orderByCustom($debts),
             default => $this->orderByAvalanche($debts),
         };
+
+        // Get all actual payments organized by month and debt
+        $actualPayments = $this->getActualPaymentsByMonth($debts);
 
         $remainingDebts = $orderedDebts->map(function ($debt) {
             return [
@@ -221,7 +221,13 @@ class DebtCalculationService
                 if ($totalPayment >= $maxPayment - 0.01) {
                     $newBalance = 0;
                 } else {
-                    $newBalance = round($debt['balance'] + $interest - $totalPayment, 2);
+                    // When using actual payments, don't add interest to balance
+                    // because database balance = original_balance - SUM(payments) without interest
+                    if ($hasActualPayments && isset($actualPayments[$month][$debtName])) {
+                        $newBalance = round($debt['balance'] - $totalPayment, 2);
+                    } else {
+                        $newBalance = round($debt['balance'] + $interest - $totalPayment, 2);
+                    }
                 }
 
                 $totalInterest += $interest;
@@ -329,8 +335,7 @@ class DebtCalculationService
         $maxMonths = 0;
 
         foreach ($debts as $debt) {
-            // Use original_balance for consistency with generatePaymentSchedule
-            $balance = $debt->original_balance ?? $debt->balance;
+            $balance = $debt->balance;
             $interestRate = $debt->interest_rate;
             $minimumPayment = $debt->minimum_payment;
 
@@ -367,8 +372,7 @@ class DebtCalculationService
         $totalInterest = 0.0;
 
         foreach ($debts as $debt) {
-            // Use original_balance for consistency with generatePaymentSchedule
-            $balance = $debt->original_balance ?? $debt->balance;
+            $balance = $debt->balance;
             $interestRate = $debt->interest_rate;
             $minimumPayment = $debt->minimum_payment;
 

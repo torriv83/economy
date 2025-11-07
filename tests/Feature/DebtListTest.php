@@ -76,6 +76,8 @@ test('calculates total debt correctly', function () {
 });
 
 test('shows empty state when no debts exist', function () {
+    app()->setLocale('en');
+
     Livewire::test(DebtList::class)
         ->assertSee('No debts registered')
         ->assertSee('Add first debt')

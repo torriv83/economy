@@ -259,7 +259,7 @@ describe('generatePaymentSchedule', function () {
         expect($lastMonth['progress'])->toBeGreaterThanOrEqual(99);
     });
 
-    it('uses original_balance when generating schedule', function () {
+    it('uses original_balance when generating schedule without actual payments', function () {
         $debt = Debt::factory()->create([
             'name' => 'Test Debt',
             'original_balance' => 10000,
@@ -271,99 +271,106 @@ describe('generatePaymentSchedule', function () {
         $debts = collect([$debt]);
         $result = $this->service->generatePaymentSchedule($debts, 0);
 
-        // First month should start with original_balance, not current balance
+        // Without actual payments, schedule starts from original_balance
         $firstMonthPayment = collect($result['schedule'][0]['payments'])->firstWhere('name', 'Test Debt');
-        expect($firstMonthPayment['remaining'])->toBeGreaterThan(5000);
+
+        // Calculate expected remaining: original_balance + interest - minimum payment
+        $interest = round(10000 * (10 / 100) / 12, 2);
+        $expectedRemaining = round(10000 + $interest - 500, 2);
+
+        expect($firstMonthPayment['remaining'])->toBe($expectedRemaining);
     });
 
     it('integrates actual payments into schedule', function () {
         $debt = Debt::factory()->create([
             'name' => 'Test Debt',
             'original_balance' => 7404,
-            'balance' => 750,
+            'balance' => 750, // Already paid 6654, balance is reduced
             'interest_rate' => 12,
             'minimum_payment' => 800,
         ]);
 
-        // Record an actual payment for month 1
+        // Historical payment is stored separately
         $debt->payments()->create([
             'planned_amount' => 750,
             'actual_amount' => 6654,
-            'payment_date' => now(),
+            'payment_date' => now()->subMonth(),
             'month_number' => 1,
-            'payment_month' => now()->format('Y-m'),
+            'payment_month' => now()->subMonth()->format('Y-m'),
         ]);
 
         $debts = collect([$debt->fresh('payments')]);
         $result = $this->service->generatePaymentSchedule($debts, 0);
 
-        // Month 1 should use the actual payment amount (6654)
+        // Month 1 uses actual payment amount
         $month1Payment = collect($result['schedule'][0]['payments'])->firstWhere('name', 'Test Debt');
+
         expect($month1Payment['amount'])->toBe(6654.0);
+        // Remaining after actual payment: original_balance - payment = 7404 - 6654 = 750
+        expect($month1Payment['remaining'])->toBe(750.0);
     });
 
-    it('calculates remaining balance correctly after actual payment', function () {
+    it('calculates remaining balance correctly with actual payment', function () {
         $debt = Debt::factory()->create([
             'name' => 'Klarna',
             'original_balance' => 7404,
-            'balance' => 750,
+            'balance' => 750, // Current balance after previous payments
             'interest_rate' => 12,
             'minimum_payment' => 800,
         ]);
 
-        // Record actual payment for month 1
+        // Historical payment already applied to balance
         $debt->payments()->create([
             'planned_amount' => 750,
             'actual_amount' => 6654,
-            'payment_date' => now(),
+            'payment_date' => now()->subMonth(),
             'month_number' => 1,
-            'payment_month' => now()->format('Y-m'),
+            'payment_month' => now()->subMonth()->format('Y-m'),
         ]);
 
         $debts = collect([$debt->fresh('payments')]);
         $result = $this->service->generatePaymentSchedule($debts, 0);
 
-        // Month 1: original_balance (7404) + interest - actual_payment (6654)
+        // Month 1 uses actual payment, remaining = original_balance - actual_payment
         $month1Payment = collect($result['schedule'][0]['payments'])->firstWhere('name', 'Klarna');
-        $expectedInterest = round(7404 * (12 / 100) / 12, 2); // Monthly interest
-        $expectedRemaining = round(7404 + $expectedInterest - 6654, 2);
 
-        expect($month1Payment['remaining'])->toBe($expectedRemaining);
+        expect($month1Payment['amount'])->toBe(6654.0);
+        expect($month1Payment['remaining'])->toBe(750.0);
     });
 
-    it('continues calculation from adjusted balance after actual payment', function () {
+    it('projects schedule with actual payment then continues projecting', function () {
         $debt = Debt::factory()->create([
             'name' => 'Test',
             'original_balance' => 1000,
-            'balance' => 500,
+            'balance' => 500, // Current balance after previous payments
             'interest_rate' => 12,
             'minimum_payment' => 100,
         ]);
 
-        // Actual payment in month 1
+        // Historical payment already applied
         $debt->payments()->create([
             'planned_amount' => 100,
             'actual_amount' => 500,
-            'payment_date' => now(),
+            'payment_date' => now()->subMonth(),
             'month_number' => 1,
-            'payment_month' => now()->format('Y-m'),
+            'payment_month' => now()->subMonth()->format('Y-m'),
         ]);
 
         $debts = collect([$debt->fresh('payments')]);
         $result = $this->service->generatePaymentSchedule($debts, 0);
 
-        // Month 1 uses actual payment
+        // Month 1 uses actual payment: original_balance - actual_payment = 1000 - 500 = 500
         $month1 = collect($result['schedule'][0]['payments'])->firstWhere('name', 'Test');
         expect($month1['amount'])->toBe(500.0);
+        expect($month1['remaining'])->toBe(500.0);
 
-        // Month 2 should calculate from the balance after month 1's actual payment
-        $month1Remaining = $month1['remaining'];
+        // Month 2 continues from month 1's remaining balance with projected payment
         if (isset($result['schedule'][1])) {
             $month2 = collect($result['schedule'][1]['payments'])->firstWhere('name', 'Test');
-            $expectedMonth2Interest = round($month1Remaining * (12 / 100) / 12, 2);
-            $expectedMonth2Payment = (float) min(100, $month1Remaining);
+            $interest2 = round(500 * (12 / 100) / 12, 2);
+            $expectedPayment2 = (float) min(100, 500 + $interest2);
 
-            expect($month2['amount'])->toBe($expectedMonth2Payment);
+            expect($month2['amount'])->toBe($expectedPayment2);
         }
     });
 });
@@ -452,7 +459,7 @@ describe('calculateMinimumPaymentsOnly', function () {
             ->and($months)->toBeLessThan(20);
     });
 
-    it('uses original_balance when available', function () {
+    it('uses current balance for calculation', function () {
         $debt = new Debt([
             'original_balance' => 10000,
             'balance' => 5000, // Partially paid down
@@ -462,8 +469,10 @@ describe('calculateMinimumPaymentsOnly', function () {
 
         $months = $this->service->calculateMinimumPaymentsOnly(collect([$debt]));
 
-        // Should calculate based on original_balance (10000), not current balance (5000)
-        expect($months)->toBeGreaterThan(40);
+        // Should calculate based on current balance (5000), reflecting payments already made
+        // 5000 at 10% interest with 200/month payment ≈ 29 months
+        expect($months)->toBeGreaterThan(25)
+            ->and($months)->toBeLessThan(35);
     });
 });
 
@@ -513,7 +522,7 @@ describe('calculateMinimumPaymentsInterest', function () {
             ->and($interest)->toBeLessThanOrEqual(100.0);
     });
 
-    it('uses original_balance for consistency', function () {
+    it('uses current balance for interest calculation', function () {
         $debt = new Debt([
             'original_balance' => 10000,
             'balance' => 5000, // Partially paid down
@@ -523,8 +532,10 @@ describe('calculateMinimumPaymentsInterest', function () {
 
         $interest = $this->service->calculateMinimumPaymentsInterest(collect([$debt]));
 
-        // Should calculate based on original_balance (10000), not current balance (5000)
-        expect($interest)->toBeGreaterThan(500);
+        // Should calculate based on current balance (5000), reflecting payments already made
+        // 5000 at 10% with 200/month payment ≈ 29 months ≈ 800 total interest
+        expect($interest)->toBeGreaterThan(700)
+            ->and($interest)->toBeLessThan(900);
     });
 
     it('handles zero interest rate', function () {

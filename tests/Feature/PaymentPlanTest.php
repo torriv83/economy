@@ -16,6 +16,8 @@ test('payment plan component renders successfully', function () {
 });
 
 test('can switch between avalanche and snowball strategies', function () {
+    app()->setLocale('en');
+
     Debt::factory()->create(['name' => 'Kredittkort', 'type' => 'kredittkort', 'balance' => 50000, 'original_balance' => 50000, 'interest_rate' => 8.5, 'minimum_payment' => 1500]);
     Debt::factory()->create(['name' => 'Studielån', 'type' => 'forbrukslån', 'balance' => 200000, 'original_balance' => 200000, 'interest_rate' => 2.5, 'minimum_payment' => 3500]);
 
@@ -38,6 +40,8 @@ test('default strategy is avalanche', function () {
 });
 
 test('displays strategy toggle buttons', function () {
+    app()->setLocale('en');
+
     Debt::factory()->create(['name' => 'Kredittkort', 'type' => 'kredittkort', 'balance' => 50000, 'original_balance' => 50000, 'interest_rate' => 8.5, 'minimum_payment' => 1500]);
 
     Livewire::test(PaymentPlan::class)
@@ -47,6 +51,8 @@ test('displays strategy toggle buttons', function () {
 });
 
 test('displays extra monthly payment amount', function () {
+    app()->setLocale('en');
+
     Debt::factory()->create(['name' => 'Kredittkort', 'type' => 'kredittkort', 'balance' => 50000, 'original_balance' => 50000, 'interest_rate' => 8.5, 'minimum_payment' => 1500]);
 
     Livewire::test(PaymentPlan::class)
