@@ -100,8 +100,8 @@ describe('recordMonthPayments', function () {
     });
 
     it('updates debt balances after recording payments', function () {
-        $debt1 = Debt::factory()->create(['balance' => 10000, 'original_balance' => 10000]);
-        $debt2 = Debt::factory()->create(['balance' => 5000, 'original_balance' => 5000]);
+        $debt1 = Debt::factory()->create(['balance' => 10000, 'original_balance' => 10000, 'interest_rate' => 10.0]);
+        $debt2 = Debt::factory()->create(['balance' => 5000, 'original_balance' => 5000, 'interest_rate' => 12.0]);
 
         $payments = [
             ['debt_id' => $debt1->id, 'planned_amount' => 500, 'actual_amount' => 500],
@@ -110,8 +110,10 @@ describe('recordMonthPayments', function () {
 
         $this->service->recordMonthPayments($payments, '2025-01', 1);
 
-        expect($debt1->fresh()->balance)->toBe(9500.0)
-            ->and($debt2->fresh()->balance)->toBe(4700.0);
+        // Debt1: 10000 * 10% / 12 = 83.33 interest, so 500 - 83.33 = 416.67 principal
+        // Debt2: 5000 * 12% / 12 = 50.00 interest, so 300 - 50.00 = 250.00 principal
+        expect($debt1->fresh()->balance)->toBe(9583.33)
+            ->and($debt2->fresh()->balance)->toBe(4750.0);
     });
 
     it('rolls back all payments if one fails', function () {
@@ -150,8 +152,8 @@ describe('recordMonthPayments', function () {
 
 describe('updateDebtBalances', function () {
     it('updates all debt balances based on payments', function () {
-        $debt1 = Debt::factory()->create(['balance' => 10000, 'original_balance' => 10000]);
-        $debt2 = Debt::factory()->create(['balance' => 5000, 'original_balance' => 5000]);
+        $debt1 = Debt::factory()->create(['balance' => 10000, 'original_balance' => 10000, 'interest_rate' => 10.0]);
+        $debt2 = Debt::factory()->create(['balance' => 5000, 'original_balance' => 5000, 'interest_rate' => 12.0]);
 
         Payment::factory()->create(['debt_id' => $debt1->id, 'actual_amount' => 1000]);
         Payment::factory()->create(['debt_id' => $debt1->id, 'actual_amount' => 500]);
@@ -159,8 +161,15 @@ describe('updateDebtBalances', function () {
 
         $this->service->updateDebtBalances();
 
-        expect($debt1->fresh()->balance)->toBe(8500.0) // 10000 - 1000 - 500
-            ->and($debt2->fresh()->balance)->toBe(3000.0); // 5000 - 2000
+        // Debt1: 10000 * 10% / 12 = 83.33 interest per payment
+        //   Payment 1: 1000 - 83.33 = 916.67 principal
+        //   Payment 2: 500 - 83.33 = 416.67 principal
+        //   Balance: 10000 - 916.67 - 416.67 = 8666.66
+        // Debt2: 5000 * 12% / 12 = 50.00 interest
+        //   Payment 1: 2000 - 50.00 = 1950.00 principal
+        //   Balance: 5000 - 1950.00 = 3050.00
+        expect($debt1->fresh()->balance)->toBe(8666.66)
+            ->and($debt2->fresh()->balance)->toBe(3050.0);
     });
 
     it('prevents negative balances', function () {
@@ -182,14 +191,16 @@ describe('updateDebtBalances', function () {
     });
 
     it('uses original_balance for calculation', function () {
-        $debt = Debt::factory()->create(['balance' => 3000, 'original_balance' => 10000]);
+        $debt = Debt::factory()->create(['balance' => 3000, 'original_balance' => 10000, 'interest_rate' => 12.0]);
 
         Payment::factory()->create(['debt_id' => $debt->id, 'actual_amount' => 5000]);
 
         $this->service->updateDebtBalances();
 
-        // Should be original_balance - payments = 10000 - 5000 = 5000
-        expect($debt->fresh()->balance)->toBe(5000.0);
+        // Interest: 3000 * 12% / 12 = 30.00 (calculated on current balance)
+        // Principal: 5000 - 30.00 = 4970.00
+        // Should be original_balance - principal = 10000 - 4970.00 = 5030.00
+        expect($debt->fresh()->balance)->toBe(5030.0);
     });
 });
 
@@ -475,14 +486,18 @@ describe('isMonthFullyPaid', function () {
 
 describe('updatePaymentAmount', function () {
     it('updates payment amount and recalculates balance', function () {
-        $debt = Debt::factory()->create(['balance' => 8500, 'original_balance' => 10000]);
+        $debt = Debt::factory()->create(['balance' => 8500, 'original_balance' => 10000, 'interest_rate' => 12.0]);
         Payment::factory()->create(['debt_id' => $debt->id, 'month_number' => 1, 'actual_amount' => 1500]);
 
         $result = $this->service->updatePaymentAmount($debt->id, 1, 2000);
 
+        // When updating payment amount, interest is recalculated based on current balance (8500)
+        // Interest: 8500 * 12% / 12 = 85.00
+        // Principal: 2000 - 85.00 = 1915.00
+        // Balance: 10000 - 1915.00 = 8085.00
         expect($result)->toBeTrue()
             ->and(Payment::first()->actual_amount)->toBe(2000.0)
-            ->and($debt->fresh()->balance)->toBe(8000.0); // 10000 - 2000
+            ->and($debt->fresh()->balance)->toBe(8085.0);
     });
 
     it('returns false when payment does not exist', function () {

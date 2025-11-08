@@ -115,7 +115,10 @@ class DebtCalculationService
                     $payments[$monthNumber] = [];
                 }
 
-                $payments[$monthNumber][$debtName] = $payment->actual_amount;
+                $payments[$monthNumber][$debtName] = [
+                    'actual_amount' => $payment->actual_amount,
+                    'principal_paid' => $payment->principal_paid ?? $payment->actual_amount,
+                ];
             }
         }
 
@@ -147,6 +150,7 @@ class DebtCalculationService
                 'id' => $debt->id,
                 'name' => $debt->name,
                 'balance' => $debt->original_balance ?? $debt->balance,
+                'original_balance' => $debt->original_balance ?? $debt->balance,
                 'interest_rate' => $debt->interest_rate,
                 'minimum_payment' => $debt->minimum_payment ?? $this->calculateMonthlyInterest($debt->balance, $debt->interest_rate),
                 'due_day' => $debt->due_day ?? 1,
@@ -201,7 +205,9 @@ class DebtCalculationService
                 $interest = $this->calculateMonthlyInterest($debt['balance'], $debt['interest_rate']);
 
                 if ($hasActualPayments && isset($actualPayments[$month][$debtName])) {
-                    $actualAmount = $actualPayments[$month][$debtName];
+                    $paymentData = $actualPayments[$month][$debtName];
+                    $actualAmount = $paymentData['actual_amount'];
+                    $principalPaid = $paymentData['principal_paid'];
                     $totalPayment = $actualAmount;
                     $minimumPayment = $debt['minimum_payment'];
                     $extraForThisDebt = max(0, $actualAmount - $minimumPayment);
@@ -221,10 +227,12 @@ class DebtCalculationService
                 if ($totalPayment >= $maxPayment - 0.01) {
                     $newBalance = 0;
                 } else {
-                    // When using actual payments, don't add interest to balance
-                    // because database balance = original_balance - SUM(payments) without interest
+                    // When using actual payments, use principal_paid to calculate remaining
+                    // because database balance = original_balance - SUM(principal_paid)
                     if ($hasActualPayments && isset($actualPayments[$month][$debtName])) {
-                        $newBalance = round($debt['balance'] - $totalPayment, 2);
+                        // Calculate remaining balance based on principal paid, not total payment
+                        // This matches how updateDebtBalances() calculates: original_balance - SUM(principal_paid)
+                        $newBalance = round($debt['original_balance'] - $principalPaid, 2);
                     } else {
                         $newBalance = round($debt['balance'] + $interest - $totalPayment, 2);
                     }

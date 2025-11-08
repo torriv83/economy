@@ -14,6 +14,8 @@ class Payment extends Model
         'debt_id',
         'planned_amount',
         'actual_amount',
+        'interest_paid',
+        'principal_paid',
         'payment_date',
         'month_number',
         'payment_month',
@@ -25,6 +27,8 @@ class Payment extends Model
         return [
             'planned_amount' => 'float',
             'actual_amount' => 'float',
+            'interest_paid' => 'float',
+            'principal_paid' => 'float',
             'payment_date' => 'date',
             'month_number' => 'integer',
         ];

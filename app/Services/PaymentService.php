@@ -19,10 +19,20 @@ class PaymentService
         int $monthNumber,
         string $paymentMonth
     ): Payment {
+        // Calculate interest on current balance before payment
+        $currentBalance = $debt->balance;
+        $monthlyInterest = round($currentBalance * ($debt->interest_rate / 100) / 12, 2);
+
+        // Payment goes to interest first, then principal
+        $interestPaid = min($actualAmount, $monthlyInterest);
+        $principalPaid = max(0, $actualAmount - $monthlyInterest);
+
         return Payment::create([
             'debt_id' => $debt->id,
             'planned_amount' => $plannedAmount,
             'actual_amount' => $actualAmount,
+            'interest_paid' => $interestPaid,
+            'principal_paid' => $principalPaid,
             'payment_date' => now(),
             'month_number' => $monthNumber,
             'payment_month' => $paymentMonth,
@@ -69,14 +79,14 @@ class PaymentService
         $debtIds = Debt::pluck('id');
 
         foreach ($debtIds as $debtId) {
-            // Update balance atomically using a single SQL query
-            // This prevents race conditions by calculating everything at the database level
+            // Update balance using principal_paid (which accounts for interest)
+            // Balance = original_balance - SUM(principal_paid)
             // Note: Using MAX instead of GREATEST for SQLite compatibility
             DB::update('
                 UPDATE debts
                 SET balance = MAX(
                     original_balance - COALESCE(
-                        (SELECT SUM(actual_amount) FROM payments WHERE debt_id = ?),
+                        (SELECT SUM(principal_paid) FROM payments WHERE debt_id = ?),
                         0
                     ),
                     0
@@ -199,7 +209,19 @@ class PaymentService
         }
 
         DB::transaction(function () use ($payment, $newAmount) {
-            $payment->update(['actual_amount' => $newAmount]);
+            $debt = $payment->debt;
+
+            // Recalculate interest and principal based on debt's current balance
+            $monthlyInterest = round($debt->balance * ($debt->interest_rate / 100) / 12, 2);
+            $interestPaid = min($newAmount, $monthlyInterest);
+            $principalPaid = max(0, $newAmount - $monthlyInterest);
+
+            $payment->update([
+                'actual_amount' => $newAmount,
+                'interest_paid' => $interestPaid,
+                'principal_paid' => $principalPaid,
+            ]);
+
             $this->updateDebtBalances();
         });
 
