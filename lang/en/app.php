@@ -166,6 +166,7 @@ return [
     'minimum_payment_validation_forbrukslån' => 'Minimum payment must be at least :minimum kr to pay off the debt within 5 years.',
     'original_balance' => 'Initial Balance',
     'original_balance_help' => 'This is the original debt amount when you first added it.',
+    'balance_calculated_info' => 'Balance is automatically calculated from initial amount and payments. Use reconciliation to adjust.',
     'paid_off_progress' => 'Paid Off',
     'of' => 'of',
 

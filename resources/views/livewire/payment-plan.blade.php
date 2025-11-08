@@ -204,6 +204,9 @@
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                                 {{ __('app.payoff_date') }}
                             </th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                Handlinger
+                            </th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -226,6 +229,20 @@
                                         <div class="text-sm text-gray-500 dark:text-gray-400">
                                             -
                                         </div>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    @if (isset($this->debts[$debt['name']]))
+                                        <button
+                                            wire:click="openReconciliationModal({{ $this->debts[$debt['name']]->id }})"
+                                            type="button"
+                                            class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                                        >
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                                            </svg>
+                                            Avstem
+                                        </button>
                                     @endif
                                 </td>
                             </tr>
@@ -256,6 +273,20 @@
                             @endif
                         </div>
                     </div>
+                    @if (isset($this->debts[$debt['name']]))
+                        <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                            <button
+                                wire:click="openReconciliationModal({{ $this->debts[$debt['name']]->id }})"
+                                type="button"
+                                class="w-full inline-flex items-center justify-center px-4 py-2 bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                            >
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                                </svg>
+                                Avstem
+                            </button>
+                        </div>
+                    @endif
                 </div>
             @endforeach
         </div>
@@ -294,6 +325,9 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        @php
+                            $paidOffDebts = []; // Track which debts have been fully paid off
+                        @endphp
                         @foreach ($this->detailedSchedule as $month)
                             @php
                                 $rowCount = count($month['payments']);
@@ -342,11 +376,18 @@
                                     @endif
                                     <td class="px-4 py-2 text-sm text-gray-900 dark:text-white {{ $payment['remaining'] <= 0.01 ? 'font-medium' : '' }}">
                                         {{ $payment['name'] }}
-                                        @if ($payment['remaining'] <= 0.01)
+                                        @php
+                                            // Only show "Nedbetalt" the FIRST time debt reaches 0
+                                            $justPaidOff = $payment['remaining'] <= 0.01 && !in_array($payment['name'], $paidOffDebts);
+                                            if ($justPaidOff) {
+                                                $paidOffDebts[] = $payment['name'];
+                                            }
+                                        @endphp
+                                        @if ($justPaidOff)
                                             <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-green-600 dark:bg-green-700 text-white">
                                                 {{ __('app.paid_off') }}!
                                             </span>
-                                        @elseif ($payment['isPriority'])
+                                        @elseif ($payment['remaining'] > 0.01 && $payment['isPriority'])
                                             <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-blue-600 dark:bg-blue-500 text-white">
                                                 {{ __('app.now_priority') }}
                                             </span>
@@ -357,22 +398,31 @@
                                             @php
                                                 $paymentRecord = $this->paymentService->getPayment($debtId, $month['month']);
                                                 $actualAmount = $paymentRecord ? $paymentRecord->actual_amount : $payment['amount'];
+                                                $isReconciliation = $paymentRecord && $paymentRecord->is_reconciliation_adjustment;
                                                 $key = $month['month'] . '_' . $debtId;
                                                 if (!isset($this->editingPayments[$key])) {
                                                     $this->editingPayments[$key] = $actualAmount;
                                                 }
                                             @endphp
                                             <div class="flex items-center gap-2 justify-end">
+                                                @if ($isReconciliation)
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-300 dark:border-yellow-700" title="{{ __('app.reconciliation_adjustment') }}">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                        </svg>
+                                                        {{ __('app.reconciliation') }}
+                                                    </span>
+                                                @endif
                                                 <input
                                                     type="number"
                                                     wire:model.live.debounce.500ms="editingPayments.{{ $key }}"
                                                     wire:blur="updatePaymentAmount({{ $month['month'] }}, {{ $debtId }})"
-                                                    class="w-24 px-2 py-1 text-sm text-right bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded focus:ring-blue-500 dark:focus:ring-blue-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                    class="w-24 px-2 py-1 text-sm text-right {{ $isReconciliation ? 'bg-yellow-50 dark:bg-yellow-900/10 border-yellow-300 dark:border-yellow-700' : 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700' }} border rounded focus:ring-blue-500 dark:focus:ring-blue-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                                 >
                                                 <span class="text-xs">kr</span>
                                             </div>
                                         @else
-                                            {{ number_format($payment['amount'], 0, ',', ' ') }} kr
+                                            {{ number_format(abs($payment['amount']), 0, ',', ' ') }} kr
                                         @endif
                                     </td>
                                     <td class="px-4 py-2 text-sm text-right {{ $payment['remaining'] <= 0.01 ? 'font-bold text-green-600 dark:text-green-400' : 'font-medium text-gray-900 dark:text-white' }}">
@@ -555,19 +605,30 @@
                                         @php
                                             $paymentRecord = $this->paymentService->getPayment($debtId, $month['month']);
                                             $actualAmount = $paymentRecord ? $paymentRecord->actual_amount : $payment['amount'];
+                                            $isReconciliation = $paymentRecord && $paymentRecord->is_reconciliation_adjustment;
                                             $key = $month['month'] . '_' . $debtId;
                                             if (!isset($this->editingPayments[$key])) {
                                                 $this->editingPayments[$key] = $actualAmount;
                                             }
                                         @endphp
-                                        <div class="flex items-center gap-2">
-                                            <input
-                                                type="number"
-                                                wire:model.live.debounce.500ms="editingPayments.{{ $key }}"
-                                                wire:blur="updatePaymentAmount({{ $month['month'] }}, {{ $debtId }})"
-                                                class="w-24 px-2 py-1 text-sm text-right bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded focus:ring-blue-500 dark:focus:ring-blue-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                            >
-                                            <span class="text-xs">kr</span>
+                                        <div class="flex flex-col items-end gap-1">
+                                            @if ($isReconciliation)
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-300 dark:border-yellow-700" title="{{ __('app.reconciliation_adjustment') }}">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                    </svg>
+                                                    {{ __('app.reconciliation') }}
+                                                </span>
+                                            @endif
+                                            <div class="flex items-center gap-2">
+                                                <input
+                                                    type="number"
+                                                    wire:model.live.debounce.500ms="editingPayments.{{ $key }}"
+                                                    wire:blur="updatePaymentAmount({{ $month['month'] }}, {{ $debtId }})"
+                                                    class="w-24 px-2 py-1 text-sm text-right {{ $isReconciliation ? 'bg-yellow-50 dark:bg-yellow-900/10 border-yellow-300 dark:border-yellow-700' : 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700' }} border rounded focus:ring-blue-500 dark:focus:ring-blue-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                >
+                                                <span class="text-xs">kr</span>
+                                            </div>
                                         </div>
                                     @else
                                         <span class="{{ $payment['isPriority'] ? 'font-semibold text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400' }}">
@@ -705,5 +766,197 @@
             </div>
         @endif
     </div>
+
+    {{-- Reconciliation Modals --}}
+    @foreach ($this->debts as $debt)
+        <div
+            x-data="{ show: $wire.entangle('reconciliationModals.{{ $debt->id }}') }"
+            x-show="show"
+            x-cloak
+            @keydown.escape.window="show = false"
+            class="fixed inset-0 z-50 overflow-y-auto"
+            aria-labelledby="modal-title"
+            role="dialog"
+            aria-modal="true"
+            style="display: none;"
+        >
+            <!-- Background overlay -->
+            <div
+                class="fixed inset-0 z-40 bg-black/50 transition-opacity"
+                aria-hidden="true"
+                x-show="show"
+                x-transition:enter="ease-out duration-300"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                @click="show = false"
+            ></div>
+
+            <div class="relative z-50 flex items-center justify-center min-h-screen p-4">
+                <div
+                    class="w-full max-w-lg bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all"
+                    x-show="show"
+                    x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave="ease-in duration-200"
+                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    @click.away="show = false"
+                >
+                        <form wire:submit.prevent="reconcileDebt({{ $debt->id }})">
+                            <!-- Header -->
+                            <div class="bg-white dark:bg-gray-800 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white" id="modal-title">
+                                        Avstem gjeld
+                                    </h3>
+                                    <button
+                                        type="button"
+                                        @click="show = false"
+                                        class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 rounded-lg p-1 transition-colors"
+                                    >
+                                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{{ $debt->name }}</p>
+                            </div>
+
+                            <!-- Content -->
+                            <div class="bg-white dark:bg-gray-800 px-6 py-5">
+                                <div class="space-y-5">
+                                            <!-- Current Calculated Balance -->
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                    Beregnet saldo
+                                                </label>
+                                                <div class="text-lg font-semibold text-gray-900 dark:text-white">
+                                                    {{ number_format($debt->balance, 2, ',', ' ') }} kr
+                                                </div>
+                                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                                    Basert på opprinnelig saldo og innbetalinger
+                                                </p>
+                                            </div>
+
+                                            <!-- Actual Balance Input -->
+                                            <div>
+                                                <label for="actualBalance-{{ $debt->id }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    Faktisk saldo (fra kontoutskrift)
+                                                    <span class="text-red-500">*</span>
+                                                </label>
+                                                <div class="relative">
+                                                    <input
+                                                        type="number"
+                                                        id="actualBalance-{{ $debt->id }}"
+                                                        wire:model.live="reconciliationBalances.{{ $debt->id }}"
+                                                        step="0.01"
+                                                        min="0"
+                                                        placeholder="Skriv inn faktisk saldo"
+                                                        class="w-full px-4 py-3 pr-14 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent transition-colors duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none @error('reconciliationBalances.' . $debt->id) border-red-500 dark:border-red-400 @enderror"
+                                                    >
+                                                    <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                                                        <span class="text-gray-500 dark:text-gray-400 text-sm font-medium">NOK</span>
+                                                    </div>
+                                                </div>
+                                                @error('reconciliationBalances.' . $debt->id)
+                                                    <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                                @enderror
+                                            </div>
+
+                                            <!-- Difference Display -->
+                                            @if (isset($this->reconciliationBalances[$debt->id]) && $this->reconciliationBalances[$debt->id] !== '')
+                                                @php
+                                                    $difference = $this->getReconciliationDifference($debt->id);
+                                                @endphp
+                                                <div class="p-4 rounded-lg {{ $difference < 0 ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' : ($difference > 0 ? 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800' : 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800') }}">
+                                                    <div class="flex items-center justify-between">
+                                                        <span class="text-sm font-medium {{ $difference < 0 ? 'text-green-900 dark:text-green-200' : ($difference > 0 ? 'text-yellow-900 dark:text-yellow-200' : 'text-blue-900 dark:text-blue-200') }}">
+                                                            Differanse:
+                                                        </span>
+                                                        <span class="text-lg font-bold {{ $difference < 0 ? 'text-green-900 dark:text-green-200' : ($difference > 0 ? 'text-yellow-900 dark:text-yellow-200' : 'text-blue-900 dark:text-blue-200') }}">
+                                                            {{ $difference >= 0 ? '+' : '' }}{{ number_format($difference, 2, ',', ' ') }} kr
+                                                        </span>
+                                                    </div>
+                                                    <p class="mt-1 text-xs {{ $difference < 0 ? 'text-green-700 dark:text-green-300' : ($difference > 0 ? 'text-yellow-700 dark:text-yellow-300' : 'text-blue-700 dark:text-blue-300') }}">
+                                                        @if (abs($difference) < 0.01)
+                                                            Saldo er korrekt - ingen justering nødvendig
+                                                        @elseif ($difference < 0)
+                                                            Du har betalt {{ number_format(abs($difference), 2, ',', ' ') }} kr mer enn registrert
+                                                        @else
+                                                            Saldo er {{ number_format($difference, 2, ',', ' ') }} kr høyere enn beregnet
+                                                        @endif
+                                                    </p>
+                                                </div>
+                                            @endif
+
+                                            <!-- Reconciliation Date -->
+                                            <div>
+                                                <label for="reconciliationDate-{{ $debt->id }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    Avstemmingsdato
+                                                    <span class="text-red-500">*</span>
+                                                </label>
+                                                <input
+                                                    type="date"
+                                                    id="reconciliationDate-{{ $debt->id }}"
+                                                    wire:model="reconciliationDates.{{ $debt->id }}"
+                                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent transition-colors duration-200 @error('reconciliationDates.' . $debt->id) border-red-500 dark:border-red-400 @enderror"
+                                                >
+                                                @error('reconciliationDates.' . $debt->id)
+                                                    <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                                @enderror
+                                            </div>
+
+                                            <!-- Notes -->
+                                            <div>
+                                                <label for="notes-{{ $debt->id }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    Notater (valgfritt)
+                                                </label>
+                                                <textarea
+                                                    id="notes-{{ $debt->id }}"
+                                                    wire:model="reconciliationNotes.{{ $debt->id }}"
+                                                    rows="3"
+                                                    placeholder="F.eks. 'Gebyr på 300 kr ikke registrert' eller 'Rentejustering fra bank'"
+                                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent transition-colors duration-200 @error('reconciliationNotes.' . $debt->id) border-red-500 dark:border-red-400 @enderror"
+                                                ></textarea>
+                                                @error('reconciliationNotes.' . $debt->id)
+                                                    <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                    </div>
+
+                            <!-- Footer -->
+                            <div class="bg-gray-50 dark:bg-gray-900 px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+                                <button
+                                    type="button"
+                                    @click="show = false"
+                                    class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
+                                >
+                                    Avbryt
+                                </button>
+                                <button
+                                    type="submit"
+                                    wire:loading.attr="disabled"
+                                    class="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    <span wire:loading.remove>Avstem</span>
+                                    <span wire:loading class="inline-flex items-center gap-2">
+                                        <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Avstemmer...
+                                    </span>
+                                </button>
+                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                        </div>
+                    @endforeach
 
 </div>

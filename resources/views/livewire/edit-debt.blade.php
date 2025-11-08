@@ -54,30 +54,27 @@
                         </p>
                     </div>
 
-                    <!-- Balance -->
+                    <!-- Balance (Read-only - Calculated) -->
                     <div>
                         <label for="balance" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             {{ __('app.balance') }}
-                            <span class="text-red-500">*</span>
                         </label>
                         <div class="relative">
                             <input
-                                type="number"
+                                type="text"
                                 id="balance"
-                                wire:model.blur="balance"
-                                x-on:input="updateCalculatedMinimum"
-                                step="0.01"
-                                min="0"
-                                placeholder="{{ __('app.balance_placeholder') }}"
-                                class="w-full px-4 py-3 pr-14 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none @error('balance') border-red-500 dark:border-red-400 @enderror"
+                                value="{{ number_format($debt->balance ?? 0, 2, ',', ' ') }}"
+                                disabled
+                                readonly
+                                class="w-full px-4 py-3 pr-14 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 cursor-not-allowed transition-colors duration-200"
                             >
                             <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
                                 <span class="text-gray-500 dark:text-gray-400 text-sm font-medium">NOK</span>
                             </div>
                         </div>
-                        @error('balance')
-                            <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                        @enderror
+                        <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                            {{ __('app.balance_calculated_info') }}
+                        </p>
                     </div>
 
                     <!-- Interest Rate -->
@@ -91,7 +88,6 @@
                                 type="number"
                                 id="interestRate"
                                 wire:model.blur="interestRate"
-                                x-on:input="updateCalculatedMinimum"
                                 step="0.01"
                                 min="0"
                                 max="100"
@@ -110,7 +106,7 @@
                     <!-- Debt Type -->
                     <div x-data="{
                         type: @entangle('type'),
-                        balance: @entangle('balance'),
+                        balance: {{ $debt->balance ?? 0 }},
                         interestRate: @entangle('interestRate'),
                         calculatedMinimum: 0,
                         updateCalculatedMinimum() {
@@ -130,7 +126,7 @@
                                 this.calculatedMinimum = monthlyInterest * 1.1; // 10% buffer above interest
                             }
                         }
-                    }" x-init="updateCalculatedMinimum(); $watch('type', () => updateCalculatedMinimum()); $watch('balance', () => updateCalculatedMinimum()); $watch('interestRate', () => updateCalculatedMinimum())">
+                    }" x-init="updateCalculatedMinimum(); $watch('type', () => updateCalculatedMinimum()); $watch('interestRate', () => updateCalculatedMinimum())">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             {{ __('app.debt_type') }}
                             <span class="text-red-500">*</span>

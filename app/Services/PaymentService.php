@@ -289,4 +289,53 @@ class PaymentService
 
         return array_values($groupedPayments);
     }
+
+    /**
+     * Reconcile a debt by creating an adjustment payment
+     * This is used when the actual balance differs from the calculated balance
+     *
+     * @param  Debt  $debt  The debt to reconcile
+     * @param  float  $actualBalance  The actual balance from bank statement
+     * @param  string  $reconciliationDate  The date of reconciliation
+     * @param  string|null  $notes  Optional notes explaining the adjustment
+     */
+    public function reconcileDebt(
+        Debt $debt,
+        float $actualBalance,
+        string $reconciliationDate,
+        ?string $notes = null
+    ): Payment {
+        // Calculate the difference between actual and calculated balance
+        $difference = round($actualBalance - $debt->balance, 2);
+
+        if (abs($difference) < 0.01) {
+            throw new \InvalidArgumentException('No adjustment needed - balances match.');
+        }
+
+        // For reconciliation adjustments:
+        // Positive difference = actual balance is HIGHER (missed fees/charges) - principal is NEGATIVE (increases balance)
+        // Negative difference = actual balance is LOWER (extra payments) - principal is POSITIVE (decreases balance)
+
+        // When difference is positive (actual > calculated), we INCREASE the balance by reducing principal_paid
+        // When difference is negative (actual < calculated), we DECREASE the balance by increasing principal_paid
+        $principalPaid = -$difference;
+
+        $payment = Payment::create([
+            'debt_id' => $debt->id,
+            'planned_amount' => 0, // No planned amount for reconciliation
+            'actual_amount' => -$difference, // Negative of difference (positive for overpayment, negative for fees)
+            'interest_paid' => 0, // Reconciliation adjustments don't split interest/principal
+            'principal_paid' => $principalPaid, // Directly adjusts principal
+            'payment_date' => $reconciliationDate,
+            'month_number' => null, // NULL so it doesn't conflict with regular monthly payments
+            'payment_month' => now()->parse($reconciliationDate)->format('Y-m'),
+            'notes' => $notes ?? 'Avstemming: '.($difference > 0 ? 'Økning' : 'Reduksjon').' på '.number_format(abs($difference), 2, ',', ' ').' kr',
+            'is_reconciliation_adjustment' => true,
+        ]);
+
+        // Update debt balances after reconciliation
+        $this->updateDebtBalances();
+
+        return $payment;
+    }
 }

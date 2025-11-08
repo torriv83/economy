@@ -127,6 +127,8 @@ return [
     'save_payments' => 'Lagre betalinger',
     'edit_amount' => 'Rediger beløp',
     'payment_saved' => 'Betaling lagret',
+    'reconciliation' => 'Avstemming',
+    'reconciliation_adjustment' => 'Avstemmingsjustering',
     'payment_deleted' => 'Betaling angret',
     'payments_saved' => 'Betalinger lagret',
     'payments_deleted' => 'Betalinger angret',
@@ -166,6 +168,7 @@ return [
     'minimum_payment_validation_forbrukslån' => 'Minimumsbetalingen må være minst :minimum kr for å betale ned gjelden innen 5 år.',
     'original_balance' => 'Opprinnelig saldo',
     'original_balance_help' => 'Dette er den opprinnelige gjeldsbeløpet da du la det til.',
+    'balance_calculated_info' => 'Saldo beregnes automatisk fra opprinnelig beløp og betalinger. Bruk avstemming for å justere.',
     'paid_off_progress' => 'Nedbetalt',
     'of' => 'av',
 

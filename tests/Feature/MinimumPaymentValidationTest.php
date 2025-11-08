@@ -149,28 +149,29 @@ describe('editing debts with validation', function () {
 
         Livewire::test(EditDebt::class, ['debt' => $debt])
             ->set('name', 'New Name')
-            ->set('balance', '15000')
+            // Balance is read-only, not editable
             ->set('minimumPayment', '450')
             ->call('update')
             ->assertHasNoErrors();
 
         expect($debt->fresh())
             ->name->toBe('New Name')
-            ->balance->toBe(15000.0)
+            ->balance->toBe(10000.0) // Balance should not change
             ->minimum_payment->toBe(450.0);
     });
 
     it('prevents updating debt to non-compliant values', function () {
         $debt = Debt::factory()->create([
             'type' => 'kredittkort',
-            'balance' => 10000,
+            'balance' => 50000, // Set high balance for testing validation
             'interest_rate' => 20,
-            'minimum_payment' => 300,
+            'minimum_payment' => 1500,
         ]);
 
+        // For kredittkort with 50000 balance, minimum payment must be at least 1500 (3% of 50000)
         Livewire::test(EditDebt::class, ['debt' => $debt])
-            ->set('balance', '50000')
-            ->set('minimumPayment', '500')
+            // Balance is read-only, uses debt->balance (50000) for validation
+            ->set('minimumPayment', '500') // Too low for 50000 balance
             ->call('update')
             ->assertHasErrors(['minimumPayment']);
     });

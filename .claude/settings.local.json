@@ -22,7 +22,16 @@
       "mcp__laravel-boost__tinker",
       "Bash(vendor/bin/pint:*)",
       "mcp__chrome-devtools__fill",
-      "mcp__laravel-boost__database-schema"
+      "mcp__laravel-boost__database-schema",
+      "mcp__laravel-boost__get-absolute-url",
+      "mcp__chrome-devtools__press_key",
+      "mcp__laravel-boost__last-error",
+      "mcp__chrome-devtools__list_console_messages",
+      "mcp__chrome-devtools__list_network_requests",
+      "mcp__chrome-devtools__get_network_request",
+      "mcp__chrome-devtools__fill_form",
+      "mcp__chrome-devtools__evaluate_script",
+      "mcp__chrome-devtools__wait_for"
     ]
   },
   "enableAllProjectMcpServers": true,

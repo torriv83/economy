@@ -259,7 +259,7 @@ describe('generatePaymentSchedule', function () {
         expect($lastMonth['progress'])->toBeGreaterThanOrEqual(99);
     });
 
-    it('uses original_balance when generating schedule without actual payments', function () {
+    it('uses current balance when generating schedule without actual payments', function () {
         $debt = Debt::factory()->create([
             'name' => 'Test Debt',
             'original_balance' => 10000,
@@ -271,12 +271,12 @@ describe('generatePaymentSchedule', function () {
         $debts = collect([$debt]);
         $result = $this->service->generatePaymentSchedule($debts, 0);
 
-        // Without actual payments, schedule starts from original_balance
+        // Without actual payments (month_number > 0), schedule starts from current balance
         $firstMonthPayment = collect($result['schedule'][0]['payments'])->firstWhere('name', 'Test Debt');
 
-        // Calculate expected remaining: original_balance + interest - minimum payment
-        $interest = round(10000 * (10 / 100) / 12, 2);
-        $expectedRemaining = round(10000 + $interest - 500, 2);
+        // Calculate expected remaining: current_balance + interest - minimum payment
+        $interest = round(5000 * (10 / 100) / 12, 2);
+        $expectedRemaining = round(5000 + $interest - 500, 2);
 
         expect($firstMonthPayment['remaining'])->toBe($expectedRemaining);
     });

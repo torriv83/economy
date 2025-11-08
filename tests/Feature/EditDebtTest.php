@@ -48,7 +48,7 @@ test('can update debt with valid data', function () {
     Livewire::test(EditDebt::class, ['debt' => $debt])
         ->set('name', 'New Name')
         ->set('type', 'kredittkort')
-        ->set('balance', '15000')
+        // Balance is read-only, not editable
         ->set('interestRate', '7.5')
         ->set('minimumPayment', '450')
         ->call('update')
@@ -58,7 +58,7 @@ test('can update debt with valid data', function () {
 
     expect($debt->name)->toBe('New Name');
     expect($debt->type)->toBe('kredittkort');
-    expect($debt->balance)->toBe(15000.0);
+    expect($debt->balance)->toBe(10000.0); // Balance should not change
     expect($debt->interest_rate)->toBe(7.5);
     expect($debt->minimum_payment)->toBe(450.0);
 });
@@ -75,7 +75,7 @@ test('requires minimum payment when updating debt', function () {
     Livewire::test(EditDebt::class, ['debt' => $debt])
         ->set('name', 'Updated Debt')
         ->set('type', 'kredittkort')
-        ->set('balance', '12000')
+        // Balance is read-only, not editable
         ->set('interestRate', '6.0')
         ->set('minimumPayment', '')
         ->call('update')
@@ -87,25 +87,13 @@ test('validates required fields', function () {
 
     Livewire::test(EditDebt::class, ['debt' => $debt])
         ->set('name', '')
-        ->set('balance', '')
+        // Balance is read-only, not validated
         ->set('interestRate', '')
         ->call('update')
-        ->assertHasErrors(['name', 'balance', 'interestRate']);
+        ->assertHasErrors(['name', 'interestRate']);
 });
 
-test('validates balance is numeric and positive', function () {
-    $debt = Debt::factory()->create();
-
-    Livewire::test(EditDebt::class, ['debt' => $debt])
-        ->set('balance', '-100')
-        ->call('update')
-        ->assertHasErrors(['balance']);
-
-    Livewire::test(EditDebt::class, ['debt' => $debt])
-        ->set('balance', 'not-a-number')
-        ->call('update')
-        ->assertHasErrors(['balance']);
-});
+// Note: Balance validation test removed - balance is now read-only and calculated from payments
 
 test('validates interest rate is within valid range', function () {
     $debt = Debt::factory()->create();
@@ -167,7 +155,7 @@ test('validation blocks save when minimum payment is below calculated minimum fo
     // the required minimum is approximately 212 kr
     Livewire::test(EditDebt::class, ['debt' => $debt])
         ->set('type', 'forbrukslån')
-        ->set('balance', '10000')
+        // Balance is read-only, uses debt->balance for validation
         ->set('interestRate', '10.0')
         ->set('minimumPayment', '2') // Way below required minimum
         ->call('update')
@@ -189,7 +177,7 @@ test('validation uses current balance for forbrukslån (not original balance)', 
     // Should FAIL: Using minimum that doesn't cover monthly interest
     Livewire::test(EditDebt::class, ['debt' => $debt])
         ->set('type', 'forbrukslån')
-        ->set('balance', '10000')
+        // Balance is read-only, uses debt->balance (10000) for validation
         ->set('interestRate', '10.0')
         ->set('minimumPayment', '83') // Less than monthly interest
         ->call('update')
@@ -198,9 +186,48 @@ test('validation uses current balance for forbrukslån (not original balance)', 
     // Should SUCCEED: Using minimum that covers monthly interest
     Livewire::test(EditDebt::class, ['debt' => $debt])
         ->set('type', 'forbrukslån')
-        ->set('balance', '10000')
+        // Balance is read-only, uses debt->balance (10000) for validation
         ->set('interestRate', '10.0')
         ->set('minimumPayment', '84') // More than monthly interest (83.33)
         ->call('update')
         ->assertHasNoErrors();
+});
+
+test('balance field is read-only and cannot be changed', function () {
+    $debt = Debt::factory()->create([
+        'name' => 'Test Debt',
+        'type' => 'kredittkort',
+        'balance' => 10000,
+        'interest_rate' => 5.0,
+        'minimum_payment' => 300,
+    ]);
+
+    // Try to update the balance field - it should not be included in the update
+    Livewire::test(EditDebt::class, ['debt' => $debt])
+        ->set('name', 'Updated Name')
+        ->set('balance', '50000') // Try to change balance
+        ->set('interestRate', '6.0')
+        ->set('minimumPayment', '400')
+        ->call('update')
+        ->assertRedirect(route('home'));
+
+    $debt->refresh();
+
+    // Balance should remain unchanged
+    expect($debt->balance)->toBe(10000.0);
+    // Other fields should update normally
+    expect($debt->name)->toBe('Updated Name');
+    expect($debt->interest_rate)->toBe(6.0);
+    expect($debt->minimum_payment)->toBe(400.0);
+});
+
+test('balance field displays current debt balance', function () {
+    $debt = Debt::factory()->create([
+        'name' => 'Test Debt',
+        'balance' => 25000.50,
+    ]);
+
+    Livewire::test(EditDebt::class, ['debt' => $debt])
+        ->assertSet('balance', '25000.5')
+        ->assertSee('25000.5'); // Should display the balance value
 });

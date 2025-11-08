@@ -20,6 +20,7 @@ class Payment extends Model
         'month_number',
         'payment_month',
         'notes',
+        'is_reconciliation_adjustment',
     ];
 
     protected function casts(): array
@@ -31,6 +32,7 @@ class Payment extends Model
             'principal_paid' => 'float',
             'payment_date' => 'date',
             'month_number' => 'integer',
+            'is_reconciliation_adjustment' => 'boolean',
         ];
     }
 

@@ -105,11 +105,24 @@ class DebtCalculationService
     protected function getActualPaymentsByMonth(Collection $debts): array
     {
         $payments = [];
+        $cumulativePrincipal = [];
 
         foreach ($debts as $debt) {
-            foreach ($debt->payments as $payment) {
+            $debtName = $debt->name;
+            $cumulativePrincipal[$debtName] = 0;
+
+            // Sort payments by month_number to ensure correct cumulative calculation
+            // Exclude reconciliation adjustments (month_number = NULL) as they don't represent monthly payments
+            $sortedPayments = $debt->payments
+                ->filter(fn ($payment) => $payment->month_number !== null)
+                ->sortBy('month_number');
+
+            foreach ($sortedPayments as $payment) {
                 $monthNumber = $payment->month_number;
-                $debtName = $debt->name;
+                $principalPaid = $payment->principal_paid ?? $payment->actual_amount;
+
+                // Track cumulative principal paid up to and including this month
+                $cumulativePrincipal[$debtName] += $principalPaid;
 
                 if (! isset($payments[$monthNumber])) {
                     $payments[$monthNumber] = [];
@@ -117,7 +130,10 @@ class DebtCalculationService
 
                 $payments[$monthNumber][$debtName] = [
                     'actual_amount' => $payment->actual_amount,
-                    'principal_paid' => $payment->principal_paid ?? $payment->actual_amount,
+                    'principal_paid' => $principalPaid,
+                    'cumulative_principal_paid' => $cumulativePrincipal[$debtName],
+                    'is_reconciliation' => $payment->is_reconciliation_adjustment ?? false,
+                    'notes' => $payment->notes,
                 ];
             }
         }
@@ -145,11 +161,21 @@ class DebtCalculationService
         // Get all actual payments organized by month and debt
         $actualPayments = $this->getActualPaymentsByMonth($debts);
 
-        $remainingDebts = $orderedDebts->map(function ($debt) {
+        $remainingDebts = $orderedDebts->map(function ($debt) use ($actualPayments) {
+            // If there are actual payments for this debt, start from original_balance to replay them
+            // Otherwise, start from current balance for accurate projections
+            $hasActualPaymentsForDebt = collect($actualPayments)->contains(function ($monthPayments) use ($debt) {
+                return isset($monthPayments[$debt->name]);
+            });
+
+            $startingBalance = $hasActualPaymentsForDebt
+                ? ($debt->original_balance ?? $debt->balance)
+                : $debt->balance;
+
             return [
                 'id' => $debt->id,
                 'name' => $debt->name,
-                'balance' => $debt->original_balance ?? $debt->balance,
+                'balance' => $startingBalance,
                 'original_balance' => $debt->original_balance ?? $debt->balance,
                 'interest_rate' => $debt->interest_rate,
                 'minimum_payment' => $debt->minimum_payment ?? $this->calculateMonthlyInterest($debt->balance, $debt->interest_rate),
@@ -204,13 +230,19 @@ class DebtCalculationService
 
                 $interest = $this->calculateMonthlyInterest($debt['balance'], $debt['interest_rate']);
 
+                $isReconciliation = false;
+                $paymentNotes = null;
+
                 if ($hasActualPayments && isset($actualPayments[$month][$debtName])) {
                     $paymentData = $actualPayments[$month][$debtName];
                     $actualAmount = $paymentData['actual_amount'];
                     $principalPaid = $paymentData['principal_paid'];
+                    $cumulativePrincipalPaid = $paymentData['cumulative_principal_paid'];
                     $totalPayment = $actualAmount;
                     $minimumPayment = $debt['minimum_payment'];
                     $extraForThisDebt = max(0, $actualAmount - $minimumPayment);
+                    $isReconciliation = $paymentData['is_reconciliation'] ?? false;
+                    $paymentNotes = $paymentData['notes'] ?? null;
                 } else {
                     $minimumPayment = $debt['minimum_payment'];
                     $extraForThisDebt = $isPriority ? $availableExtraPayment : 0;
@@ -227,12 +259,12 @@ class DebtCalculationService
                 if ($totalPayment >= $maxPayment - 0.01) {
                     $newBalance = 0;
                 } else {
-                    // When using actual payments, use principal_paid to calculate remaining
+                    // When using actual payments, use cumulative principal_paid to calculate remaining
                     // because database balance = original_balance - SUM(principal_paid)
                     if ($hasActualPayments && isset($actualPayments[$month][$debtName])) {
-                        // Calculate remaining balance based on principal paid, not total payment
+                        // Calculate remaining balance based on cumulative principal paid
                         // This matches how updateDebtBalances() calculates: original_balance - SUM(principal_paid)
-                        $newBalance = round($debt['original_balance'] - $principalPaid, 2);
+                        $newBalance = round($debt['original_balance'] - $cumulativePrincipalPaid, 2);
                     } else {
                         $newBalance = round($debt['balance'] + $interest - $totalPayment, 2);
                     }
@@ -250,6 +282,8 @@ class DebtCalculationService
                     'remaining' => round($newBalance, 2),
                     'isPriority' => $isPriority,
                     'due_day' => $debt['due_day'],
+                    'is_reconciliation' => $isReconciliation,
+                    'notes' => $paymentNotes,
                 ];
 
                 $remainingDebts[$index]['balance'] = $newBalance;
