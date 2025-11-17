@@ -236,12 +236,16 @@ class PayoffCalendar extends Component
                             ];
                         }
 
+                        // Check if the payment is overdue (planned date is in the past)
+                        $isOverdue = $plannedDate->isPast() && ! $plannedDate->isToday();
+
                         $events[$plannedDateKey]['amount'] += $payment['amount'];
                         $events[$plannedDateKey]['debts'][] = [
                             'name' => $payment['name'],
                             'amount' => $payment['amount'],
                             'isPriority' => $payment['isPriority'],
                             'isPaid' => false,
+                            'isOverdue' => $isOverdue,
                         ];
                     }
                 }
