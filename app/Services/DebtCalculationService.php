@@ -194,7 +194,8 @@ class DebtCalculationService
             $month++;
             // Use the due_day from the priority debt (first in list), defaulting to 1
             $dueDay = $remainingDebts[0]['due_day'] ?? 1;
-            $monthDate = now()->addMonths($month - 1)->day(min($dueDay, now()->addMonths($month - 1)->daysInMonth));
+            $baseMonth = now()->addMonths($month - 1);
+            $monthDate = $baseMonth->copy()->day(min($dueDay, $baseMonth->daysInMonth));
 
             $paidOffDebts = [];
             foreach ($remainingDebts as $index => $debt) {
