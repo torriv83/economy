@@ -422,7 +422,7 @@ class PaymentPlan extends Component
         $debt = Debt::find($debtId);
         if ($debt) {
             $this->reconciliationBalances[$debtId] = (string) $debt->balance;
-            $this->reconciliationDates[$debtId] = now()->format('Y-m-d');
+            $this->reconciliationDates[$debtId] = now()->format('d.m.Y');
             $this->reconciliationNotes[$debtId] = null;
         }
     }
@@ -436,7 +436,7 @@ class PaymentPlan extends Component
         $debt = Debt::find($debtId);
         if ($debt) {
             $this->reconciliationBalances[$debtId] = (string) $debt->balance;
-            $this->reconciliationDates[$debtId] = now()->format('Y-m-d');
+            $this->reconciliationDates[$debtId] = now()->format('d.m.Y');
         }
     }
 
@@ -463,14 +463,14 @@ class PaymentPlan extends Component
 
         $this->validate([
             "reconciliationBalances.{$debtId}" => ['required', 'numeric', 'min:0'],
-            "reconciliationDates.{$debtId}" => ['required', 'date'],
+            "reconciliationDates.{$debtId}" => ['required', 'date_format:d.m.Y'],
             "reconciliationNotes.{$debtId}" => ['nullable', 'string', 'max:500'],
         ], [
             "reconciliationBalances.{$debtId}.required" => 'Faktisk saldo er påkrevd.',
             "reconciliationBalances.{$debtId}.numeric" => 'Faktisk saldo må være et tall.',
             "reconciliationBalances.{$debtId}.min" => 'Faktisk saldo kan ikke være negativ.',
             "reconciliationDates.{$debtId}.required" => 'Avstemmingsdato er påkrevd.',
-            "reconciliationDates.{$debtId}.date" => 'Avstemmingsdato må være en gyldig dato.',
+            "reconciliationDates.{$debtId}.date_format" => 'Avstemmingsdato må være i formatet DD.MM.ÅÅÅÅ.',
             "reconciliationNotes.{$debtId}.max" => 'Notater kan ikke være lengre enn 500 tegn.',
         ]);
 
@@ -483,16 +483,25 @@ class PaymentPlan extends Component
             return;
         }
 
+        // Convert Norwegian date format (DD.MM.YYYY) to database format (YYYY-MM-DD)
+        $dateObject = \DateTime::createFromFormat('d.m.Y', $this->reconciliationDates[$debtId]);
+        $databaseDate = $dateObject ? $dateObject->format('Y-m-d') : now()->format('Y-m-d');
+
         $this->paymentService->reconcileDebt(
             $debt,
             (float) $this->reconciliationBalances[$debtId],
-            $this->reconciliationDates[$debtId],
+            $databaseDate,
             $this->reconciliationNotes[$debtId] ?? null
         );
 
         session()->flash('message', 'Gjeld avstemt.');
 
         $this->closeReconciliationModal($debtId);
+
+        // Force Livewire to re-render the component with fresh database data
+        // This ensures all computed properties (detailedSchedule, debtPayoffSchedule, etc.)
+        // recalculate using the updated debt balance
+        $this->dispatch('$refresh');
     }
 
     public function render()

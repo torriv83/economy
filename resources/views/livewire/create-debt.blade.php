@@ -126,11 +126,12 @@
                             }
 
                             if (this.type === 'kredittkort') {
-                                this.calculatedMinimum = Math.max(balance * 0.03, 300);
+                                // Round up to match backend validation
+                                this.calculatedMinimum = Math.ceil(Math.max(balance * 0.03, 300));
                             } else {
                                 // For forbrukslån: show monthly interest + small buffer
                                 const monthlyInterest = (balance * (interestRate / 100)) / 12;
-                                this.calculatedMinimum = monthlyInterest * 1.1; // 10% buffer above interest
+                                this.calculatedMinimum = Math.ceil(monthlyInterest * 1.1); // 10% buffer above interest
                             }
                         }
                     }" x-init="updateCalculatedMinimum(); $watch('type', () => updateCalculatedMinimum()); $watch('balance', () => updateCalculatedMinimum()); $watch('interestRate', () => updateCalculatedMinimum())">

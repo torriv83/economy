@@ -41,7 +41,7 @@ describe('reconcile debt modal', function () {
 
         Livewire::test(PaymentPlan::class)
             ->call('openReconciliationModal', $debt->id)
-            ->assertSet('reconciliationDates.'.$debt->id, now()->format('Y-m-d'));
+            ->assertSet('reconciliationDates.'.$debt->id, now()->format('d.m.Y'));
     });
 });
 
@@ -97,7 +97,7 @@ describe('reconciliation validation', function () {
 
         Livewire::test(PaymentPlan::class)
             ->set('reconciliationBalances.'.$debt->id, '')
-            ->set('reconciliationDates.'.$debt->id, now()->format('Y-m-d'))
+            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
             ->call('reconcileDebt', $debt->id)
             ->assertHasErrors(['reconciliationBalances.'.$debt->id => 'required']);
     });
@@ -107,7 +107,7 @@ describe('reconciliation validation', function () {
 
         Livewire::test(PaymentPlan::class)
             ->set('reconciliationBalances.'.$debt->id, 'invalid')
-            ->set('reconciliationDates.'.$debt->id, now()->format('Y-m-d'))
+            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
             ->call('reconcileDebt', $debt->id)
             ->assertHasErrors(['reconciliationBalances.'.$debt->id => 'numeric']);
     });
@@ -117,7 +117,7 @@ describe('reconciliation validation', function () {
 
         Livewire::test(PaymentPlan::class)
             ->set('reconciliationBalances.'.$debt->id, '-100')
-            ->set('reconciliationDates.'.$debt->id, now()->format('Y-m-d'))
+            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
             ->call('reconcileDebt', $debt->id)
             ->assertHasErrors(['reconciliationBalances.'.$debt->id => 'min']);
     });
@@ -139,7 +139,7 @@ describe('reconciliation validation', function () {
             ->set('reconciliationBalances.'.$debt->id, '10000')
             ->set('reconciliationDates.'.$debt->id, 'invalid-date')
             ->call('reconcileDebt', $debt->id)
-            ->assertHasErrors(['reconciliationDates.'.$debt->id => 'date']);
+            ->assertHasErrors(['reconciliationDates.'.$debt->id => 'date_format']);
     });
 
     it('allows notes to be optional', function () {
@@ -150,7 +150,7 @@ describe('reconciliation validation', function () {
 
         Livewire::test(PaymentPlan::class)
             ->set('reconciliationBalances.'.$debt->id, '10500')
-            ->set('reconciliationDates.'.$debt->id, now()->format('Y-m-d'))
+            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
             ->set('reconciliationNotes.'.$debt->id, '')
             ->call('reconcileDebt', $debt->id)
             ->assertHasNoErrors(['reconciliationNotes.'.$debt->id]);
@@ -168,7 +168,7 @@ describe('creating reconciliation adjustments', function () {
 
         Livewire::test(PaymentPlan::class)
             ->set('reconciliationBalances.'.$debt->id, '10500')
-            ->set('reconciliationDates.'.$debt->id, '2025-01-15')
+            ->set('reconciliationDates.'.$debt->id, '15.01.2025')
             ->set('reconciliationNotes.'.$debt->id, 'Late fee not recorded')
             ->call('reconcileDebt', $debt->id);
 
@@ -193,7 +193,7 @@ describe('creating reconciliation adjustments', function () {
 
         Livewire::test(PaymentPlan::class)
             ->set('reconciliationBalances.'.$debt->id, '9500')
-            ->set('reconciliationDates.'.$debt->id, '2025-01-15')
+            ->set('reconciliationDates.'.$debt->id, '15.01.2025')
             ->set('reconciliationNotes.'.$debt->id, 'Extra payment made')
             ->call('reconcileDebt', $debt->id);
 
@@ -214,7 +214,7 @@ describe('creating reconciliation adjustments', function () {
 
         Livewire::test(PaymentPlan::class)
             ->set('reconciliationBalances.'.$debt->id, '10000.00')
-            ->set('reconciliationDates.'.$debt->id, now()->format('Y-m-d'))
+            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
             ->call('reconcileDebt', $debt->id);
 
         expect(Payment::count())->toBe(0);
@@ -229,7 +229,7 @@ describe('creating reconciliation adjustments', function () {
 
         Livewire::test(PaymentPlan::class)
             ->set('reconciliationBalances.'.$debt->id, '9500')
-            ->set('reconciliationDates.'.$debt->id, now()->format('Y-m-d'))
+            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
             ->call('reconcileDebt', $debt->id);
 
         // Payment should have been created with principal_paid
@@ -251,7 +251,7 @@ describe('creating reconciliation adjustments', function () {
         Livewire::test(PaymentPlan::class)
             ->call('openReconciliationModal', $debt->id)
             ->set('reconciliationBalances.'.$debt->id, '9500')
-            ->set('reconciliationDates.'.$debt->id, now()->format('Y-m-d'))
+            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
             ->call('reconcileDebt', $debt->id)
             ->assertCount('reconciliationModals', 0);
     });
@@ -268,7 +268,7 @@ describe('interest and principal calculations', function () {
         // Add 500 kr adjustment (like a late fee)
         Livewire::test(PaymentPlan::class)
             ->set('reconciliationBalances.'.$debt->id, '10500')
-            ->set('reconciliationDates.'.$debt->id, now()->format('Y-m-d'))
+            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
             ->call('reconcileDebt', $debt->id);
 
         $payment = Payment::first();
@@ -293,7 +293,7 @@ describe('interest and principal calculations', function () {
         // 500 kr overpayment
         Livewire::test(PaymentPlan::class)
             ->set('reconciliationBalances.'.$debt->id, '9500')
-            ->set('reconciliationDates.'.$debt->id, now()->format('Y-m-d'))
+            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
             ->call('reconcileDebt', $debt->id);
 
         $payment = Payment::first();
@@ -313,7 +313,7 @@ describe('edge cases', function () {
 
         Livewire::test(PaymentPlan::class)
             ->set('reconciliationBalances.'.$debt->id, '10000.005')
-            ->set('reconciliationDates.'.$debt->id, now()->format('Y-m-d'))
+            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
             ->call('reconcileDebt', $debt->id);
 
         // Difference rounds to 0.00, should not create payment
@@ -328,7 +328,7 @@ describe('edge cases', function () {
 
         Livewire::test(PaymentPlan::class)
             ->set('reconciliationBalances.'.$debt->id, '15000')
-            ->set('reconciliationDates.'.$debt->id, now()->format('Y-m-d'))
+            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
             ->call('reconcileDebt', $debt->id);
 
         $payment = Payment::first();
@@ -344,7 +344,7 @@ describe('edge cases', function () {
 
         Livewire::test(PaymentPlan::class)
             ->set('reconciliationBalances.'.$debt->id, '10500')
-            ->set('reconciliationDates.'.$debt->id, now()->format('Y-m-d'))
+            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
             ->call('reconcileDebt', $debt->id);
 
         $payment = Payment::first();
@@ -374,5 +374,131 @@ describe('edge cases', function () {
 
         expect(Payment::where('is_reconciliation_adjustment', true)->count())->toBe(2);
         expect($secondPayment->month_number)->toBeNull(); // Both can be NULL without collision
+    });
+});
+
+describe('payment schedule updates after reconciliation', function () {
+    it('updates detailed schedule with new balance after reconciliation', function () {
+        $debt = Debt::factory()->create([
+            'name' => 'Test Card',
+            'balance' => 10000,
+            'original_balance' => 10000,
+            'interest_rate' => 12,
+            'minimum_payment' => 500,
+        ]);
+
+        $component = Livewire::test(PaymentPlan::class)
+            ->set('extraPayment', 0);
+
+        // Get initial schedule - should start from 10000 balance
+        $initialSchedule = $component->get('detailedSchedule');
+        $firstMonth = collect($initialSchedule)->first();
+        $debtPayment = collect($firstMonth['payments'])->firstWhere('name', 'Test Card');
+
+        // Verify initial balance is correct
+        expect($debtPayment['remaining'])->toBeLessThan(10000); // After first payment
+
+        // Reconcile to lower balance (extra payment made)
+        $component
+            ->set('reconciliationBalances.'.$debt->id, '9000')
+            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
+            ->call('reconcileDebt', $debt->id);
+
+        // Get updated schedule - should now start from 9000 balance
+        $updatedSchedule = $component->get('detailedSchedule');
+        $firstMonthUpdated = collect($updatedSchedule)->first();
+        $debtPaymentUpdated = collect($firstMonthUpdated['payments'])->firstWhere('name', 'Test Card');
+
+        // The remaining balance in the schedule should reflect the new starting balance
+        // Since we reconciled to 9000, the remaining after first payment should be less than initial
+        expect($debtPaymentUpdated['remaining'])->toBeLessThan($debtPayment['remaining']);
+
+        // Verify the debt balance was actually updated in DB
+        $debt->refresh();
+        expect($debt->balance)->toBe(9000.0);
+    });
+
+    it('updates debt payoff schedule after reconciliation', function () {
+        $debt = Debt::factory()->create([
+            'name' => 'Test Card',
+            'balance' => 10000,
+            'original_balance' => 10000,
+            'interest_rate' => 12,
+            'minimum_payment' => 500,
+        ]);
+
+        $component = Livewire::test(PaymentPlan::class)
+            ->set('extraPayment', 0);
+
+        // Get initial payoff schedule
+        $initialPayoff = $component->get('debtPayoffSchedule');
+        $initialMonths = collect($initialPayoff)->firstWhere('name', 'Test Card')['payoff_month'];
+
+        // Reconcile to lower balance
+        $component
+            ->set('reconciliationBalances.'.$debt->id, '5000')
+            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
+            ->call('reconcileDebt', $debt->id);
+
+        // Get updated payoff schedule
+        $updatedPayoff = $component->get('debtPayoffSchedule');
+        $updatedMonths = collect($updatedPayoff)->firstWhere('name', 'Test Card')['payoff_month'];
+
+        // Should pay off faster with lower balance
+        expect($updatedMonths)->toBeLessThan($initialMonths);
+
+        // Verify balance in payoff schedule reflects new balance
+        $updatedBalance = collect($updatedPayoff)->firstWhere('name', 'Test Card')['balance'];
+        expect($updatedBalance)->toBe(5000.0);
+    });
+
+    it('clears all computed property caches after reconciliation', function () {
+        $debt = Debt::factory()->create([
+            'name' => 'Test Card',
+            'balance' => 10000,
+            'original_balance' => 10000,
+            'interest_rate' => 12,
+            'minimum_payment' => 500,
+        ]);
+
+        $component = Livewire::test(PaymentPlan::class)
+            ->set('extraPayment', 0);
+
+        // Access all computed properties to cache them
+        $initialSchedule = $component->get('paymentSchedule');
+        $initialDetailed = $component->get('detailedSchedule');
+        $initialPayoff = $component->get('debtPayoffSchedule');
+        $initialTotal = $component->get('totalMonths');
+        $initialInterest = $component->get('totalInterest');
+
+        // Reconcile to significantly lower balance
+        $component
+            ->set('reconciliationBalances.'.$debt->id, '3000')
+            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
+            ->call('reconcileDebt', $debt->id);
+
+        // Access all computed properties again - they should reflect new values
+        $updatedSchedule = $component->get('paymentSchedule');
+        $updatedDetailed = $component->get('detailedSchedule');
+        $updatedPayoff = $component->get('debtPayoffSchedule');
+        $updatedTotal = $component->get('totalMonths');
+        $updatedInterest = $component->get('totalInterest');
+
+        // Verify ALL computed properties reflect the new balance
+        expect($updatedTotal)->toBeLessThan($initialTotal);
+        expect($updatedInterest)->toBeLessThan($initialInterest);
+
+        // Verify payoff schedule has updated balance
+        $payoffBalance = collect($updatedPayoff)->firstWhere('name', 'Test Card')['balance'];
+        expect($payoffBalance)->toBe(3000.0);
+
+        // Verify detailed schedule has lower remaining balances
+        $firstMonthInitial = collect($initialDetailed)->first();
+        $firstMonthUpdated = collect($updatedDetailed)->first();
+
+        $initialRemaining = collect($firstMonthInitial['payments'])->firstWhere('name', 'Test Card')['remaining'];
+        $updatedRemaining = collect($firstMonthUpdated['payments'])->firstWhere('name', 'Test Card')['remaining'];
+
+        expect($updatedRemaining)->toBeLessThan($initialRemaining);
     });
 });

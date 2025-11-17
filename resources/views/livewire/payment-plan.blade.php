@@ -900,10 +900,11 @@
                                                     <span class="text-red-500">*</span>
                                                 </label>
                                                 <input
-                                                    type="date"
+                                                    type="text"
                                                     id="reconciliationDate-{{ $debt->id }}"
                                                     wire:model="reconciliationDates.{{ $debt->id }}"
-                                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent transition-colors duration-200 @error('reconciliationDates.' . $debt->id) border-red-500 dark:border-red-400 @enderror"
+                                                    placeholder="DD.MM.ÅÅÅÅ"
+                                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent transition-colors duration-200 @error('reconciliationDates.' . $debt->id) border-red-500 dark:border-red-400 @enderror"
                                                 >
                                                 @error('reconciliationDates.' . $debt->id)
                                                     <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>

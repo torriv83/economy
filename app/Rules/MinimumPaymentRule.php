@@ -27,7 +27,8 @@ class MinimumPaymentRule implements ValidationRule
         $requiredMinimum = $this->calculateRequiredMinimum();
 
         if ($minimumPayment < $requiredMinimum) {
-            $formattedMinimum = number_format($requiredMinimum, 0, ',', ' ');
+            // Round up to ensure users see the actual minimum they need to enter
+            $formattedMinimum = number_format(ceil($requiredMinimum), 0, ',', ' ');
 
             if ($this->type === 'kredittkort') {
                 $fail(__('app.minimum_payment_validation_kredittkort', ['minimum' => $formattedMinimum]));

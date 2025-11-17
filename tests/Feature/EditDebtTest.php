@@ -231,3 +231,32 @@ test('balance field displays current debt balance', function () {
         ->assertSet('balance', '25000.5')
         ->assertSee('25000.5'); // Should display the balance value
 });
+
+test('minimum payment validation displays rounded up value that will actually pass', function () {
+    // Test case: Balance of 23175 kr requires 695.25 kr minimum (3% of balance)
+    // The error message should show 696 kr (rounded up), not 695 kr
+    $debt = Debt::factory()->create([
+        'name' => 'Test Kredittkort',
+        'type' => 'kredittkort',
+        'balance' => 23175, // 3% = 695.25
+        'interest_rate' => 15.0,
+        'minimum_payment' => 700,
+    ]);
+
+    // Entering 695 should fail with error showing 696
+    Livewire::test(EditDebt::class, ['debt' => $debt])
+        ->set('type', 'kredittkort')
+        ->set('interestRate', '15.0')
+        ->set('minimumPayment', '695')
+        ->call('update')
+        ->assertHasErrors(['minimumPayment'])
+        ->assertSee('696'); // Should display rounded up value
+
+    // Entering 696 should pass
+    Livewire::test(EditDebt::class, ['debt' => $debt])
+        ->set('type', 'kredittkort')
+        ->set('interestRate', '15.0')
+        ->set('minimumPayment', '696')
+        ->call('update')
+        ->assertHasNoErrors();
+});

@@ -109,7 +109,15 @@ class DebtCalculationService
 
         foreach ($debts as $debt) {
             $debtName = $debt->name;
-            $cumulativePrincipal[$debtName] = 0;
+
+            // Initialize cumulative principal with any reconciliation adjustments
+            // Reconciliation adjustments establish a new baseline and their principal
+            // must be included when calculating remaining balances
+            $reconciliationPrincipal = $debt->payments
+                ->where('is_reconciliation_adjustment', true)
+                ->sum('principal_paid');
+
+            $cumulativePrincipal[$debtName] = $reconciliationPrincipal;
 
             // Sort payments by month_number to ensure correct cumulative calculation
             // Exclude reconciliation adjustments (month_number = NULL) as they don't represent monthly payments
@@ -162,15 +170,27 @@ class DebtCalculationService
         $actualPayments = $this->getActualPaymentsByMonth($debts);
 
         $remainingDebts = $orderedDebts->map(function ($debt) use ($actualPayments) {
-            // If there are actual payments for this debt, start from original_balance to replay them
-            // Otherwise, start from current balance for accurate projections
-            $hasActualPaymentsForDebt = collect($actualPayments)->contains(function ($monthPayments) use ($debt) {
-                return isset($monthPayments[$debt->name]);
-            });
+            // Check if this debt has reconciliation adjustments
+            $hasReconciliation = $debt->payments()
+                ->where('is_reconciliation_adjustment', true)
+                ->exists();
 
-            $startingBalance = $hasActualPaymentsForDebt
-                ? ($debt->original_balance ?? $debt->balance)
-                : $debt->balance;
+            // If reconciled: Use current balance (reconciliation sets the truth from this point forward)
+            // If not reconciled but has payments: Replay from original_balance to simulate payment history
+            // If no payments: Use current balance for accurate projections
+            if ($hasReconciliation) {
+                // Reconciliation means the current balance IS the truth - don't replay from original
+                $startingBalance = $debt->balance;
+            } else {
+                // Check if there are actual payments for this debt
+                $hasActualPaymentsForDebt = collect($actualPayments)->contains(function ($monthPayments) use ($debt) {
+                    return isset($monthPayments[$debt->name]);
+                });
+
+                $startingBalance = $hasActualPaymentsForDebt
+                    ? ($debt->original_balance ?? $debt->balance)
+                    : $debt->balance;
+            }
 
             return [
                 'id' => $debt->id,
@@ -263,6 +283,7 @@ class DebtCalculationService
                 } else {
                     // When using actual payments, use cumulative principal_paid to calculate remaining
                     // because database balance = original_balance - SUM(principal_paid)
+                    // Note: cumulative_principal_paid includes reconciliation adjustments
                     if ($hasActualPayments && isset($actualPayments[$month][$debtName])) {
                         // Calculate remaining balance based on cumulative principal paid
                         // This matches how updateDebtBalances() calculates: original_balance - SUM(principal_paid)
