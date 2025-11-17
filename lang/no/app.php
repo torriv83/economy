@@ -188,6 +188,7 @@ return [
     'today' => 'I dag',
     'legend' => 'Forklaring',
     'payment_due' => 'Betaling forfaller',
+    'payment_paid' => 'Betaling utført',
     'debt_paid_off' => 'Gjeld nedbetalt',
     'debt_free_day' => 'Gjeldsfri dag',
     'debt_free_short' => 'Gjeldsfri',

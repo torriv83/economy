@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Debt;
+use App\Models\Payment;
 use App\Services\DebtCalculationService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -142,17 +143,43 @@ class PayoffCalendar extends Component
         return $weeks;
     }
 
+    public function getActualPaymentsProperty(): Collection
+    {
+        $monthStart = Carbon::create($this->currentYear, $this->currentMonth, 1)->startOfMonth();
+        $monthEnd = $monthStart->copy()->endOfMonth();
+
+        return Payment::whereBetween('payment_date', [$monthStart, $monthEnd])
+            ->with('debt')
+            ->where('is_reconciliation_adjustment', false)
+            ->get();
+    }
+
     public function getPaymentEventsProperty(): array
     {
         $events = [];
         $schedule = $this->paymentSchedule;
+        $actualPayments = $this->actualPayments;
 
         if (empty($schedule['schedule'])) {
             return [];
         }
 
+        // Group actual payments by debt_id and payment_month for quick lookup
+        $actualPaymentsByDebtAndMonth = $actualPayments->groupBy(function ($payment) {
+            return $payment->debt_id.'_'.$payment->payment_month;
+        })->map(fn ($group) => $group->first());
+
+        // Only process the current month's schedule
+        $currentMonthKey = Carbon::create($this->currentYear, $this->currentMonth, 1)->format('Y-m');
+
         foreach ($schedule['schedule'] as $monthData) {
             $baseDate = Carbon::parse($monthData['date']);
+            $scheduleMonthKey = $baseDate->format('Y-m');
+
+            // Only show events for the currently selected month
+            if ($scheduleMonthKey !== $currentMonthKey) {
+                continue;
+            }
 
             // Create payment events for each individual debt based on its due_day
             if (isset($monthData['payments'])) {
@@ -161,29 +188,62 @@ class PayoffCalendar extends Component
                         continue;
                     }
 
-                    // Calculate the actual payment date using this debt's due_day
+                    // Calculate the planned payment date using this debt's due_day
                     $dueDay = $payment['due_day'] ?? 1;
-                    $paymentDate = $baseDate->copy()
+                    $plannedDate = $baseDate->copy()
                         ->year($baseDate->year)
                         ->month($baseDate->month)
                         ->day(min($dueDay, $baseDate->daysInMonth));
 
-                    $dateKey = $paymentDate->format('Y-m-d');
+                    $plannedDateKey = $plannedDate->format('Y-m-d');
 
-                    if (! isset($events[$dateKey])) {
-                        $events[$dateKey] = [
-                            'type' => 'payment',
-                            'amount' => 0,
-                            'debts' => [],
-                        ];
+                    // Find the debt to get its ID
+                    $debt = $this->getDebts()->firstWhere('name', $payment['name']);
+                    if (! $debt) {
+                        continue;
                     }
 
-                    $events[$dateKey]['amount'] += $payment['amount'];
-                    $events[$dateKey]['debts'][] = [
-                        'name' => $payment['name'],
-                        'amount' => $payment['amount'],
-                        'isPriority' => $payment['isPriority'],
-                    ];
+                    // Check if there's an actual payment for this debt in this month
+                    $lookupKey = $debt->id.'_'.$currentMonthKey;
+                    $actualPayment = $actualPaymentsByDebtAndMonth->get($lookupKey);
+
+                    if ($actualPayment) {
+                        // There's an actual payment - use the actual payment date
+                        $actualDateKey = $actualPayment->payment_date->format('Y-m-d');
+
+                        if (! isset($events[$actualDateKey])) {
+                            $events[$actualDateKey] = [
+                                'type' => 'payment',
+                                'amount' => 0,
+                                'debts' => [],
+                            ];
+                        }
+
+                        $events[$actualDateKey]['amount'] += $actualPayment->actual_amount;
+                        $events[$actualDateKey]['debts'][] = [
+                            'name' => $payment['name'],
+                            'amount' => $actualPayment->actual_amount,
+                            'isPriority' => $payment['isPriority'],
+                            'isPaid' => true,
+                        ];
+                    } else {
+                        // No actual payment yet - show planned payment on due date
+                        if (! isset($events[$plannedDateKey])) {
+                            $events[$plannedDateKey] = [
+                                'type' => 'payment',
+                                'amount' => 0,
+                                'debts' => [],
+                            ];
+                        }
+
+                        $events[$plannedDateKey]['amount'] += $payment['amount'];
+                        $events[$plannedDateKey]['debts'][] = [
+                            'name' => $payment['name'],
+                            'amount' => $payment['amount'],
+                            'isPriority' => $payment['isPriority'],
+                            'isPaid' => false,
+                        ];
+                    }
                 }
             }
         }

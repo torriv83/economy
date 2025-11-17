@@ -260,9 +260,10 @@
                             $hasPayment = isset($this->paymentEvents[$dateKey]);
                             $hasMilestone = isset($this->milestones[$dateKey]);
                             $isDebtFree = $dateKey === $this->debtFreeDate;
+                            $hasAnyPaidPayment = $hasPayment && collect($this->paymentEvents[$dateKey]['debts'])->contains('isPaid', true);
                         @endphp
                         <div
-                            class="aspect-square p-2 rounded-lg border transition-all {{ $day['isCurrentMonth'] ? 'border-gray-200 dark:border-gray-700' : 'border-transparent bg-gray-50 dark:bg-gray-900/50' }} {{ $day['isToday'] ? 'ring-2 ring-blue-500 dark:ring-blue-400' : '' }} {{ $isDebtFree ? 'bg-gradient-to-br from-green-400 to-green-500 dark:from-green-600 dark:to-green-700 border-green-500 dark:border-green-400' : ($hasMilestone ? 'bg-purple-50 dark:bg-purple-900/20 border-purple-300 dark:border-purple-700' : ($hasPayment ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700' : '')) }}"
+                            class="aspect-square p-2 rounded-lg border transition-all {{ $day['isCurrentMonth'] ? 'border-gray-200 dark:border-gray-700' : 'border-transparent bg-gray-50 dark:bg-gray-900/50' }} {{ $day['isToday'] ? 'ring-2 ring-blue-500 dark:ring-blue-400' : '' }} {{ $isDebtFree ? 'bg-gradient-to-br from-green-400 to-green-500 dark:from-green-600 dark:to-green-700 border-green-500 dark:border-green-400' : ($hasMilestone ? 'bg-purple-50 dark:bg-purple-900/20 border-purple-300 dark:border-purple-700' : ($hasAnyPaidPayment ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700' : ($hasPayment ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700' : ''))) }}"
                         >
                             <div class="flex flex-col h-full">
                                 <div class="text-sm font-medium {{ $day['isCurrentMonth'] ? ($isDebtFree ? 'text-white' : 'text-gray-900 dark:text-white') : 'text-gray-400 dark:text-gray-600' }}">
@@ -283,10 +284,22 @@
                                     @endif
                                     @if ($hasPayment && !$isDebtFree)
                                         @foreach ($this->paymentEvents[$dateKey]['debts'] as $debt)
-                                            <div class="text-xs text-blue-700 dark:text-blue-300 font-medium truncate" title="{{ $debt['name'] }} ({{ number_format($debt['amount'], 0) }} kr)">
-                                                {{ $debt['name'] }}
+                                            @php
+                                                $isPaid = $debt['isPaid'] ?? false;
+                                                $textColor = $isPaid ? 'text-green-700 dark:text-green-300' : 'text-blue-700 dark:text-blue-300';
+                                                $amountColor = $isPaid ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400';
+                                            @endphp
+                                            <div class="flex items-center gap-1">
+                                                @if ($isPaid)
+                                                    <svg class="w-3 h-3 text-green-600 dark:text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                    </svg>
+                                                @endif
+                                                <div class="text-xs {{ $textColor }} font-medium truncate" title="{{ $debt['name'] }} ({{ number_format($debt['amount'], 0) }} kr){{ $isPaid ? ' - Betalt' : '' }}">
+                                                    {{ $debt['name'] }}
+                                                </div>
                                             </div>
-                                            <div class="text-xs text-blue-600 dark:text-blue-400">
+                                            <div class="text-xs {{ $amountColor }}">
                                                 {{ number_format($debt['amount'], 0) }} kr
                                             </div>
                                         @endforeach
@@ -304,7 +317,7 @@
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                 {{ __('app.legend') }}
             </h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div class="flex items-center gap-2">
                     <div class="w-6 h-6 rounded border-2 border-blue-500 dark:border-blue-400 ring-2 ring-blue-500 dark:ring-blue-400"></div>
                     <span class="text-xs text-gray-600 dark:text-gray-400">{{ __('app.today') }}</span>
@@ -312,6 +325,14 @@
                 <div class="flex items-center gap-2">
                     <div class="w-6 h-6 rounded bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700"></div>
                     <span class="text-xs text-gray-600 dark:text-gray-400">{{ __('app.payment_due') }}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 rounded bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700 flex items-center justify-center">
+                        <svg class="w-3 h-3 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <span class="text-xs text-gray-600 dark:text-gray-400">{{ __('app.payment_paid') }}</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <div class="w-6 h-6 rounded bg-purple-50 dark:bg-purple-900/20 border border-purple-300 dark:border-purple-700"></div>

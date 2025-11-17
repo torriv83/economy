@@ -186,6 +186,7 @@ return [
     'today' => 'Today',
     'legend' => 'Legend',
     'payment_due' => 'Payment due',
+    'payment_paid' => 'Payment paid',
     'debt_paid_off' => 'Debt paid off',
     'debt_free_day' => 'Debt-free day',
     'debt_free_short' => 'Debt-free',
