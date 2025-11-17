@@ -77,6 +77,7 @@ class PaymentService
     {
         // Get all debt IDs that have payments or need balance updates
         $debtIds = Debt::pluck('id');
+        $now = now()->format('Y-m-d H:i:s');
 
         foreach ($debtIds as $debtId) {
             // Update balance using principal_paid (which accounts for interest)
@@ -90,9 +91,10 @@ class PaymentService
                         0
                     ),
                     0
-                )
+                ),
+                updated_at = ?
                 WHERE id = ?
-            ', [$debtId, $debtId]);
+            ', [$debtId, $now, $debtId]);
         }
     }
 
