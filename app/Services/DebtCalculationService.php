@@ -232,6 +232,7 @@ class DebtCalculationService
 
                 $isReconciliation = false;
                 $paymentNotes = null;
+                $cumulativePrincipalPaid = 0;
 
                 if ($hasActualPayments && isset($actualPayments[$month][$debtName])) {
                     $paymentData = $actualPayments[$month][$debtName];

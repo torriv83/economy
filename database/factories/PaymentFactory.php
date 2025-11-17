@@ -40,6 +40,7 @@ class PaymentFactory extends Factory
     {
         return $this->afterMaking(function (\App\Models\Payment $payment) {
             if ($payment->debt && $payment->actual_amount > 0) {
+                /** @var \App\Models\Debt $debt */
                 $debt = $payment->debt;
                 $monthlyInterest = round($debt->balance * ($debt->interest_rate / 100) / 12, 2);
 

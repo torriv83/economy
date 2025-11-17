@@ -3,7 +3,6 @@
   <component name="LaravelPint">
     <laravel_pint_settings>
       <LaravelPintConfiguration tool_path="$PROJECT_DIR$/vendor/bin/pint" />
-      <LaravelPintConfiguration asDefaultInterpreter="true" tool_path="$PROJECT_DIR$/vendor/bin/pint" />
     </laravel_pint_settings>
   </component>
   <component name="MessDetectorOptionsConfiguration">
@@ -176,12 +175,15 @@
       <path value="$PROJECT_DIR$/vendor/kelunik/certificate" />
       <path value="$PROJECT_DIR$/vendor/revolt/event-loop" />
       <path value="$PROJECT_DIR$/vendor/_laravel_idea" />
+      <path value="$PROJECT_DIR$/vendor/larastan/larastan" />
+      <path value="$PROJECT_DIR$/vendor/iamcal/sql-parser" />
+      <path value="$PROJECT_DIR$/vendor/phpstan/phpstan" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.2" />
   <component name="PhpStan">
     <PhpStan_settings>
-      <PhpStanConfiguration asDefaultInterpreter="true" />
+      <PhpStanConfiguration asDefaultInterpreter="true" tool_path="$PROJECT_DIR$/vendor/bin/phpstan" />
     </PhpStan_settings>
   </component>
   <component name="PhpStanOptionsConfiguration">

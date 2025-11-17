@@ -53,7 +53,7 @@ class DebtList extends Component
 
     public function getTotalDebtProperty(): float
     {
-        return Debt::all()->sum('balance');
+        return Debt::sum('balance');
     }
 
     public function getDebtsCountProperty(): int
@@ -81,7 +81,7 @@ class DebtList extends Component
         }
 
         // Check if all debts have minimum payments
-        $hasAllMinimums = $debts->every(fn ($debt) => $debt->minimum_payment !== null && $debt->minimum_payment > 0);
+        $hasAllMinimums = $debts->every(fn ($debt) => $debt->minimum_payment > 0);
 
         if (! $hasAllMinimums) {
             return null;

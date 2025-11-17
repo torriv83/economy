@@ -7,6 +7,12 @@ use App\Services\DebtCalculationService;
 use Illuminate\Support\Collection;
 use Livewire\Component;
 
+/**
+ * @property array $snowballData
+ * @property array $avalancheData
+ * @property int $minimumPaymentMonths
+ * @property float $minimumPaymentInterest
+ */
 class StrategyComparison extends Component
 {
     public float $extraPayment = 2000;

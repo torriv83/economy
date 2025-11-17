@@ -7,6 +7,10 @@ use App\Services\DebtCalculationService;
 use App\Services\PaymentService;
 use Livewire\Component;
 
+/**
+ * @property int $totalMonths
+ * @property array $detailedSchedule
+ */
 class PaymentPlan extends Component
 {
     public float $extraPayment = 2000;

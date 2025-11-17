@@ -211,6 +211,7 @@ class PaymentService
         }
 
         DB::transaction(function () use ($payment, $newAmount) {
+            /** @var \App\Models\Debt $debt */
             $debt = $payment->debt;
 
             // Recalculate interest and principal based on debt's current balance
@@ -263,6 +264,8 @@ class PaymentService
         $monthMapping = [];
 
         foreach ($payments as $payment) {
+            /** @var \App\Models\Debt $debt */
+            $debt = $payment->debt;
             $paymentMonth = $payment->payment_month;
 
             if (! isset($monthMapping[$paymentMonth])) {
@@ -282,7 +285,7 @@ class PaymentService
             }
 
             $groupedPayments[$paymentMonth]['payments'][] = [
-                'name' => $payment->debt->name,
+                'name' => $debt->name,
                 'amount' => $payment->actual_amount,
                 'remaining' => 0,
                 'isPriority' => false,

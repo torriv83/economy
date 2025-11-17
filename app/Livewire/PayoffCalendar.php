@@ -9,6 +9,12 @@ use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Livewire\Component;
 
+/**
+ * @property string|null $debtFreeDate
+ * @property array $paymentSchedule
+ * @property Collection $actualPayments
+ * @property int $daysRemaining
+ */
 class PayoffCalendar extends Component
 {
     public float $extraPayment = 2000;
