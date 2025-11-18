@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Providers;
 
+use App\Services\YnabService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -11,7 +14,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(YnabService::class, function () {
+            return new YnabService(
+                token: config('services.ynab.token'),
+                budgetId: config('services.ynab.budget_id')
+            );
+        });
     }
 
     /**

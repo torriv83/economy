@@ -1,20 +1,39 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire;
 
 use App\Models\Debt;
 use App\Services\DebtCalculationService;
+use App\Services\YnabService;
+use Illuminate\Support\Collection;
 use Livewire\Component;
 
 class DebtList extends Component
 {
     public bool $reorderMode = false;
 
+    public bool $showYnabSync = false;
+
+    public array $ynabDiscrepancies = [];
+
+    public bool $showLinkConfirmation = false;
+
+    public ?int $linkingLocalDebtId = null;
+
+    public array $linkingYnabDebt = [];
+
+    public array $selectedFieldsToUpdate = [];
+
     protected DebtCalculationService $calculationService;
 
-    public function boot(DebtCalculationService $service): void
+    protected YnabService $ynabService;
+
+    public function boot(DebtCalculationService $calculationService, YnabService $ynabService): void
     {
-        $this->calculationService = $service;
+        $this->calculationService = $calculationService;
+        $this->ynabService = $ynabService;
     }
 
     public function getDebtsProperty(): array
@@ -130,6 +149,229 @@ class DebtList extends Component
 
         $this->reorderMode = false;
         session()->flash('message', 'Prioritetsrekkefølge lagret.');
+    }
+
+    public function checkYnab(): void
+    {
+        // First check if YNAB API is accessible
+        if (! $this->ynabService->isAccessible()) {
+            session()->flash('error', 'YNAB er for tiden nede. Prøv igjen senere.');
+
+            return;
+        }
+
+        try {
+            $ynabDebts = $this->ynabService->fetchDebtAccounts();
+            $localDebts = Debt::all();
+
+            $this->ynabDiscrepancies = $this->findDiscrepancies($ynabDebts, $localDebts);
+            $this->showYnabSync = true;
+        } catch (\Exception $e) {
+            session()->flash('error', 'Kunne ikke hente data fra YNAB: '.$e->getMessage());
+        }
+    }
+
+    public function findDiscrepancies(Collection $ynabDebts, Collection $localDebts): array
+    {
+        $discrepancies = [
+            'new' => [],
+            'closed' => [],
+            'potential_matches' => [],
+        ];
+
+        // Find new debts in YNAB that don't exist locally
+        foreach ($ynabDebts as $ynabDebt) {
+            // First check if already linked by YNAB account ID
+            $linkedByAccountId = $localDebts->first(function ($localDebt) use ($ynabDebt) {
+                return $localDebt->ynab_account_id === $ynabDebt['ynab_id'];
+            });
+
+            if ($linkedByAccountId) {
+                // Already linked, skip this YNAB debt
+                continue;
+            }
+
+            if (! $ynabDebt['closed']) {
+                // Look for potential matches (similar names or exact matches)
+                $potentialMatch = $this->findPotentialMatch($ynabDebt['name'], $localDebts);
+
+                if ($potentialMatch) {
+                    $discrepancies['potential_matches'][] = [
+                        'ynab' => $ynabDebt,
+                        'local' => [
+                            'id' => $potentialMatch->id,
+                            'name' => $potentialMatch->name,
+                            'balance' => $potentialMatch->balance,
+                            'interest_rate' => $potentialMatch->interest_rate,
+                        ],
+                    ];
+                } else {
+                    $discrepancies['new'][] = $ynabDebt;
+                }
+            }
+        }
+
+        // Find debts that are closed in YNAB but still exist locally
+        foreach ($localDebts as $localDebt) {
+            // Check both by account ID and by name
+            $ynabDebt = $ynabDebts->first(function ($ynabDebt) use ($localDebt) {
+                return ($localDebt->ynab_account_id && $localDebt->ynab_account_id === $ynabDebt['ynab_id'])
+                    || strtolower($ynabDebt['name']) === strtolower($localDebt->name);
+            });
+
+            if ($ynabDebt && $ynabDebt['closed']) {
+                $discrepancies['closed'][] = [
+                    'id' => $localDebt->id,
+                    'name' => $localDebt->name,
+                    'balance' => $localDebt->balance,
+                ];
+            }
+        }
+
+        return $discrepancies;
+    }
+
+    protected function findPotentialMatch(string $ynabName, Collection $localDebts): ?Debt
+    {
+        // Normalize names for comparison
+        $normalizedYnabName = strtolower(trim($ynabName));
+
+        return $localDebts->first(function ($localDebt) use ($normalizedYnabName) {
+            // Skip debts that are already linked to a YNAB account
+            if ($localDebt->ynab_account_id) {
+                return false;
+            }
+
+            $normalizedLocalName = strtolower(trim($localDebt->name));
+
+            // Check if one name contains the other
+            return str_contains($normalizedYnabName, $normalizedLocalName)
+                || str_contains($normalizedLocalName, $normalizedYnabName)
+                || similar_text($normalizedYnabName, $normalizedLocalName) > 5;
+        });
+    }
+
+    public function importYnabDebt(array $ynabDebt): void
+    {
+        Debt::create([
+            'name' => $ynabDebt['name'],
+            'balance' => $ynabDebt['balance'],
+            'interest_rate' => $ynabDebt['interest_rate'],
+            'minimum_payment' => $ynabDebt['minimum_payment'],
+            'ynab_account_id' => $ynabDebt['ynab_id'],
+        ]);
+
+        // Remove from discrepancies
+        $this->ynabDiscrepancies['new'] = array_filter(
+            $this->ynabDiscrepancies['new'],
+            fn ($debt) => $debt['name'] !== $ynabDebt['name']
+        );
+
+        session()->flash('message', "'{$ynabDebt['name']}' importert fra YNAB.");
+    }
+
+    public function deleteClosedDebt(int $id, string $name): void
+    {
+        $debt = Debt::find($id);
+
+        if ($debt) {
+            $debt->delete();
+
+            // Remove from discrepancies
+            $this->ynabDiscrepancies['closed'] = array_filter(
+                $this->ynabDiscrepancies['closed'],
+                fn ($debt) => $debt['id'] !== $id
+            );
+
+            session()->flash('message', "'{$name}' slettet.");
+        }
+    }
+
+    public function ignorePotentialMatch(string $ynabName): void
+    {
+        // Remove from potential matches and add to new debts
+        $match = collect($this->ynabDiscrepancies['potential_matches'])->first(function ($item) use ($ynabName) {
+            return $item['ynab']['name'] === $ynabName;
+        });
+
+        if ($match) {
+            $this->ynabDiscrepancies['potential_matches'] = array_filter(
+                $this->ynabDiscrepancies['potential_matches'],
+                fn ($item) => $item['ynab']['name'] !== $ynabName
+            );
+
+            $this->ynabDiscrepancies['new'][] = $match['ynab'];
+        }
+    }
+
+    public function openLinkConfirmation(int $localDebtId, array $ynabDebt): void
+    {
+        $this->linkingLocalDebtId = $localDebtId;
+        $this->linkingYnabDebt = $ynabDebt;
+        $this->selectedFieldsToUpdate = [];
+        $this->showLinkConfirmation = true;
+    }
+
+    public function closeLinkConfirmation(): void
+    {
+        $this->showLinkConfirmation = false;
+        $this->linkingLocalDebtId = null;
+        $this->linkingYnabDebt = [];
+        $this->selectedFieldsToUpdate = [];
+    }
+
+    public function confirmLinkToExistingDebt(): void
+    {
+        if (! $this->linkingLocalDebtId || empty($this->linkingYnabDebt)) {
+            session()->flash('error', 'Ugyldig kobling.');
+
+            return;
+        }
+
+        $debt = Debt::find($this->linkingLocalDebtId);
+
+        if (! $debt) {
+            session()->flash('error', 'Kunne ikke finne gjelden.');
+
+            return;
+        }
+
+        // Update the YNAB account ID to link them
+        $updateData = ['ynab_account_id' => $this->linkingYnabDebt['ynab_id']];
+
+        // Update selected fields
+        if (in_array('name', $this->selectedFieldsToUpdate)) {
+            $updateData['name'] = $this->linkingYnabDebt['name'];
+        }
+        if (in_array('balance', $this->selectedFieldsToUpdate)) {
+            $updateData['balance'] = $this->linkingYnabDebt['balance'];
+        }
+        if (in_array('interest_rate', $this->selectedFieldsToUpdate)) {
+            $updateData['interest_rate'] = $this->linkingYnabDebt['interest_rate'];
+        }
+        if (in_array('minimum_payment', $this->selectedFieldsToUpdate)) {
+            $updateData['minimum_payment'] = $this->linkingYnabDebt['minimum_payment'];
+        }
+
+        $debt->update($updateData);
+
+        // Remove from potential matches if they exist
+        if (isset($this->ynabDiscrepancies['potential_matches'])) {
+            $this->ynabDiscrepancies['potential_matches'] = array_filter(
+                $this->ynabDiscrepancies['potential_matches'],
+                fn ($item) => $item['ynab']['name'] !== $this->linkingYnabDebt['name']
+            );
+        }
+
+        session()->flash('message', "'{$debt->name}' koblet til YNAB-konto.");
+
+        $this->closeLinkConfirmation();
+    }
+
+    public function closeSyncModal(): void
+    {
+        $this->showYnabSync = false;
+        $this->ynabDiscrepancies = [];
     }
 
     public function render()

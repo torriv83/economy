@@ -46,8 +46,17 @@
                 @if (!$reorderMode)
                     <button
                         type="button"
+                        wire:click="checkYnab"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 hover:bg-purple-200 dark:bg-purple-900/30 dark:hover:bg-purple-900/50 text-purple-700 dark:text-purple-300 font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:ring-offset-2">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Sjekk YNAB
+                    </button>
+                    <button
+                        type="button"
                         wire:click="enableReorderMode"
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:ring-offset-2">
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:ring-offset-2">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
@@ -64,13 +73,13 @@
                     <button
                         type="button"
                         wire:click="cancelReorder"
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:ring-offset-2">
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:ring-offset-2">
                         {{ __('app.cancel') }}
                     </button>
                     <button
                         type="button"
                         x-on:click="saveOrder"
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2">
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2">
                         {{ __('app.save_order') }}
                     </button>
                 @endif
@@ -306,6 +315,267 @@
                 </div>
             </div>
         @endif
+
+    {{-- YNAB Sync Modal --}}
+    @if ($showYnabSync)
+        <div class="fixed inset-0 bg-black/50 transition-opacity z-50" wire:click="closeSyncModal"></div>
+        <div class="fixed inset-0 z-50 overflow-y-auto pointer-events-none">
+            <div class="flex min-h-full items-center justify-center p-4">
+                <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto pointer-events-auto" @click.stop>
+                    {{-- Header --}}
+                    <div class="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                            YNAB Synkronisering
+                        </h3>
+                        <button wire:click="closeSyncModal" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 cursor-pointer">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="p-6">
+                        @if (count($ynabDiscrepancies['new']) === 0 && count($ynabDiscrepancies['closed']) === 0 && count($ynabDiscrepancies['potential_matches']) === 0)
+                            <div class="text-center py-8">
+                                <svg class="mx-auto h-12 w-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <p class="mt-4 text-lg font-medium text-gray-900 dark:text-white">Alt er synkronisert!</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Ingen forskjeller funnet mellom YNAB og din app.</p>
+                            </div>
+                        @else
+                            {{-- Potential Matches Section --}}
+                            @if (count($ynabDiscrepancies['potential_matches']) > 0)
+                                <div class="mb-6">
+                                    <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                                        <svg class="h-5 w-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        Mulige matches ({{ count($ynabDiscrepancies['potential_matches']) }})
+                                    </h4>
+                                    <div class="space-y-3">
+                                        @foreach ($ynabDiscrepancies['potential_matches'] as $match)
+                                            <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                                                <div class="space-y-3">
+                                                    <div class="flex items-start justify-between">
+                                                        <div class="flex-1">
+                                                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">YNAB:</p>
+                                                            <p class="font-semibold text-gray-900 dark:text-white">{{ $match['ynab']['name'] }}</p>
+                                                            <div class="mt-1 space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                                                                <p>{{ number_format($match['ynab']['balance'], 0, ',', ' ') }} kr • {{ number_format($match['ynab']['interest_rate'], 1, ',', ' ') }}%</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="border-t border-yellow-200 dark:border-yellow-800 pt-3">
+                                                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Din app:</p>
+                                                        <p class="font-semibold text-gray-900 dark:text-white">{{ $match['local']['name'] }}</p>
+                                                        <div class="mt-1 space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                                                            <p>{{ number_format($match['local']['balance'], 0, ',', ' ') }} kr • {{ number_format($match['local']['interest_rate'], 1, ',', ' ') }}%</p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex gap-2 pt-2">
+                                                        <button
+                                                            wire:click="ignorePotentialMatch('{{ $match['ynab']['name'] }}')"
+                                                            class="flex-1 px-3 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white text-sm font-medium rounded-lg transition-colors cursor-pointer">
+                                                            Dette er ikke samme gjeld
+                                                        </button>
+                                                        <button
+                                                            wire:click="openLinkConfirmation({{ $match['local']['id'] }}, {{ json_encode($match['ynab']) }})"
+                                                            class="flex-1 px-3 py-2 bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer">
+                                                            Dette er samme gjeld
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- New Debts Section --}}
+                            @if (count($ynabDiscrepancies['new']) > 0)
+                                <div class="mb-6">
+                                    <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                                        <svg class="h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Ny gjeld i YNAB ({{ count($ynabDiscrepancies['new']) }})
+                                    </h4>
+                                    <div class="space-y-3">
+                                        @foreach ($ynabDiscrepancies['new'] as $debt)
+                                            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                                                <div class="flex items-start justify-between">
+                                                    <div class="flex-1">
+                                                        <p class="font-semibold text-gray-900 dark:text-white">{{ $debt['name'] }}</p>
+                                                        <div class="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                                                            <p>Saldo: <span class="font-medium">{{ number_format($debt['balance'], 0, ',', ' ') }} kr</span></p>
+                                                            <p>Rente: <span class="font-medium">{{ number_format($debt['interest_rate'], 1, ',', ' ') }}%</span></p>
+                                                            @if ($debt['minimum_payment'])
+                                                                <p>Min. betaling: <span class="font-medium">{{ number_format($debt['minimum_payment'], 0, ',', ' ') }} kr</span></p>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        wire:click="importYnabDebt({{ json_encode($debt) }})"
+                                                        class="ml-4 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer">
+                                                        Importer
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- Closed Debts Section --}}
+                            @if (count($ynabDiscrepancies['closed']) > 0)
+                                <div>
+                                    <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                                        <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        Lukket i YNAB ({{ count($ynabDiscrepancies['closed']) }})
+                                    </h4>
+                                    <div class="space-y-3">
+                                        @foreach ($ynabDiscrepancies['closed'] as $debt)
+                                            <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                                                <div class="flex items-center justify-between">
+                                                    <div>
+                                                        <p class="font-semibold text-gray-900 dark:text-white">{{ $debt['name'] }}</p>
+                                                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                                            Lukket i YNAB, men eksisterer fortsatt her
+                                                        </p>
+                                                    </div>
+                                                    <button
+                                                        wire:click="deleteClosedDebt({{ $debt['id'] }}, '{{ $debt['name'] }}')"
+                                                        class="ml-4 px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer">
+                                                        Slett
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Link Confirmation Modal --}}
+    @if ($showLinkConfirmation)
+        <div class="fixed inset-0 z-50 overflow-y-auto" wire:key="link-confirmation-modal">
+            <div class="flex items-center justify-center min-h-screen px-4">
+                {{-- Backdrop --}}
+                <div class="fixed inset-0 bg-black/50 pointer-events-none"></div>
+
+                {{-- Modal --}}
+                <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full pointer-events-auto" @click.stop>
+                    {{-- Header --}}
+                    <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                            Koble til YNAB
+                        </h3>
+                        <button wire:click="closeLinkConfirmation" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 cursor-pointer">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    {{-- Content --}}
+                    <div class="p-6">
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                            Velg hvilke felter du vil oppdatere fra YNAB:
+                        </p>
+
+                        <div class="space-y-3 mb-6">
+                            {{-- Name checkbox --}}
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    wire:model="selectedFieldsToUpdate"
+                                    value="name"
+                                    class="mt-1 h-4 w-4 text-yellow-600 rounded border-gray-300 focus:ring-yellow-500 dark:border-gray-600 dark:bg-gray-700 cursor-pointer">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white">Navn</p>
+                                    @if (!empty($linkingYnabDebt))
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ $linkingYnabDebt['name'] }}</p>
+                                    @endif
+                                </div>
+                            </label>
+
+                            {{-- Balance checkbox --}}
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    wire:model="selectedFieldsToUpdate"
+                                    value="balance"
+                                    class="mt-1 h-4 w-4 text-yellow-600 rounded border-gray-300 focus:ring-yellow-500 dark:border-gray-600 dark:bg-gray-700 cursor-pointer">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white">Saldo</p>
+                                    @if (!empty($linkingYnabDebt))
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ number_format($linkingYnabDebt['balance'], 0, ',', ' ') }} kr</p>
+                                    @endif
+                                </div>
+                            </label>
+
+                            {{-- Interest rate checkbox --}}
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    wire:model="selectedFieldsToUpdate"
+                                    value="interest_rate"
+                                    class="mt-1 h-4 w-4 text-yellow-600 rounded border-gray-300 focus:ring-yellow-500 dark:border-gray-600 dark:bg-gray-700 cursor-pointer">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white">Rente</p>
+                                    @if (!empty($linkingYnabDebt))
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ number_format($linkingYnabDebt['interest_rate'], 1, ',', ' ') }}%</p>
+                                    @endif
+                                </div>
+                            </label>
+
+                            {{-- Minimum payment checkbox --}}
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    wire:model="selectedFieldsToUpdate"
+                                    value="minimum_payment"
+                                    class="mt-1 h-4 w-4 text-yellow-600 rounded border-gray-300 focus:ring-yellow-500 dark:border-gray-600 dark:bg-gray-700 cursor-pointer">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white">Minimum betaling</p>
+                                    @if (!empty($linkingYnabDebt) && $linkingYnabDebt['minimum_payment'])
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ number_format($linkingYnabDebt['minimum_payment'], 0, ',', ' ') }} kr/måned</p>
+                                    @endif
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-6">
+                            <p class="text-xs text-gray-600 dark:text-gray-400">
+                                <strong>Viktig:</strong> YNAB-konto-ID vil alltid bli lagret for å koble gjeldene sammen.
+                            </p>
+                        </div>
+
+                        <div class="flex gap-3">
+                            <button
+                                wire:click="closeLinkConfirmation"
+                                class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white text-sm font-medium rounded-lg transition-colors cursor-pointer">
+                                Avbryt
+                            </button>
+                            <button
+                                wire:click="confirmLinkToExistingDebt"
+                                class="flex-1 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer">
+                                Koble til YNAB
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>
 
 @push('scripts')

@@ -155,9 +155,9 @@ describe('updateDebtBalances', function () {
         $debt1 = Debt::factory()->create(['balance' => 10000, 'original_balance' => 10000, 'interest_rate' => 10.0]);
         $debt2 = Debt::factory()->create(['balance' => 5000, 'original_balance' => 5000, 'interest_rate' => 12.0]);
 
-        Payment::factory()->create(['debt_id' => $debt1->id, 'actual_amount' => 1000]);
-        Payment::factory()->create(['debt_id' => $debt1->id, 'actual_amount' => 500]);
-        Payment::factory()->create(['debt_id' => $debt2->id, 'actual_amount' => 2000]);
+        Payment::factory()->create(['debt_id' => $debt1->id, 'actual_amount' => 1000, 'month_number' => 1]);
+        Payment::factory()->create(['debt_id' => $debt1->id, 'actual_amount' => 500, 'month_number' => 2]);
+        Payment::factory()->create(['debt_id' => $debt2->id, 'actual_amount' => 2000, 'month_number' => 1]);
 
         $this->service->updateDebtBalances();
 

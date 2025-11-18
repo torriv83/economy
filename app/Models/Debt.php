@@ -20,6 +20,7 @@ class Debt extends Model
         'minimum_payment',
         'custom_priority_order',
         'due_day',
+        'ynab_account_id',
     ];
 
     protected function casts(): array

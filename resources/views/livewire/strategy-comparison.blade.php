@@ -11,74 +11,51 @@
 
         {{-- Extra Payment Section --}}
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {{-- Recommended Payment (from YNAB data - mock) --}}
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                        {{ __('app.recommended_extra_payment') }}
-                    </label>
-                    <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-2xl font-bold text-blue-900 dark:text-blue-100">3 500 kr</span>
-                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-blue-600 dark:bg-blue-700 text-white">
-                                {{ __('app.from_ynab') }}
-                            </span>
-                        </div>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">
-                            {{ __('app.recommended_payment_description') }}
-                        </p>
+            <label for="extraPayment" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                {{ __('app.extra_monthly_payment') }}
+            </label>
+            <div class="flex items-center gap-2">
+                <button
+                    type="button"
+                    wire:click="$set('extraPayment', {{ max(0, $this->extraPayment - 500) }})"
+                    class="h-12 w-12 flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
+                    aria-label="Decrease by 500"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                    </svg>
+                </button>
+                <div class="relative flex-1">
+                    <input
+                        type="number"
+                        id="extraPayment"
+                        wire:model.live.debounce.300ms="extraPayment"
+                        min="0"
+                        max="1000000"
+                        step="100"
+                        class="w-full px-4 py-3 pr-14 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    >
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                        <span class="text-gray-500 dark:text-gray-400 text-sm font-medium">kr</span>
                     </div>
                 </div>
-
-                {{-- Manual Override Input --}}
-                <div>
-                    <label for="extraPayment" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                        {{ __('app.extra_monthly_payment') }}
-                    </label>
-                    <div class="flex items-center gap-2">
-                        <button
-                            type="button"
-                            wire:click="$set('extraPayment', {{ max(0, $this->extraPayment - 500) }})"
-                            class="h-12 w-12 flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
-                            aria-label="Decrease by 500"
-                        >
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
-                            </svg>
-                        </button>
-                        <div class="relative flex-1">
-                            <input
-                                type="number"
-                                id="extraPayment"
-                                wire:model.live.debounce.300ms="extraPayment"
-                                min="0"
-                                max="1000000"
-                                step="100"
-                                class="w-full px-4 py-3 pr-14 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                            >
-                            <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                                <span class="text-gray-500 dark:text-gray-400 text-sm font-medium">kr</span>
-                            </div>
-                        </div>
-                        <button
-                            type="button"
-                            wire:click="$set('extraPayment', {{ $this->extraPayment + 500 }})"
-                            class="h-12 w-12 flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
-                            aria-label="Increase by 500"
-                        >
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                            </svg>
-                        </button>
-                    </div>
-                    @error('extraPayment')
-                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
-                    @enderror
-                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                        {{ __('app.override_recommendation') }}
-                    </p>
-                </div>
+                <button
+                    type="button"
+                    wire:click="$set('extraPayment', {{ $this->extraPayment + 500 }})"
+                    class="h-12 w-12 flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
+                    aria-label="Increase by 500"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                </button>
             </div>
+            @error('extraPayment')
+                <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+            @enderror
+            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                {{ __('app.enter_extra_payment_description') }}
+            </p>
         </div>
 
         {{-- Strategy Comparison Columns --}}
