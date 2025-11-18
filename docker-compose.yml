@@ -1,0 +1,73 @@
+services:
+  app:
+    image: debt-manager:latest
+    container_name: debt-manager-app
+    restart: unless-stopped
+    ports:
+      - "27270:80"
+    volumes:
+      - sqlite-data:/var/www/database
+    networks:
+      - debt-manager
+    environment:
+      - APP_ENV=production
+      - DB_CONNECTION=sqlite
+      - DB_DATABASE=/var/www/database/database.sqlite
+
+  # Uncomment below services when you need background processing
+
+  # redis:
+  #   image: redis:alpine
+  #   container_name: debt-manager-redis
+  #   restart: unless-stopped
+  #   networks:
+  #     - debt-manager
+
+  # queue:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: debt-manager-queue
+  #   restart: unless-stopped
+  #   working_dir: /var/www
+  #   volumes:
+  #     - ./:/var/www
+  #     - sqlite-data:/var/www/database
+  #   command: php artisan queue:work --sleep=3 --tries=3
+  #   depends_on:
+  #     - app
+  #     - redis
+  #   networks:
+  #     - debt-manager
+  #   environment:
+  #     - APP_ENV=production
+  #     - DB_CONNECTION=sqlite
+  #     - DB_DATABASE=/var/www/database/database.sqlite
+
+  # scheduler:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: debt-manager-scheduler
+  #   restart: unless-stopped
+  #   working_dir: /var/www
+  #   volumes:
+  #     - ./:/var/www
+  #     - sqlite-data:/var/www/database
+  #   command: php artisan schedule:work
+  #   depends_on:
+  #     - app
+  #   networks:
+  #     - debt-manager
+  #   environment:
+  #     - APP_ENV=production
+  #     - DB_CONNECTION=sqlite
+  #     - DB_DATABASE=/var/www/database/database.sqlite
+
+networks:
+  debt-manager:
+    driver: bridge
+
+volumes:
+  sqlite-data:
+    driver: local
