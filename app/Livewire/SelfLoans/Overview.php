@@ -28,6 +28,14 @@ class Overview extends Component
 
     public bool $showWithdrawalModal = false;
 
+    public string $editName = '';
+
+    public string $editDescription = '';
+
+    public string $editOriginalAmount = '';
+
+    public bool $showEditModal = false;
+
     public function getSelfLoansProperty(): array
     {
         $loans = SelfLoan::where('current_balance', '>', 0)->get();
@@ -145,6 +153,52 @@ class Overview extends Component
         session()->flash('message', 'Withdrawal added successfully.');
 
         $this->closeWithdrawalModal();
+    }
+
+    public function openEditModal(int $loanId): void
+    {
+        $loan = SelfLoan::find($loanId);
+
+        if ($loan) {
+            $this->selectedLoanId = $loanId;
+            $this->editName = $loan->name;
+            $this->editDescription = $loan->description ?? '';
+            $this->editOriginalAmount = (string) $loan->original_amount;
+            $this->showEditModal = true;
+        }
+    }
+
+    public function closeEditModal(): void
+    {
+        $this->showEditModal = false;
+        $this->selectedLoanId = 0;
+        $this->editName = '';
+        $this->editDescription = '';
+        $this->editOriginalAmount = '';
+        $this->resetValidation();
+    }
+
+    public function updateLoan(): void
+    {
+        $this->validate([
+            'editName' => 'required|string|max:255',
+            'editDescription' => 'nullable|string|max:500',
+            'editOriginalAmount' => 'required|numeric|min:0.01',
+        ]);
+
+        $loan = SelfLoan::find($this->selectedLoanId);
+
+        if ($loan) {
+            $loan->update([
+                'name' => $this->editName,
+                'description' => $this->editDescription,
+                'original_amount' => $this->editOriginalAmount,
+            ]);
+
+            session()->flash('message', 'Self-loan updated successfully.');
+        }
+
+        $this->closeEditModal();
     }
 
     public function deleteLoan(int $id): void

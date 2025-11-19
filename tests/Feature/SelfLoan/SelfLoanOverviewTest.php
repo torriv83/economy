@@ -213,3 +213,94 @@ test('can withdraw with custom date', function () {
     expect($loan->current_balance)->toBe(12000.0);
     expect($loan->original_amount)->toBe(12000.0);
 });
+
+test('can open edit modal and load loan data', function () {
+    $loan = SelfLoan::factory()->create([
+        'name' => 'Test Loan',
+        'description' => 'Test Description',
+        'original_amount' => 5000,
+    ]);
+
+    Livewire::test(Overview::class)
+        ->call('openEditModal', $loan->id)
+        ->assertSet('showEditModal', true)
+        ->assertSet('editName', 'Test Loan')
+        ->assertSet('editDescription', 'Test Description')
+        ->assertSet('editOriginalAmount', '5000');
+});
+
+test('can update self-loan via modal', function () {
+    $loan = SelfLoan::factory()->create([
+        'name' => 'Old Name',
+        'description' => 'Old Description',
+        'original_amount' => 5000,
+    ]);
+
+    Livewire::test(Overview::class)
+        ->call('openEditModal', $loan->id)
+        ->set('editName', 'New Name')
+        ->set('editDescription', 'New Description')
+        ->set('editOriginalAmount', '7500')
+        ->call('updateLoan');
+
+    $loan->refresh();
+
+    expect($loan->name)->toBe('New Name');
+    expect($loan->description)->toBe('New Description');
+    expect($loan->original_amount)->toBe(7500.0);
+});
+
+test('edit modal validates required fields', function () {
+    $loan = SelfLoan::factory()->create();
+
+    Livewire::test(Overview::class)
+        ->call('openEditModal', $loan->id)
+        ->set('editName', '')
+        ->call('updateLoan')
+        ->assertHasErrors(['editName']);
+});
+
+test('edit modal validates original amount is numeric', function () {
+    $loan = SelfLoan::factory()->create();
+
+    Livewire::test(Overview::class)
+        ->call('openEditModal', $loan->id)
+        ->set('editOriginalAmount', 'not-a-number')
+        ->call('updateLoan')
+        ->assertHasErrors(['editOriginalAmount']);
+});
+
+test('edit modal validates original amount is positive', function () {
+    $loan = SelfLoan::factory()->create();
+
+    Livewire::test(Overview::class)
+        ->call('openEditModal', $loan->id)
+        ->set('editOriginalAmount', '-100')
+        ->call('updateLoan')
+        ->assertHasErrors(['editOriginalAmount']);
+});
+
+test('edit modal closes after successful update', function () {
+    $loan = SelfLoan::factory()->create();
+
+    Livewire::test(Overview::class)
+        ->call('openEditModal', $loan->id)
+        ->set('editName', 'Updated Name')
+        ->call('updateLoan')
+        ->assertSet('showEditModal', false);
+});
+
+test('can close edit modal without saving', function () {
+    $loan = SelfLoan::factory()->create([
+        'name' => 'Original Name',
+    ]);
+
+    Livewire::test(Overview::class)
+        ->call('openEditModal', $loan->id)
+        ->set('editName', 'Changed Name')
+        ->call('closeEditModal')
+        ->assertSet('showEditModal', false);
+
+    $loan->refresh();
+    expect($loan->name)->toBe('Original Name');
+});

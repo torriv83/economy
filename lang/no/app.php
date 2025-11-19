@@ -243,4 +243,9 @@ return [
     'delete_self_loan_confirm' => 'Er du sikker på at du vil slette dette privat lånet?',
     'create_new_self_loan_description' => 'Registrer penger lånt fra egne besparelser',
     'view_repayment_history_description' => 'Se alle nedbetalinger og nedbetalt lån',
+    'original_amount_kr' => 'Opprinnelig beløp (kr)',
+    'current_balance_kr' => 'Nåværende saldo (kr)',
+    'current_balance_readonly_info' => 'Nåværende saldo beregnes fra nedbetalinger og uttak',
+    'update_self_loan' => 'Oppdater privat lån',
+    'edit_self_loan' => 'Rediger privat lån',
 ];

@@ -33,17 +33,27 @@
             @foreach ($this->selfLoans as $loan)
                 <div wire:key="loan-{{ $loan['id'] }}" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
                     <div class="p-6">
-                        {{-- Loan Name --}}
-                        <div class="mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                                {{ $loan['name'] }}
-                            </h3>
-                            @if ($loan['description'])
-                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                    {{ $loan['description'] }}
-                                </p>
-                            @endif
+                        {{-- Loan Name with Edit Icon --}}
+                        <div class="mb-4 flex items-start justify-between">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                    {{ $loan['name'] }}
+                                </h3>
+                            </div>
+                            <button
+                                wire:click="openEditModal({{ $loan['id'] }})"
+                                class="ml-2 p-1.5 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-offset-2 rounded"
+                                title="{{ __('app.edit') }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                </svg>
+                            </button>
                         </div>
+                        @if ($loan['description'])
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 mb-4">
+                                {{ $loan['description'] }}
+                            </p>
+                        @endif
 
                         {{-- Progress Bar --}}
                         @if ($loan['progress_percentage'] > 0)
@@ -316,6 +326,101 @@
                                 type="submit"
                                 class="flex-1 px-4 py-2 bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-offset-2">
                                 {{ __('app.add_withdrawal') }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Edit Modal --}}
+    @if ($showEditModal)
+        <div class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex items-center justify-center min-h-screen px-4">
+                {{-- Backdrop --}}
+                <div class="fixed inset-0 bg-black/50" wire:click="closeEditModal"></div>
+
+                {{-- Modal --}}
+                <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full" @click.stop>
+                    {{-- Header --}}
+                    <div class="border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                            {{ __('app.edit_self_loan') }}
+                        </h3>
+                        <button wire:click="closeEditModal" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-offset-2 rounded">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    {{-- Content --}}
+                    <form wire:submit.prevent="updateLoan" class="p-6">
+                        <div class="space-y-4">
+                            {{-- Name --}}
+                            <div>
+                                <label for="edit-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {{ __('app.name') }} *
+                                </label>
+                                <input
+                                    type="text"
+                                    id="edit-name"
+                                    wire:model="editName"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                                    required>
+                                @error('editName')
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            {{-- Description --}}
+                            <div>
+                                <label for="edit-description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {{ __('app.description_optional') }}
+                                </label>
+                                <textarea
+                                    id="edit-description"
+                                    wire:model="editDescription"
+                                    rows="3"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                                ></textarea>
+                                @error('editDescription')
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            {{-- Original Amount --}}
+                            <div>
+                                <label for="edit-original-amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {{ __('app.original_amount_kr') }} *
+                                </label>
+                                <input
+                                    type="number"
+                                    id="edit-original-amount"
+                                    wire:model="editOriginalAmount"
+                                    step="0.01"
+                                    min="0.01"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                                    required>
+                                @error('editOriginalAmount')
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+
+                        {{-- Actions --}}
+                        <div class="flex gap-3 mt-6">
+                            <button
+                                type="button"
+                                wire:click="closeEditModal"
+                                class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition-colors">
+                                {{ __('app.cancel') }}
+                            </button>
+                            <button
+                                type="submit"
+                                class="flex-1 px-4 py-2 bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-offset-2">
+                                {{ __('app.update_self_loan') }}
                             </button>
                         </div>
                     </form>

@@ -241,4 +241,9 @@ return [
     'delete_self_loan_confirm' => 'Are you sure you want to delete this self-loan?',
     'create_new_self_loan_description' => 'Record money borrowed from your own savings',
     'view_repayment_history_description' => 'View all repayments and paid-off loans',
+    'original_amount_kr' => 'Original Amount (kr)',
+    'current_balance_kr' => 'Current Balance (kr)',
+    'current_balance_readonly_info' => 'Current balance is calculated from repayments and withdrawals',
+    'update_self_loan' => 'Update Self-Loan',
+    'edit_self_loan' => 'Edit Self-Loan',
 ];
