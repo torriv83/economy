@@ -16,7 +16,17 @@ class Overview extends Component
 
     public string $repaymentNotes = '';
 
+    public string $repaymentDate = '';
+
     public bool $showRepaymentModal = false;
+
+    public float $withdrawalAmount = 0;
+
+    public string $withdrawalNotes = '';
+
+    public string $withdrawalDate = '';
+
+    public bool $showWithdrawalModal = false;
 
     public function getSelfLoansProperty(): array
     {
@@ -51,6 +61,7 @@ class Overview extends Component
         $this->selectedLoanId = $loanId;
         $this->repaymentAmount = 0;
         $this->repaymentNotes = '';
+        $this->repaymentDate = now()->format('Y-m-d');
         $this->showRepaymentModal = true;
     }
 
@@ -60,6 +71,7 @@ class Overview extends Component
         $this->selectedLoanId = 0;
         $this->repaymentAmount = 0;
         $this->repaymentNotes = '';
+        $this->repaymentDate = '';
         $this->resetValidation();
     }
 
@@ -68,6 +80,7 @@ class Overview extends Component
         $this->validate([
             'repaymentAmount' => 'required|numeric|min:0.01',
             'repaymentNotes' => 'nullable|string|max:500',
+            'repaymentDate' => 'required|date|before_or_equal:today',
         ]);
 
         $loan = SelfLoan::findOrFail($this->selectedLoanId);
@@ -82,7 +95,7 @@ class Overview extends Component
             'self_loan_id' => $loan->id,
             'amount' => $this->repaymentAmount,
             'notes' => $this->repaymentNotes,
-            'paid_at' => now(),
+            'paid_at' => \Carbon\Carbon::parse($this->repaymentDate),
         ]);
 
         $loan->update([
@@ -92,6 +105,46 @@ class Overview extends Component
         session()->flash('message', 'Repayment added successfully.');
 
         $this->closeRepaymentModal();
+    }
+
+    public function openWithdrawalModal(int $loanId): void
+    {
+        $this->selectedLoanId = $loanId;
+        $this->withdrawalAmount = 0;
+        $this->withdrawalNotes = '';
+        $this->withdrawalDate = now()->format('Y-m-d');
+        $this->showWithdrawalModal = true;
+    }
+
+    public function closeWithdrawalModal(): void
+    {
+        $this->showWithdrawalModal = false;
+        $this->selectedLoanId = 0;
+        $this->withdrawalAmount = 0;
+        $this->withdrawalNotes = '';
+        $this->withdrawalDate = '';
+        $this->resetValidation();
+    }
+
+    public function addWithdrawal(): void
+    {
+        $this->validate([
+            'withdrawalAmount' => 'required|numeric|min:0.01',
+            'withdrawalNotes' => 'nullable|string|max:500',
+            'withdrawalDate' => 'required|date|before_or_equal:today',
+        ]);
+
+        $loan = SelfLoan::findOrFail($this->selectedLoanId);
+
+        // Increase the balance and original amount
+        $loan->update([
+            'current_balance' => $loan->current_balance + $this->withdrawalAmount,
+            'original_amount' => $loan->original_amount + $this->withdrawalAmount,
+        ]);
+
+        session()->flash('message', 'Withdrawal added successfully.');
+
+        $this->closeWithdrawalModal();
     }
 
     public function deleteLoan(int $id): void

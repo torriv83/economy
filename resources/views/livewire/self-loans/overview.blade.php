@@ -20,8 +20,8 @@
                         {{ $this->loansCount }} {{ trans_choice('app.active_loans', $this->loansCount) }}
                     </p>
                 </div>
-                <div class="h-16 w-16 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
-                    <svg class="h-8 w-8 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="h-16 w-16 bg-teal-100 dark:bg-teal-900/20 rounded-lg flex items-center justify-center">
+                    <svg class="h-8 w-8 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                 </div>
@@ -52,13 +52,13 @@
                                     <span class="text-xs font-medium text-gray-600 dark:text-gray-400">
                                         {{ __('app.repaid_progress') }}
                                     </span>
-                                    <span class="text-xs font-bold text-purple-600 dark:text-purple-400">
+                                    <span class="text-xs font-bold text-teal-600 dark:text-teal-400">
                                         {{ number_format($loan['progress_percentage'], 1, ',', ' ') }}%
                                     </span>
                                 </div>
                                 <div class="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                                     <div
-                                        class="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-500 to-purple-600 dark:from-purple-600 dark:to-purple-700 rounded-full transition-all duration-500"
+                                        class="absolute inset-y-0 left-0 bg-gradient-to-r from-teal-500 to-teal-600 dark:from-teal-600 dark:to-teal-700 rounded-full transition-all duration-500"
                                         style="width: {{ $loan['progress_percentage'] }}%"
                                     ></div>
                                 </div>
@@ -91,16 +91,21 @@
                         </div>
 
                         {{-- Actions --}}
-                        <div class="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <div class="grid grid-cols-2 gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
                             <button
                                 wire:click="openRepaymentModal({{ $loan['id'] }})"
-                                class="flex-1 px-3 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:ring-offset-2">
+                                class="px-3 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-offset-2">
                                 {{ __('app.add_repayment') }}
+                            </button>
+                            <button
+                                wire:click="openWithdrawalModal({{ $loan['id'] }})"
+                                class="px-3 py-2 text-sm font-medium text-teal-700 dark:text-teal-300 bg-teal-100 hover:bg-teal-200 dark:bg-teal-900/30 dark:hover:bg-teal-900/50 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-offset-2">
+                                {{ __('app.withdraw_more') }}
                             </button>
                             <button
                                 type="button"
                                 x-on:click="if (confirm('{{ __('app.delete_self_loan_confirm') }}')) $wire.deleteLoan({{ $loan['id'] }})"
-                                class="flex-1 px-3 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400 focus:ring-offset-2">
+                                class="col-span-2 px-3 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400 focus:ring-offset-2">
                                 {{ __('app.delete') }}
                             </button>
                         </div>
@@ -141,7 +146,7 @@
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
                             {{ __('app.add_repayment') }}
                         </h3>
-                        <button wire:click="closeRepaymentModal" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:ring-offset-2 rounded">
+                        <button wire:click="closeRepaymentModal" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-offset-2 rounded">
                             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
@@ -162,9 +167,26 @@
                                     wire:model="repaymentAmount"
                                     step="0.01"
                                     min="0.01"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
                                     required>
                                 @error('repaymentAmount')
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            {{-- Date --}}
+                            <div>
+                                <label for="repayment-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {{ __('app.payment_date') }} *
+                                </label>
+                                <input
+                                    type="date"
+                                    id="repayment-date"
+                                    wire:model="repaymentDate"
+                                    max="{{ date('Y-m-d') }}"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                                    required>
+                                @error('repaymentDate')
                                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -178,7 +200,7 @@
                                     id="repayment-notes"
                                     wire:model="repaymentNotes"
                                     rows="3"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
                                 ></textarea>
                                 @error('repaymentNotes')
                                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -196,8 +218,104 @@
                             </button>
                             <button
                                 type="submit"
-                                class="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:ring-offset-2">
+                                class="flex-1 px-4 py-2 bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-offset-2">
                                 {{ __('app.add_repayment') }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Withdrawal Modal --}}
+    @if ($showWithdrawalModal)
+        <div class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex items-center justify-center min-h-screen px-4">
+                {{-- Backdrop --}}
+                <div class="fixed inset-0 bg-black/50" wire:click="closeWithdrawalModal"></div>
+
+                {{-- Modal --}}
+                <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full" @click.stop>
+                    {{-- Header --}}
+                    <div class="border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                            {{ __('app.withdraw_more') }}
+                        </h3>
+                        <button wire:click="closeWithdrawalModal" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-offset-2 rounded">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    {{-- Content --}}
+                    <form wire:submit.prevent="addWithdrawal" class="p-6">
+                        <div class="space-y-4">
+                            {{-- Amount --}}
+                            <div>
+                                <label for="withdrawal-amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {{ __('app.amount_kr') }} *
+                                </label>
+                                <input
+                                    type="number"
+                                    id="withdrawal-amount"
+                                    wire:model="withdrawalAmount"
+                                    step="0.01"
+                                    min="0.01"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                                    required>
+                                @error('withdrawalAmount')
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            {{-- Date --}}
+                            <div>
+                                <label for="withdrawal-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {{ __('app.withdrawal_date') }} *
+                                </label>
+                                <input
+                                    type="date"
+                                    id="withdrawal-date"
+                                    wire:model="withdrawalDate"
+                                    max="{{ date('Y-m-d') }}"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                                    required>
+                                @error('withdrawalDate')
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            {{-- Notes --}}
+                            <div>
+                                <label for="withdrawal-notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {{ __('app.notes_optional') }}
+                                </label>
+                                <textarea
+                                    id="withdrawal-notes"
+                                    wire:model="withdrawalNotes"
+                                    rows="3"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                                ></textarea>
+                                @error('withdrawalNotes')
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+
+                        {{-- Actions --}}
+                        <div class="flex gap-3 mt-6">
+                            <button
+                                type="button"
+                                wire:click="closeWithdrawalModal"
+                                class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white text-sm font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:ring-offset-2">
+                                {{ __('app.cancel') }}
+                            </button>
+                            <button
+                                type="submit"
+                                class="flex-1 px-4 py-2 bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-offset-2">
+                                {{ __('app.add_withdrawal') }}
                             </button>
                         </div>
                     </form>
