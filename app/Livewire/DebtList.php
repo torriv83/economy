@@ -256,18 +256,46 @@ class DebtList extends Component
         Debt::create([
             'name' => $ynabDebt['name'],
             'balance' => $ynabDebt['balance'],
+            'original_balance' => $ynabDebt['balance'],
             'interest_rate' => $ynabDebt['interest_rate'],
-            'minimum_payment' => $ynabDebt['minimum_payment'],
+            'minimum_payment' => $ynabDebt['minimum_payment'] ?? 0,
             'ynab_account_id' => $ynabDebt['ynab_id'],
         ]);
 
         // Remove from discrepancies
-        $this->ynabDiscrepancies['new'] = array_filter(
-            $this->ynabDiscrepancies['new'],
-            fn ($debt) => $debt['name'] !== $ynabDebt['name']
-        );
+        if (isset($this->ynabDiscrepancies['new'])) {
+            $this->ynabDiscrepancies['new'] = array_filter(
+                $this->ynabDiscrepancies['new'],
+                fn ($debt) => $debt['name'] !== $ynabDebt['name']
+            );
+        }
 
         session()->flash('message', "'{$ynabDebt['name']}' importert fra YNAB.");
+    }
+
+    public function importAllYnabDebts(): void
+    {
+        if (! isset($this->ynabDiscrepancies['new']) || count($this->ynabDiscrepancies['new']) === 0) {
+            return;
+        }
+
+        $count = count($this->ynabDiscrepancies['new']);
+
+        foreach ($this->ynabDiscrepancies['new'] as $debt) {
+            Debt::create([
+                'name' => $debt['name'],
+                'balance' => $debt['balance'],
+                'original_balance' => $debt['balance'],
+                'interest_rate' => $debt['interest_rate'],
+                'minimum_payment' => $debt['minimum_payment'] ?? 0,
+                'ynab_account_id' => $debt['ynab_id'],
+            ]);
+        }
+
+        // Clear the new debts array
+        $this->ynabDiscrepancies['new'] = [];
+
+        session()->flash('message', "{$count} gjeld importert fra YNAB.");
     }
 
     public function deleteClosedDebt(int $id, string $name): void

@@ -205,7 +205,6 @@
                     <div>
                         <label for="minimumPayment" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             {{ __('app.minimum_payment') }}
-                            <span class="text-red-500">*</span>
                         </label>
                         <div class="relative">
                             <input

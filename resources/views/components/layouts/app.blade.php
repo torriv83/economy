@@ -42,6 +42,13 @@
                         {{ __('app.calendar') }}
                     </a>
 
+                    <!-- Separator -->
+                    <div class="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
+
+                    <a href="{{ route('self-loans') }}" class="{{ request()->routeIs('self-loans') ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }} font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded px-3 py-2">
+                        {{ __('app.self_loans') }}
+                    </a>
+
                     <!-- Dark Mode Toggle -->
                     <button @click="darkMode = !darkMode" aria-label="{{ __('app.toggle_dark_mode') }}" class="p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2">
                         <svg x-show="!darkMode" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -142,6 +149,13 @@
                     class="block px-3 py-2 rounded-lg text-base font-medium {{ request()->routeIs('calendar') ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700' }} transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
                 >
                     {{ __('app.calendar') }}
+                </a>
+                <a
+                    href="{{ route('self-loans') }}"
+                    @click="mobileMenuOpen = false"
+                    class="block px-3 py-2 rounded-lg text-base font-medium {{ request()->routeIs('self-loans') ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700' }} transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
+                >
+                    {{ __('app.self_loans') }}
                 </a>
 
                 <!-- Language Switcher (Mobile) -->
