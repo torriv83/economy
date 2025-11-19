@@ -204,7 +204,7 @@ return [
     'due_day' => 'Forfallsdag',
     'due_day_placeholder' => 'Dag i måneden (1-31)',
     'due_day_help' => 'Dagen i hver måned når betalingen forfaller',
-    'due_on_day' => 'Forfaller den :day hver måned',
+    'due_on_day' => 'Forfaller den :day. hver måned',
 
     // Self-Loans
     'self_loans' => 'Privat Lån',
