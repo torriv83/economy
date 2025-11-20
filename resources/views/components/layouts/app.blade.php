@@ -14,17 +14,17 @@
     </a>
 
     <!-- Navigation -->
-    <nav class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <!-- Logo/Brand -->
-                <div class="flex items-center">
-                    <a href="{{ route('home') }}" class="text-xl font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded">
-                        {{ __('app.app_name') }}
-                    </a>
-                </div>
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
+        <div class="flex items-center h-16">
+            <!-- Logo/Brand - Fixed width on left to align with sidebar -->
+            <div class="flex items-center justify-center {{ request()->routeIs('home', 'debts', 'debts.edit', 'payoff', 'self-loans') ? 'w-64' : 'px-4 sm:px-6 lg:px-8' }} flex-shrink-0">
+                <a href="{{ route('home') }}" class="text-xl font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded">
+                    {{ __('app.app_name') }}
+                </a>
+            </div>
 
-                <!-- Navigation Links -->
+            <!-- Navigation Links -->
+            <div class="flex-1 flex justify-between items-center px-4 sm:px-6 lg:px-8">
                 <div class="hidden md:flex items-center gap-6">
                     <a href="{{ route('debts') }}" class="{{ request()->routeIs('home', 'debts', 'debts.edit') ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }} font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded px-3 py-2">
                         {{ __('app.debts') }}
@@ -150,8 +150,8 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main id="main-content" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Main Content with Sidebar Space -->
+    <main id="main-content" class="{{ request()->routeIs('home', 'debts', 'debts.edit', 'payoff', 'self-loans') ? 'md:ml-64' : '' }} pt-20 px-4 sm:px-6 lg:px-8 py-8">
         {{ $slot }}
     </main>
 

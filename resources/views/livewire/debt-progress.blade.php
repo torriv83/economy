@@ -70,106 +70,121 @@
         {{-- Progress Chart --}}
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">{{ __('app.debt_reduction_over_time') }}</h2>
-            <div class="relative h-96">
-                <canvas id="debtProgressChart"></canvas>
+            <div class="relative h-96"
+                x-data="{
+                    chart: null,
+                    chartData: @js($this->progressData),
+                    init() {
+                        this.loadChartJs();
+                    },
+                    loadChartJs() {
+                        if (typeof Chart !== 'undefined') {
+                            this.initChart();
+                            return;
+                        }
+
+                        const script = document.createElement('script');
+                        script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+                        script.onload = () => this.initChart();
+                        document.head.appendChild(script);
+                    },
+                    initChart() {
+                        const canvas = this.$refs.canvas;
+                        if (!canvas) {
+                            return;
+                        }
+
+                        const isDarkMode = document.documentElement.classList.contains('dark');
+                        const ctx = canvas.getContext('2d');
+
+                        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                        if (isDarkMode) {
+                            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)');
+                            gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+                        } else {
+                            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
+                            gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+                        }
+
+                        this.chart = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: this.chartData.map(d => d.month),
+                                datasets: [{
+                                    label: '{{ __("app.total_debt_balance") }}',
+                                    data: this.chartData.map(d => d.balance),
+                                    borderColor: isDarkMode ? 'rgb(96, 165, 250)' : 'rgb(59, 130, 246)',
+                                    backgroundColor: gradient,
+                                    borderWidth: 3,
+                                    fill: true,
+                                    tension: 0.4,
+                                    pointRadius: 4,
+                                    pointHoverRadius: 6,
+                                    pointBackgroundColor: isDarkMode ? 'rgb(96, 165, 250)' : 'rgb(59, 130, 246)',
+                                    pointBorderColor: isDarkMode ? 'rgb(30, 41, 59)' : 'rgb(255, 255, 255)',
+                                    pointBorderWidth: 2,
+                                    pointHoverBackgroundColor: isDarkMode ? 'rgb(147, 197, 253)' : 'rgb(96, 165, 250)',
+                                    pointHoverBorderColor: isDarkMode ? 'rgb(30, 41, 59)' : 'rgb(255, 255, 255)',
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                interaction: {
+                                    intersect: false,
+                                    mode: 'index'
+                                },
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    },
+                                    tooltip: {
+                                        backgroundColor: isDarkMode ? 'rgb(30, 41, 59)' : 'rgb(255, 255, 255)',
+                                        titleColor: isDarkMode ? 'rgb(248, 250, 252)' : 'rgb(17, 24, 39)',
+                                        bodyColor: isDarkMode ? 'rgb(203, 213, 225)' : 'rgb(75, 85, 99)',
+                                        borderColor: isDarkMode ? 'rgb(51, 65, 85)' : 'rgb(229, 231, 235)',
+                                        borderWidth: 1,
+                                        padding: 12,
+                                        displayColors: false,
+                                        callbacks: {
+                                            label: function(context) {
+                                                return context.parsed.y.toLocaleString('nb-NO') + ' kr';
+                                            }
+                                        }
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        grid: {
+                                            color: isDarkMode ? 'rgba(51, 65, 85, 0.5)' : 'rgba(229, 231, 235, 0.5)',
+                                            drawBorder: false
+                                        },
+                                        ticks: {
+                                            color: isDarkMode ? 'rgb(148, 163, 184)' : 'rgb(107, 114, 128)',
+                                            callback: function(value) {
+                                                return value.toLocaleString('nb-NO') + ' kr';
+                                            }
+                                        }
+                                    },
+                                    x: {
+                                        grid: {
+                                            display: false,
+                                            drawBorder: false
+                                        },
+                                        ticks: {
+                                            color: isDarkMode ? 'rgb(148, 163, 184)' : 'rgb(107, 114, 128)',
+                                            maxRotation: 45,
+                                            minRotation: 45
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }">
+                <canvas x-ref="canvas"></canvas>
             </div>
         </div>
-
-        @push('scripts')
-        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const isDarkMode = document.documentElement.classList.contains('dark');
-                const chartData = @json($this->progressData);
-
-                const ctx = document.getElementById('debtProgressChart').getContext('2d');
-
-                const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-                if (isDarkMode) {
-                    gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)');
-                    gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
-                } else {
-                    gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
-                    gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
-                }
-
-                new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: chartData.map(d => d.month),
-                        datasets: [{
-                            label: '{{ __("app.total_debt_balance") }}',
-                            data: chartData.map(d => d.balance),
-                            borderColor: isDarkMode ? 'rgb(96, 165, 250)' : 'rgb(59, 130, 246)',
-                            backgroundColor: gradient,
-                            borderWidth: 3,
-                            fill: true,
-                            tension: 0.4,
-                            pointRadius: 4,
-                            pointHoverRadius: 6,
-                            pointBackgroundColor: isDarkMode ? 'rgb(96, 165, 250)' : 'rgb(59, 130, 246)',
-                            pointBorderColor: isDarkMode ? 'rgb(30, 41, 59)' : 'rgb(255, 255, 255)',
-                            pointBorderWidth: 2,
-                            pointHoverBackgroundColor: isDarkMode ? 'rgb(147, 197, 253)' : 'rgb(96, 165, 250)',
-                            pointHoverBorderColor: isDarkMode ? 'rgb(30, 41, 59)' : 'rgb(255, 255, 255)',
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        interaction: {
-                            intersect: false,
-                            mode: 'index'
-                        },
-                        plugins: {
-                            legend: {
-                                display: false
-                            },
-                            tooltip: {
-                                backgroundColor: isDarkMode ? 'rgb(30, 41, 59)' : 'rgb(255, 255, 255)',
-                                titleColor: isDarkMode ? 'rgb(248, 250, 252)' : 'rgb(17, 24, 39)',
-                                bodyColor: isDarkMode ? 'rgb(203, 213, 225)' : 'rgb(75, 85, 99)',
-                                borderColor: isDarkMode ? 'rgb(51, 65, 85)' : 'rgb(229, 231, 235)',
-                                borderWidth: 1,
-                                padding: 12,
-                                displayColors: false,
-                                callbacks: {
-                                    label: function(context) {
-                                        return context.parsed.y.toLocaleString('nb-NO') + ' kr';
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                grid: {
-                                    color: isDarkMode ? 'rgba(51, 65, 85, 0.5)' : 'rgba(229, 231, 235, 0.5)',
-                                    drawBorder: false
-                                },
-                                ticks: {
-                                    color: isDarkMode ? 'rgb(148, 163, 184)' : 'rgb(107, 114, 128)',
-                                    callback: function(value) {
-                                        return value.toLocaleString('nb-NO') + ' kr';
-                                    }
-                                }
-                            },
-                            x: {
-                                grid: {
-                                    display: false,
-                                    drawBorder: false
-                                },
-                                ticks: {
-                                    color: isDarkMode ? 'rgb(148, 163, 184)' : 'rgb(107, 114, 128)',
-                                    maxRotation: 45,
-                                    minRotation: 45
-                                }
-                            }
-                        }
-                    }
-                });
-            });
-        </script>
-        @endpush
     @endif
 </div>
