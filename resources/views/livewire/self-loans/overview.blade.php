@@ -185,17 +185,42 @@
                             </div>
 
                             {{-- Date --}}
-                            <div>
-                                <label for="repayment-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <div class="relative">
+                                <label for="repayment-date-display" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     {{ __('app.payment_date') }} *
                                 </label>
-                                <input
-                                    type="date"
-                                    id="repayment-date"
-                                    wire:model="repaymentDate"
-                                    max="{{ date('Y-m-d') }}"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                                    required>
+                                <div class="relative" x-data="{
+                                    displayDate: '{{ $repaymentDate }}',
+                                    updateFromPicker(value) {
+                                        if (value) {
+                                            const parts = value.split('-');
+                                            this.displayDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
+                                            $wire.set('repaymentDate', this.displayDate);
+                                        }
+                                    }
+                                }">
+                                    <input
+                                        type="text"
+                                        id="repayment-date-display"
+                                        x-model="displayDate"
+                                        readonly
+                                        @click="$refs.datePicker.showPicker()"
+                                        placeholder="dd.mm.åååå"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent dark:bg-gray-700 dark:text-white cursor-pointer"
+                                        required>
+                                    <input
+                                        type="date"
+                                        x-ref="datePicker"
+                                        @change="updateFromPicker($event.target.value)"
+                                        max="{{ date('Y-m-d') }}"
+                                        class="absolute inset-0 opacity-0 cursor-pointer"
+                                        style="z-index: -1;">
+                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                </div>
                                 @error('repaymentDate')
                                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                                 @enderror
@@ -281,17 +306,42 @@
                             </div>
 
                             {{-- Date --}}
-                            <div>
-                                <label for="withdrawal-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <div class="relative">
+                                <label for="withdrawal-date-display" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     {{ __('app.withdrawal_date') }} *
                                 </label>
-                                <input
-                                    type="date"
-                                    id="withdrawal-date"
-                                    wire:model="withdrawalDate"
-                                    max="{{ date('Y-m-d') }}"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                                    required>
+                                <div class="relative" x-data="{
+                                    displayDate: '{{ $withdrawalDate }}',
+                                    updateFromPicker(value) {
+                                        if (value) {
+                                            const parts = value.split('-');
+                                            this.displayDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
+                                            $wire.set('withdrawalDate', this.displayDate);
+                                        }
+                                    }
+                                }">
+                                    <input
+                                        type="text"
+                                        id="withdrawal-date-display"
+                                        x-model="displayDate"
+                                        readonly
+                                        @click="$refs.datePicker.showPicker()"
+                                        placeholder="dd.mm.åååå"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent dark:bg-gray-700 dark:text-white cursor-pointer"
+                                        required>
+                                    <input
+                                        type="date"
+                                        x-ref="datePicker"
+                                        @change="updateFromPicker($event.target.value)"
+                                        max="{{ date('Y-m-d') }}"
+                                        class="absolute inset-0 opacity-0 cursor-pointer"
+                                        style="z-index: -1;">
+                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                </div>
                                 @error('withdrawalDate')
                                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                                 @enderror

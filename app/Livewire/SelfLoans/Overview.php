@@ -6,6 +6,7 @@ namespace App\Livewire\SelfLoans;
 
 use App\Models\SelfLoan\SelfLoan;
 use App\Models\SelfLoan\SelfLoanRepayment;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
@@ -76,7 +77,7 @@ class Overview extends Component
         $this->selectedLoanId = $loanId;
         $this->repaymentAmount = 0;
         $this->repaymentNotes = '';
-        $this->repaymentDate = now()->format('Y-m-d');
+        $this->repaymentDate = now()->format('d.m.Y');
         $this->showRepaymentModal = true;
     }
 
@@ -95,7 +96,7 @@ class Overview extends Component
         $this->validate([
             'repaymentAmount' => 'required|numeric|min:0.01',
             'repaymentNotes' => 'nullable|string|max:500',
-            'repaymentDate' => 'required|date|before_or_equal:today',
+            'repaymentDate' => 'required|date_format:d.m.Y|before_or_equal:today',
         ]);
 
         $loan = SelfLoan::findOrFail($this->selectedLoanId);
@@ -111,7 +112,7 @@ class Overview extends Component
                 'self_loan_id' => $loan->id,
                 'amount' => $this->repaymentAmount,
                 'notes' => $this->repaymentNotes,
-                'paid_at' => \Carbon\Carbon::parse($this->repaymentDate),
+                'paid_at' => Carbon::createFromFormat('d.m.Y', $this->repaymentDate),
             ]);
 
             $loan->update([
@@ -129,7 +130,7 @@ class Overview extends Component
         $this->selectedLoanId = $loanId;
         $this->withdrawalAmount = 0;
         $this->withdrawalNotes = '';
-        $this->withdrawalDate = now()->format('Y-m-d');
+        $this->withdrawalDate = now()->format('d.m.Y');
         $this->showWithdrawalModal = true;
     }
 
@@ -148,7 +149,7 @@ class Overview extends Component
         $this->validate([
             'withdrawalAmount' => 'required|numeric|min:0.01',
             'withdrawalNotes' => 'nullable|string|max:500',
-            'withdrawalDate' => 'required|date|before_or_equal:today',
+            'withdrawalDate' => 'required|date_format:d.m.Y|before_or_equal:today',
         ]);
 
         $loan = SelfLoan::findOrFail($this->selectedLoanId);
@@ -159,7 +160,7 @@ class Overview extends Component
                 'self_loan_id' => $loan->id,
                 'amount' => -$this->withdrawalAmount,
                 'notes' => $this->withdrawalNotes,
-                'paid_at' => \Carbon\Carbon::parse($this->withdrawalDate),
+                'paid_at' => Carbon::createFromFormat('d.m.Y', $this->withdrawalDate),
             ]);
 
             // Increase the balance and original amount
