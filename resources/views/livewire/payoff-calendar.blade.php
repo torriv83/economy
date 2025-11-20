@@ -11,7 +11,8 @@
 
     {{-- Countdown Widget (Prominent) --}}
     @if ($this->debtFreeDate && $this->countdown['months'] > 0)
-        <div class="bg-gradient-to-r from-green-500 to-green-600 dark:from-green-600 dark:to-green-700 rounded-lg shadow-lg border border-green-400 dark:border-green-500 p-8 mb-8"
+        <div wire:key="countdown-{{ $strategy }}-{{ $extraPayment }}"
+             class="bg-gradient-to-r from-green-500 to-green-600 dark:from-green-600 dark:to-green-700 rounded-lg shadow-lg border border-green-400 dark:border-green-500 p-8 mb-8"
              x-data="{
                  years: {{ $this->countdown['years'] }},
                  months: {{ $this->countdown['months'] }},
