@@ -29,13 +29,16 @@
                     <a href="{{ route('debts') }}" class="{{ request()->routeIs('home', 'debts', 'debts.edit') ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }} font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded px-3 py-2">
                         {{ __('app.debts') }}
                     </a>
-                    <a href="{{ route('payoff') }}" class="{{ request()->routeIs('payoff') ? 'bg-green-600 dark:bg-green-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }} font-medium transition focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:ring-offset-2 rounded px-3 py-2">
+                    <a href="{{ route('payoff') }}" class="{{ request()->routeIs('payoff') ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }} font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded px-3 py-2">
                         {{ __('app.payoff_planning') }}
                     </a>
-                    <a href="{{ route('self-loans') }}" class="{{ request()->routeIs('self-loans') ? 'bg-teal-600 dark:bg-teal-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }} font-medium transition focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-offset-2 rounded px-3 py-2">
+                    <a href="{{ route('self-loans') }}" class="{{ request()->routeIs('self-loans') ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }} font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded px-3 py-2">
                         {{ __('app.self_loans') }}
                     </a>
+                </div>
 
+                <!-- Dark Mode Toggle and Language Switcher -->
+                <div class="hidden md:flex items-center gap-4 ml-auto">
                     <!-- Dark Mode Toggle -->
                     <button @click="darkMode = !darkMode" aria-label="{{ __('app.toggle_dark_mode') }}" class="p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2">
                         <svg x-show="!darkMode" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -112,14 +115,14 @@
                 <a
                     href="{{ route('payoff') }}"
                     @click="mobileMenuOpen = false"
-                    class="block px-3 py-2 rounded-lg text-base font-medium {{ request()->routeIs('payoff') ? 'bg-green-600 dark:bg-green-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700' }} transition focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:ring-offset-2"
+                    class="block px-3 py-2 rounded-lg text-base font-medium {{ request()->routeIs('payoff') ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700' }} transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
                 >
                     {{ __('app.payoff_planning') }}
                 </a>
                 <a
                     href="{{ route('self-loans') }}"
                     @click="mobileMenuOpen = false"
-                    class="block px-3 py-2 rounded-lg text-base font-medium {{ request()->routeIs('self-loans') ? 'bg-teal-600 dark:bg-teal-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700' }} transition focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-offset-2"
+                    class="block px-3 py-2 rounded-lg text-base font-medium {{ request()->routeIs('self-loans') ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700' }} transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
                 >
                     {{ __('app.self_loans') }}
                 </a>

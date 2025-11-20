@@ -2,7 +2,7 @@
     {{-- Fixed Sidebar for Desktop --}}
     <aside class="hidden md:block fixed left-0 top-16 w-64 h-[calc(100vh-4rem)] bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto transition-colors duration-200">
         <nav class="p-4">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{{ __('app.debts') }}</h2>
+            <h2 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">{{ __('app.debts') }}</h2>
 
             <div class="space-y-1">
                 <button
@@ -66,7 +66,7 @@
     {{-- Mobile Sidebar Navigation --}}
     <div class="md:hidden mb-6">
         <nav class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{{ __('app.debts') }}</h2>
+            <h2 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">{{ __('app.debts') }}</h2>
 
             <div class="space-y-1">
                 <button
