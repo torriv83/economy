@@ -32,18 +32,9 @@
         }
     }
 }">
-    {{-- Header --}}
-    <div class="flex items-start justify-between mb-8">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                    {{ __('app.debts_overview') }}
-                </h1>
-                <p class="text-gray-600 dark:text-gray-400">
-                    {{ __('app.debts_overview_description') }}
-                </p>
-            </div>
-            <div class="flex gap-2">
-                @if (!$reorderMode)
+    {{-- Action Buttons --}}
+    <div class="flex justify-end gap-2 mb-8">
+        @if (!$reorderMode)
                     <button
                         type="button"
                         wire:click="checkYnab"
@@ -62,13 +53,6 @@
                         </svg>
                         {{ __('app.reorder_debts') }}
                     </button>
-                    <a href="/debts/create"
-                       class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2">
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                        {{ __('app.add_new_debt') }}
-                    </a>
                 @else
                     <button
                         type="button"
@@ -83,10 +67,9 @@
                         {{ __('app.save_order') }}
                     </button>
                 @endif
-            </div>
-        </div>
+    </div>
 
-        @if (count($this->debts) > 0)
+    @if (count($this->debts) > 0)
             {{-- Summary Cards --}}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                 {{-- Total Debt Card --}}

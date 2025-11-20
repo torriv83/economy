@@ -36,6 +36,8 @@ return [
     // Debt List
     'debts_overview' => 'Gjeldsoversikt',
     'debts_overview_description' => 'Administrer alle dine gjeld på ett sted',
+    'create_debt_description' => 'Legg til en ny gjeld i oversikten din',
+    'progress' => 'Fremdrift',
     'debts_count' => '{count} gjeld|{count} gjeld',
     'per_month' => '/måned',
     'no_debts' => 'Ingen gjeld registrert',
@@ -72,8 +74,10 @@ return [
     'today_at' => 'i dag kl.',
 
     // Strategy Comparison
+    'payoff_planning' => 'Nedbetalingsplanlegging',
     'payoff_strategies' => 'Nedbetalingsstrategier',
     'strategies_description' => 'Sammenlign ulike metoder for å bli gjeldsfri raskere',
+    'monthly_plan' => 'Månedsplan',
     'extra_monthly_payment' => 'Ekstra månedlig betaling',
     'snowball_method' => 'Snøball-metoden',
     'snowball_description' => 'Betal ned minste gjeld først for psykologiske seire',

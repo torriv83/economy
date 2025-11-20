@@ -1,15 +1,5 @@
 <div>
-    <!-- Header -->
-    <div class="mb-8">
-            <div class="flex items-center justify-between mb-2">
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ __('app.create_debt') }}</h1>
-                <a href="{{ route('home') }}" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">
-                    {{ __('app.cancel') }}
-                </a>
-            </div>
-        </div>
-
-        <!-- Success Message -->
+    <!-- Success Message -->
         @if ($showSuccessMessage)
             <div
                 x-data="{ show: true }"

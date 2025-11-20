@@ -1,14 +1,4 @@
 <div>
-    {{-- Header Section --}}
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            {{ __('app.payment_plan') }}
-        </h1>
-        <p class="text-gray-600 dark:text-gray-400">
-            {{ __('app.payment_plan_description') }}
-        </p>
-    </div>
-
     {{-- Strategy Info Bar --}}
     <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
         <div class="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-4">

@@ -1,14 +1,4 @@
 <div>
-    {{-- Header Section --}}
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            {{ __('app.payoff_calendar') }}
-        </h1>
-        <p class="text-gray-600 dark:text-gray-400">
-            {{ __('app.calendar_description') }}
-        </p>
-    </div>
-
     {{-- Countdown Widget (Prominent) --}}
     @if ($this->debtFreeDate && $this->countdown['months'] > 0)
         <div wire:key="countdown-{{ $strategy }}-{{ $extraPayment }}"

@@ -36,6 +36,8 @@ return [
     // Debt List
     'debts_overview' => 'Debt Overview',
     'debts_overview_description' => 'Manage all your debts in one place',
+    'create_debt_description' => 'Add a new debt to your overview',
+    'progress' => 'Progress',
     'debts_count' => '{count} debt|{count} debts',
     'per_month' => '/month',
     'no_debts' => 'No debts registered',
@@ -72,8 +74,10 @@ return [
     'today_at' => 'today at',
 
     // Strategy Comparison
+    'payoff_planning' => 'Payoff Planning',
     'payoff_strategies' => 'Payoff Strategies',
     'strategies_description' => 'Compare different methods to become debt-free faster',
+    'monthly_plan' => 'Monthly Plan',
     'extra_monthly_payment' => 'Extra Monthly Payment',
     'snowball_method' => 'Snowball Method',
     'snowball_description' => 'Pay off smallest debt first for psychological wins',

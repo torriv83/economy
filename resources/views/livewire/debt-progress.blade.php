@@ -1,9 +1,4 @@
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ __('app.debt_progress') }}</h1>
-        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">{{ __('app.debt_progress_description') }}</p>
-    </div>
-
+<div>
     @if(empty($this->progressData))
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-12 text-center">
             <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900/20 mb-4">
