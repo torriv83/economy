@@ -81,7 +81,7 @@
                         {{-- Loan Details --}}
                         <div class="space-y-3 mb-6">
                             <div class="flex justify-between items-baseline">
-                                <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.current_balance') }}</span>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.balance') }}</span>
                                 <span class="text-xl font-bold text-gray-900 dark:text-white">
                                     {{ number_format($loan['current_balance'], 0, ',', ' ') }} kr
                                 </span>

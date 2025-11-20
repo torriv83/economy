@@ -199,7 +199,7 @@
                                 {{ __('app.debt_name') }}
                             </th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                                {{ __('app.current_balance') }}
+                                {{ __('app.balance') }}
                             </th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                                 {{ __('app.payoff_date') }}
@@ -261,7 +261,7 @@
                     </div>
                     <div class="space-y-2">
                         <div class="flex justify-between items-baseline">
-                            <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.current_balance') }}:</span>
+                            <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.balance') }}:</span>
                             <span class="font-medium text-gray-900 dark:text-white">{{ number_format($debt['balance'], 0, ',', ' ') }} kr</span>
                         </div>
                         <div class="flex justify-between items-baseline">
