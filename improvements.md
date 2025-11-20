@@ -29,8 +29,8 @@ Quick wins (high value, relatively simple):
 - Snowflake tracking: Log one-time windfalls (tax refunds, bonuses) and see immediate impact
 
 High-value additions:
-- Historical progress charts: Track balance reduction over time (requires monthly snapshots)
-- Payoff calendar: Visual calendar with payment dates and debt-free countdown (IMPLEMENTED)
+- (IMPLEMENTED) Historical progress charts: Track balance reduction over time (requires monthly snapshots)
+- (IMPLEMENTED) Payoff calendar: Visual calendar with payment dates and debt-free countdown 
 - Interest saved meter: Running counter showing savings vs. minimum-only payments
 - Budget tracking: Set monthly debt budget and track adherence
 

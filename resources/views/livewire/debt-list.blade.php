@@ -278,6 +278,24 @@
                         </div>
                     </div>
                 @endforeach
+
+                {{-- Add New Debt Placeholder --}}
+                @if (!$reorderMode)
+                    <a href="/debts/create"
+                       class="bg-white dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all p-6 flex flex-col items-center justify-center min-h-[300px] group focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2">
+                        <div class="h-16 w-16 bg-gray-100 dark:bg-gray-700 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 rounded-full flex items-center justify-center mb-4 transition-colors">
+                            <svg class="h-8 w-8 text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                            {{ __('app.add_new_debt') }}
+                        </h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-500 mt-2 text-center">
+                            {{ __('app.click_to_add_debt') }}
+                        </p>
+                    </a>
+                @endif
             </div>
         @else
             {{-- Empty State --}}

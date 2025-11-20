@@ -122,6 +122,23 @@
                     </div>
                 </div>
             @endforeach
+
+            {{-- Add New Self-Loan Placeholder --}}
+            <button
+                wire:click="$parent.showCreate"
+                class="bg-white dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-teal-500 dark:hover:border-teal-500 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all p-6 flex flex-col items-center justify-center min-h-[300px] group focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-offset-2 cursor-pointer">
+                <div class="h-16 w-16 bg-gray-100 dark:bg-gray-700 group-hover:bg-teal-100 dark:group-hover:bg-teal-900/30 rounded-full flex items-center justify-center mb-4 transition-colors">
+                    <svg class="h-8 w-8 text-gray-400 dark:text-gray-500 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-600 dark:text-gray-400 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                    {{ __('app.create_self_loan') }}
+                </h3>
+                <p class="text-sm text-gray-500 dark:text-gray-500 mt-2 text-center">
+                    {{ __('app.click_to_add_self_loan') }}
+                </p>
+            </button>
         </div>
     @else
         {{-- Empty State --}}
