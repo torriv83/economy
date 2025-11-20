@@ -26,6 +26,12 @@ class DebtList extends Component
 
     public array $selectedFieldsToUpdate = [];
 
+    public bool $showDeleteModal = false;
+
+    public ?int $debtToDelete = null;
+
+    public string $debtNameToDelete = '';
+
     protected DebtCalculationService $calculationService;
 
     protected YnabService $ynabService;
@@ -119,14 +125,27 @@ class DebtList extends Component
         ];
     }
 
-    public function deleteDebt(int $id): void
+    public function confirmDelete(int $id, string $name): void
     {
-        $debt = Debt::find($id);
+        $this->debtToDelete = $id;
+        $this->debtNameToDelete = $name;
+        $this->showDeleteModal = true;
+    }
 
-        if ($debt) {
-            $debt->delete();
-            session()->flash('message', 'Gjeld slettet.');
+    public function deleteDebt(): void
+    {
+        if ($this->debtToDelete) {
+            $debt = Debt::find($this->debtToDelete);
+
+            if ($debt) {
+                $debt->delete();
+                session()->flash('message', 'Gjeld slettet.');
+            }
         }
+
+        $this->showDeleteModal = false;
+        $this->debtToDelete = null;
+        $this->debtNameToDelete = '';
     }
 
     public function enableReorderMode(): void

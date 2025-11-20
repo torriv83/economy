@@ -57,7 +57,8 @@ test('can delete a self-loan', function () {
 
     Livewire::test(Overview::class)
         ->assertSee('Test Loan')
-        ->call('deleteLoan', $loan->id)
+        ->call('confirmDelete', $loan->id, 'Test Loan')
+        ->call('deleteLoan')
         ->assertDontSee('Test Loan');
 
     expect(SelfLoan::find($loan->id))->toBeNull();

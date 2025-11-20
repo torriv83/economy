@@ -10,6 +10,20 @@ use Livewire\Component;
 
 class History extends Component
 {
+    public ?int $selectedLoanId = null;
+
+    public function getAvailableLoansProperty(): array
+    {
+        $loans = SelfLoan::orderBy('name')->get();
+
+        return $loans->map(function ($loan) {
+            return [
+                'id' => $loan->id,
+                'name' => $loan->name,
+            ];
+        })->toArray();
+    }
+
     public function getPaidOffLoansProperty(): array
     {
         $loans = SelfLoan::where('current_balance', '<=', 0)->latest()->get();
@@ -34,9 +48,14 @@ class History extends Component
 
     public function getAllRepaymentsProperty(): array
     {
-        $repayments = SelfLoanRepayment::with('selfLoan')
-            ->latest('paid_at')
-            ->get();
+        $query = SelfLoanRepayment::with('selfLoan')
+            ->latest('paid_at');
+
+        if ($this->selectedLoanId !== null) {
+            $query->where('self_loan_id', $this->selectedLoanId);
+        }
+
+        $repayments = $query->get();
 
         return $repayments->map(function ($repayment) {
             return [
@@ -47,6 +66,11 @@ class History extends Component
                 'paid_at' => $repayment->paid_at->locale('nb')->translatedFormat('d. F Y H:i'),
             ];
         })->toArray();
+    }
+
+    public function clearFilter(): void
+    {
+        $this->selectedLoanId = null;
     }
 
     public function render()

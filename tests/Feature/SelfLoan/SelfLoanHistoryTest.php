@@ -57,11 +57,102 @@ test('shows empty state when no history exists', function () {
 });
 
 test('does not show active loans in paid-off section', function () {
-    SelfLoan::factory()->create([
+    $activeLoan = SelfLoan::factory()->create([
         'name' => 'Active Loan',
         'current_balance' => 1000,
     ]);
 
+    $paidOffLoan = SelfLoan::factory()->create([
+        'name' => 'Paid Off Loan',
+        'current_balance' => 0,
+    ]);
+
+    $component = Livewire::test(History::class);
+
+    // Active loans should NOT appear in the paid-off loans section
+    $paidOffLoans = $component->get('paidOffLoans');
+    $paidOffLoanNames = collect($paidOffLoans)->pluck('name')->toArray();
+
+    expect($paidOffLoanNames)->not->toContain('Active Loan');
+    expect($paidOffLoanNames)->toContain('Paid Off Loan');
+});
+
+test('can filter repayments by loan', function () {
+    $loan1 = SelfLoan::factory()->create(['name' => 'Loan One']);
+    $loan2 = SelfLoan::factory()->create(['name' => 'Loan Two']);
+
+    SelfLoanRepayment::factory()->create([
+        'self_loan_id' => $loan1->id,
+        'amount' => 1000,
+        'notes' => 'Payment for Loan One',
+    ]);
+
+    SelfLoanRepayment::factory()->create([
+        'self_loan_id' => $loan2->id,
+        'amount' => 2000,
+        'notes' => 'Payment for Loan Two',
+    ]);
+
     Livewire::test(History::class)
-        ->assertDontSee('Active Loan');
+        ->set('selectedLoanId', $loan1->id)
+        ->assertSee('Payment for Loan One')
+        ->assertDontSee('Payment for Loan Two');
+});
+
+test('shows all repayments when no filter is selected', function () {
+    $loan1 = SelfLoan::factory()->create(['name' => 'Loan One']);
+    $loan2 = SelfLoan::factory()->create(['name' => 'Loan Two']);
+
+    SelfLoanRepayment::factory()->create([
+        'self_loan_id' => $loan1->id,
+        'amount' => 1000,
+    ]);
+
+    SelfLoanRepayment::factory()->create([
+        'self_loan_id' => $loan2->id,
+        'amount' => 2000,
+    ]);
+
+    Livewire::test(History::class)
+        ->assertSee('Loan One')
+        ->assertSee('Loan Two');
+});
+
+test('can clear filter', function () {
+    $loan1 = SelfLoan::factory()->create(['name' => 'Loan One']);
+    $loan2 = SelfLoan::factory()->create(['name' => 'Loan Two']);
+
+    SelfLoanRepayment::factory()->create([
+        'self_loan_id' => $loan1->id,
+        'amount' => 1000,
+        'notes' => 'Payment One',
+    ]);
+
+    SelfLoanRepayment::factory()->create([
+        'self_loan_id' => $loan2->id,
+        'amount' => 2000,
+        'notes' => 'Payment Two',
+    ]);
+
+    Livewire::test(History::class)
+        ->set('selectedLoanId', $loan1->id)
+        ->assertSee('Payment One')
+        ->assertDontSee('Payment Two')
+        ->call('clearFilter')
+        ->assertSee('Payment One')
+        ->assertSee('Payment Two');
+});
+
+test('displays available loans in filter dropdown', function () {
+    $loan1 = SelfLoan::factory()->create(['name' => 'First Loan']);
+    $loan2 = SelfLoan::factory()->create(['name' => 'Second Loan']);
+
+    SelfLoanRepayment::factory()->create([
+        'self_loan_id' => $loan1->id,
+        'amount' => 1000,
+    ]);
+
+    Livewire::test(History::class)
+        ->assertSee('First Loan')
+        ->assertSee('Second Loan');
 });

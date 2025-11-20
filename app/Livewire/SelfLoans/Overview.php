@@ -6,6 +6,7 @@ namespace App\Livewire\SelfLoans;
 
 use App\Models\SelfLoan\SelfLoan;
 use App\Models\SelfLoan\SelfLoanRepayment;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 class Overview extends Component
@@ -35,6 +36,12 @@ class Overview extends Component
     public string $editOriginalAmount = '';
 
     public bool $showEditModal = false;
+
+    public bool $showDeleteModal = false;
+
+    public ?int $loanToDelete = null;
+
+    public string $loanNameToDelete = '';
 
     public function getSelfLoansProperty(): array
     {
@@ -99,16 +106,18 @@ class Overview extends Component
             return;
         }
 
-        SelfLoanRepayment::create([
-            'self_loan_id' => $loan->id,
-            'amount' => $this->repaymentAmount,
-            'notes' => $this->repaymentNotes,
-            'paid_at' => \Carbon\Carbon::parse($this->repaymentDate),
-        ]);
+        DB::transaction(function () use ($loan) {
+            SelfLoanRepayment::create([
+                'self_loan_id' => $loan->id,
+                'amount' => $this->repaymentAmount,
+                'notes' => $this->repaymentNotes,
+                'paid_at' => \Carbon\Carbon::parse($this->repaymentDate),
+            ]);
 
-        $loan->update([
-            'current_balance' => $loan->current_balance - $this->repaymentAmount,
-        ]);
+            $loan->update([
+                'current_balance' => $loan->current_balance - $this->repaymentAmount,
+            ]);
+        });
 
         session()->flash('message', 'Repayment added successfully.');
 
@@ -144,11 +153,21 @@ class Overview extends Component
 
         $loan = SelfLoan::findOrFail($this->selectedLoanId);
 
-        // Increase the balance and original amount
-        $loan->update([
-            'current_balance' => $loan->current_balance + $this->withdrawalAmount,
-            'original_amount' => $loan->original_amount + $this->withdrawalAmount,
-        ]);
+        DB::transaction(function () use ($loan) {
+            // Create a negative repayment to track withdrawals
+            SelfLoanRepayment::create([
+                'self_loan_id' => $loan->id,
+                'amount' => -$this->withdrawalAmount,
+                'notes' => $this->withdrawalNotes,
+                'paid_at' => \Carbon\Carbon::parse($this->withdrawalDate),
+            ]);
+
+            // Increase the balance and original amount
+            $loan->update([
+                'current_balance' => $loan->current_balance + $this->withdrawalAmount,
+                'original_amount' => $loan->original_amount + $this->withdrawalAmount,
+            ]);
+        });
 
         session()->flash('message', 'Withdrawal added successfully.');
 
@@ -201,14 +220,27 @@ class Overview extends Component
         $this->closeEditModal();
     }
 
-    public function deleteLoan(int $id): void
+    public function confirmDelete(int $id, string $name): void
     {
-        $loan = SelfLoan::find($id);
+        $this->loanToDelete = $id;
+        $this->loanNameToDelete = $name;
+        $this->showDeleteModal = true;
+    }
 
-        if ($loan) {
-            $loan->delete();
-            session()->flash('message', 'Self-loan deleted.');
+    public function deleteLoan(): void
+    {
+        if ($this->loanToDelete) {
+            $loan = SelfLoan::find($this->loanToDelete);
+
+            if ($loan) {
+                $loan->delete();
+                session()->flash('message', 'Self-loan deleted.');
+            }
         }
+
+        $this->showDeleteModal = false;
+        $this->loanToDelete = null;
+        $this->loanNameToDelete = '';
     }
 
     public function render()

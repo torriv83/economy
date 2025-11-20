@@ -83,34 +83,34 @@
                 <h2 class="text-white text-lg font-medium mb-4">
                     {{ __('app.countdown_to_freedom') }}
                 </h2>
-                <div class="flex items-center justify-center gap-8 mb-4">
+                <div class="flex flex-wrap items-center justify-center gap-4 sm:gap-8 mb-4">
                     @if ($this->countdown['years'] > 0)
-                        <div>
-                            <div class="text-6xl font-bold text-white" x-text="years"></div>
-                            <div class="text-green-100 text-sm font-medium mt-1">{{ trans_choice('app.years', $this->countdown['years']) }}</div>
+                        <div class="flex flex-col items-center min-w-0">
+                            <div class="text-4xl sm:text-6xl font-bold text-white" x-text="years"></div>
+                            <div class="text-green-100 text-xs sm:text-sm font-medium mt-1">{{ trans_choice('app.years', $this->countdown['years']) }}</div>
                         </div>
                     @endif
                     @if ($this->countdown['months'] > 0)
-                        <div>
-                            <div class="text-6xl font-bold text-white" x-text="months"></div>
-                            <div class="text-green-100 text-sm font-medium mt-1">{{ trans_choice('app.months', $this->countdown['months']) }}</div>
+                        <div class="flex flex-col items-center min-w-0">
+                            <div class="text-4xl sm:text-6xl font-bold text-white" x-text="months"></div>
+                            <div class="text-green-100 text-xs sm:text-sm font-medium mt-1">{{ trans_choice('app.months', $this->countdown['months']) }}</div>
                         </div>
                     @endif
-                    <div>
-                        <div class="text-6xl font-bold text-white" x-text="days"></div>
-                        <div class="text-green-100 text-sm font-medium mt-1">{{ __('app.days') }}</div>
+                    <div class="flex flex-col items-center min-w-0">
+                        <div class="text-4xl sm:text-6xl font-bold text-white" x-text="days"></div>
+                        <div class="text-green-100 text-xs sm:text-sm font-medium mt-1">{{ __('app.days') }}</div>
                     </div>
-                    <div>
-                        <div class="text-6xl font-bold text-white" x-text="hours.toString().padStart(2, '0')"></div>
-                        <div class="text-green-100 text-sm font-medium mt-1">{{ __('app.hours') }}</div>
+                    <div class="flex flex-col items-center min-w-0">
+                        <div class="text-4xl sm:text-6xl font-bold text-white" x-text="hours.toString().padStart(2, '0')"></div>
+                        <div class="text-green-100 text-xs sm:text-sm font-medium mt-1">{{ __('app.hours') }}</div>
                     </div>
-                    <div>
-                        <div class="text-6xl font-bold text-white" x-text="minutes.toString().padStart(2, '0')"></div>
-                        <div class="text-green-100 text-sm font-medium mt-1">{{ __('app.minutes') }}</div>
+                    <div class="flex flex-col items-center min-w-0">
+                        <div class="text-4xl sm:text-6xl font-bold text-white" x-text="minutes.toString().padStart(2, '0')"></div>
+                        <div class="text-green-100 text-xs sm:text-sm font-medium mt-1">{{ __('app.minutes') }}</div>
                     </div>
-                    <div>
-                        <div class="text-6xl font-bold text-white" x-text="seconds.toString().padStart(2, '0')"></div>
-                        <div class="text-green-100 text-sm font-medium mt-1">{{ __('app.seconds') }}</div>
+                    <div class="flex flex-col items-center min-w-0">
+                        <div class="text-4xl sm:text-6xl font-bold text-white" x-text="seconds.toString().padStart(2, '0')"></div>
+                        <div class="text-green-100 text-xs sm:text-sm font-medium mt-1">{{ __('app.seconds') }}</div>
                     </div>
                 </div>
                 <p class="text-green-100 text-sm">

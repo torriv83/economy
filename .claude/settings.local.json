@@ -33,7 +33,8 @@
       "mcp__chrome-devtools__evaluate_script",
       "mcp__chrome-devtools__wait_for",
       "WebSearch",
-      "Bash(vendor/bin/phpstan analyse:*)"
+      "Bash(vendor/bin/phpstan analyse:*)",
+      "mcp__chrome-devtools__new_page"
     ]
   },
   "enableAllProjectMcpServers": true,

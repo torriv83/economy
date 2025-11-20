@@ -2,7 +2,10 @@
 <project version="4">
   <component name="LaravelPint">
     <laravel_pint_settings>
-      <LaravelPintConfiguration tool_path="$PROJECT_DIR$/vendor/bin/pint" />
+      <LaravelPintConfiguration tool_path="$PROJECT_DIR$/vendor/bin/pint">
+        <option name="timeout" value="10000" />
+      </LaravelPintConfiguration>
+      <LaravelPintConfiguration asDefaultInterpreter="true" tool_path="$PROJECT_DIR$/vendor/bin/pint" />
     </laravel_pint_settings>
   </component>
   <component name="MessDetectorOptionsConfiguration">
@@ -187,6 +190,8 @@
     </PhpStan_settings>
   </component>
   <component name="PhpStanOptionsConfiguration">
+    <option name="config" value="P:\Herd\economy\phpstan.neon" />
+    <option name="level" value="5" />
     <option name="transferred" value="true" />
   </component>
   <component name="PhpUnit">

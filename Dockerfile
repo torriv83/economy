@@ -37,8 +37,9 @@ RUN mkdir -p /var/www/database
 RUN cp /var/www/.env.docker /var/www/.env
 
 # Install PHP dependencies
-# Disable JIT and increase memory limit to prevent segfaults during autoload optimization
-RUN php -d opcache.jit=off -d memory_limit=-1 /usr/bin/composer install --no-dev --optimize-autoloader --no-interaction
+# Use --classmap-authoritative instead of --optimize-autoloader to avoid segfaults
+# Also disable opcache entirely during composer operations
+RUN php -d opcache.enable=0 -d opcache.jit=off -d memory_limit=-1 /usr/bin/composer install --no-dev --classmap-authoritative --no-interaction
 
 # Install and build frontend assets
 RUN npm ci && npm run build

@@ -2,6 +2,7 @@
 
 use App\Livewire\CreateDebt;
 use App\Livewire\DebtList;
+use App\Livewire\DebtProgress;
 use App\Livewire\EditDebt;
 use App\Livewire\PaymentPlan;
 use App\Livewire\PayoffCalendar;
@@ -20,6 +21,8 @@ Route::get('/strategies', StrategyComparison::class)->name('strategies');
 Route::get('/payment-plan', PaymentPlan::class)->name('payment-plan');
 
 Route::get('/calendar', PayoffCalendar::class)->name('calendar');
+
+Route::get('/progress', DebtProgress::class)->name('progress');
 
 Route::get('/self-loans', SelfLoanLayout::class)->name('self-loans');
 
