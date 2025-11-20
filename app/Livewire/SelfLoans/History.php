@@ -28,18 +28,24 @@ class History extends Component
     {
         $loans = SelfLoan::where('current_balance', '<=', 0)->latest()->get();
 
-        return $loans->map(function ($loan) {
+        return $loans->map(function (SelfLoan $loan) {
+            /** @var \Illuminate\Database\Eloquent\Collection<int, SelfLoanRepayment> $repayments */
+            $repayments = $loan->repayments()->latest('paid_at')->get();
+
             return [
                 'id' => $loan->id,
                 'name' => $loan->name,
                 'description' => $loan->description,
                 'original_amount' => $loan->original_amount,
                 'created_at' => $loan->created_at->locale('nb')->translatedFormat('d. F Y'),
-                'repayments' => $loan->repayments()->latest('paid_at')->get()->map(function ($repayment) {
+                'repayments' => $repayments->map(function (SelfLoanRepayment $repayment) {
+                    /** @var \Carbon\Carbon $paidAt */
+                    $paidAt = $repayment->paid_at;
+
                     return [
                         'amount' => $repayment->amount,
                         'notes' => $repayment->notes,
-                        'paid_at' => $repayment->paid_at->locale('nb')->translatedFormat('d. F Y H:i'),
+                        'paid_at' => $paidAt->locale('nb')->translatedFormat('d. F Y H:i'),
                     ];
                 })->toArray(),
             ];
@@ -55,15 +61,21 @@ class History extends Component
             $query->where('self_loan_id', $this->selectedLoanId);
         }
 
+        /** @var \Illuminate\Database\Eloquent\Collection<int, SelfLoanRepayment> $repayments */
         $repayments = $query->get();
 
-        return $repayments->map(function ($repayment) {
+        return $repayments->map(function (SelfLoanRepayment $repayment) {
+            /** @var SelfLoan $loan */
+            $loan = $repayment->selfLoan;
+            /** @var \Carbon\Carbon $paidAt */
+            $paidAt = $repayment->paid_at;
+
             return [
                 'id' => $repayment->id,
-                'loan_name' => $repayment->selfLoan->name,
+                'loan_name' => $loan->name,
                 'amount' => $repayment->amount,
                 'notes' => $repayment->notes,
-                'paid_at' => $repayment->paid_at->locale('nb')->translatedFormat('d. F Y H:i'),
+                'paid_at' => $paidAt->locale('nb')->translatedFormat('d. F Y H:i'),
             ];
         })->toArray();
     }
