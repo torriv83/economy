@@ -10,6 +10,7 @@ use Livewire\Component;
 /**
  * @property array $snowballData
  * @property array $avalancheData
+ * @property array $customData
  * @property int $minimumPaymentMonths
  * @property float $minimumPaymentInterest
  */
@@ -91,6 +92,24 @@ class StrategyComparison extends Component
         return $comparison['avalanche'];
     }
 
+    public function getCustomDataProperty(): array
+    {
+        $debts = $this->getDebts();
+
+        if ($debts->isEmpty()) {
+            return [
+                'months' => 0,
+                'totalInterest' => 0,
+                'order' => [],
+                'savings' => 0,
+            ];
+        }
+
+        $comparison = $this->calculationService->compareStrategies($debts, $this->extraPayment);
+
+        return $comparison['custom'];
+    }
+
     /**
      * Get the number of months to pay off all debts using only minimum payments.
      * Each debt is calculated independently with no reallocation of freed-up payments.
@@ -157,6 +176,24 @@ class StrategyComparison extends Component
         ];
     }
 
+    /**
+     * Get savings data for Custom strategy compared to minimum payments.
+     *
+     * @return array{monthsSaved: int, yearsSaved: int, remainingMonths: int, interestSaved: float}
+     */
+    public function getCustomSavingsProperty(): array
+    {
+        $monthsSaved = max(0, $this->minimumPaymentMonths - $this->customData['months']);
+        $interestSaved = max(0, $this->minimumPaymentInterest - $this->customData['totalInterest']);
+
+        return [
+            'monthsSaved' => $monthsSaved,
+            'yearsSaved' => (int) floor($monthsSaved / 12),
+            'remainingMonths' => $monthsSaved % 12,
+            'interestSaved' => $interestSaved,
+        ];
+    }
+
     public function getOrderedDebtsProperty(): array
     {
         $debts = $this->getDebts();
@@ -165,6 +202,7 @@ class StrategyComparison extends Component
             return [
                 'snowball' => [],
                 'avalanche' => [],
+                'custom' => [],
             ];
         }
 
@@ -183,17 +221,31 @@ class StrategyComparison extends Component
                     'interestRate' => $debt->interest_rate,
                 ];
             })->toArray(),
+            'custom' => $this->calculationService->orderByCustom($debts)->map(function ($debt) {
+                return [
+                    'name' => $debt->name,
+                    'balance' => $debt->balance,
+                    'interestRate' => $debt->interest_rate,
+                ];
+            })->toArray(),
         ];
     }
 
     /**
      * Determine which strategy saves the most money compared to minimum payments.
-     * Returns 'snowball' or 'avalanche' based on which has higher savings.
+     * Returns 'snowball', 'avalanche', or 'custom' based on which has higher savings.
      */
     public function getBestStrategyProperty(): string
     {
         $snowballSavings = $this->snowballData['savings'] ?? 0;
         $avalancheSavings = $this->avalancheData['savings'] ?? 0;
+        $customSavings = $this->customData['savings'] ?? 0;
+
+        $maxSavings = max($snowballSavings, $avalancheSavings, $customSavings);
+
+        if ($customSavings === $maxSavings) {
+            return 'custom';
+        }
 
         return $avalancheSavings >= $snowballSavings ? 'avalanche' : 'snowball';
     }
@@ -230,6 +282,24 @@ class StrategyComparison extends Component
         }
 
         $schedule = $this->calculationService->generatePaymentSchedule($debts, $this->extraPayment, 'avalanche');
+
+        return $this->extractMilestones($schedule['schedule']);
+    }
+
+    /**
+     * Get milestone data for Custom strategy showing when each debt is paid off.
+     *
+     * @return array Array of milestones with debt name and month paid off
+     */
+    public function getCustomMilestonesProperty(): array
+    {
+        $debts = $this->getDebts();
+
+        if ($debts->isEmpty()) {
+            return [];
+        }
+
+        $schedule = $this->calculationService->generatePaymentSchedule($debts, $this->extraPayment, 'custom');
 
         return $this->extractMilestones($schedule['schedule']);
     }

@@ -79,6 +79,7 @@ return [
     'strategies_description' => 'Sammenlign ulike metoder for å bli gjeldsfri raskere',
     'monthly_plan' => 'Månedsplan',
     'extra_monthly_payment' => 'Ekstra månedlig betaling',
+    'enter_extra_payment_description' => 'Angi hvor mye ekstra du kan betale hver måned utover minimumsbetalingene',
     'snowball_method' => 'Snøball-metoden',
     'snowball_description' => 'Betal ned minste gjeld først for psykologiske seire',
     'avalanche_method' => 'Skred-metoden',

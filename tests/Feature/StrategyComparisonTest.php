@@ -10,10 +10,13 @@ uses(RefreshDatabase::class);
 test('strategy comparison component renders successfully', function () {
     app()->setLocale('en');
 
-    $response = $this->get('/strategies');
+    $component = Livewire::test(StrategyComparison::class);
 
-    $response->assertSuccessful();
-    $response->assertSee('Payoff Strategies');
+    $component->assertSuccessful();
+    $component->assertSee('Extra Monthly Payment');
+    $component->assertSee('Snowball Method');
+    $component->assertSee('Avalanche Method');
+    $component->assertSee('Custom Order');
 });
 
 test('displays minimum payment months when debts exist', function () {

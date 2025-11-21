@@ -79,6 +79,7 @@ return [
     'strategies_description' => 'Compare different methods to become debt-free faster',
     'monthly_plan' => 'Monthly Plan',
     'extra_monthly_payment' => 'Extra Monthly Payment',
+    'enter_extra_payment_description' => 'Enter how much extra you can pay each month beyond the minimum payments',
     'snowball_method' => 'Snowball Method',
     'snowball_description' => 'Pay off smallest debt first for psychological wins',
     'avalanche_method' => 'Avalanche Method',

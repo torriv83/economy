@@ -49,7 +49,7 @@
         </div>
 
         {{-- Strategy Comparison Columns --}}
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {{-- Snowball Method Column --}}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border {{ $this->bestStrategy === 'snowball' ? 'border-2 border-blue-200 dark:border-blue-800' : 'border border-gray-200 dark:border-gray-700' }} overflow-hidden">
                 {{-- Header --}}
@@ -199,6 +199,80 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Custom Method Column --}}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border {{ $this->bestStrategy === 'custom' ? 'border-2 border-orange-200 dark:border-orange-800' : 'border border-gray-200 dark:border-gray-700' }} overflow-hidden">
+                {{-- Header --}}
+                <div class="bg-orange-50 dark:bg-orange-900/20 border-b border-orange-100 dark:border-orange-800/30 px-6 py-4">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-orange-100 dark:bg-orange-900/40 text-orange-800 dark:text-orange-300">
+                            {{ __('app.custom_order') }}
+                        </span>
+                        @if ($this->bestStrategy === 'custom')
+                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-bold bg-orange-600 dark:bg-orange-700 text-white">
+                                {{ __('app.recommended') }}
+                            </span>
+                        @endif
+                    </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        {{ __('app.custom_order_description') }}
+                    </p>
+                </div>
+
+                {{-- Payment Order --}}
+                <div class="px-6 py-5">
+                    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
+                        {{ __('app.payment_order') }}
+                    </h3>
+                    <div class="space-y-3">
+                        @foreach ($this->orderedDebts['custom'] as $index => $debt)
+                            <div wire:key="custom-{{ $index }}" class="flex items-center justify-between p-3 rounded-lg bg-orange-50 dark:bg-orange-900/20">
+                                <div class="flex items-center gap-3">
+                                    <span class="flex items-center justify-center w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-800 dark:text-orange-300 text-xs font-bold">
+                                        {{ $index + 1 }}
+                                    </span>
+                                    <span class="font-medium text-gray-900 dark:text-white">{{ $debt['name'] }}</span>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-semibold text-gray-900 dark:text-white">{{ number_format($debt['balance'], 0, ',', ' ') }} kr</div>
+                                    <div class="text-sm text-orange-700 dark:text-orange-400 font-medium">{{ number_format($debt['interestRate'], 1, ',', ' ') }}%</div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- Summary --}}
+                <div class="border-t border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20 px-6 py-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.time_to_debt_free') }}</span>
+                        <span class="font-bold text-gray-900 dark:text-white">{{ $this->customData['months'] }} {{ __('app.months_short') }}</span>
+                    </div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.total_interest') }}</span>
+                        <span class="font-bold text-gray-900 dark:text-white">{{ number_format($this->customData['totalInterest'], 0, ',', ' ') }} kr</span>
+                    </div>
+                    @if ($this->minimumPaymentMonths > 0 && $this->customSavings['monthsSaved'] > 0)
+                        <div class="flex items-center justify-between text-orange-600 dark:text-orange-400">
+                            <span class="text-sm font-medium">{{ __('app.faster_than_minimum') }}</span>
+                            <span class="text-sm font-bold">
+                                @if ($this->customSavings['yearsSaved'] > 0)
+                                    {{ $this->customSavings['yearsSaved'] }} {{ trans_choice('app.years', $this->customSavings['yearsSaved']) }}
+                                @endif
+                                @if ($this->customSavings['remainingMonths'] > 0)
+                                    {{ $this->customSavings['remainingMonths'] }} {{ trans_choice('app.months', $this->customSavings['remainingMonths']) }}
+                                @endif
+                            </span>
+                        </div>
+                    @endif
+                    <div class="pt-3 border-t border-orange-200 dark:border-orange-800">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-semibold text-orange-700 dark:text-orange-400">{{ __('app.money_saved') }}</span>
+                            <span class="text-lg font-bold text-orange-700 dark:text-orange-400">{{ number_format($this->customData['savings'], 0, ',', ' ') }} kr {{ __('app.vs_minimum') }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         {{-- Visual Comparison Section --}}
@@ -298,6 +372,42 @@
                             </div>
                         @endif
                     </div>
+
+                    {{-- Custom Timeline --}}
+                    <div class="mt-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                {{ __('app.custom_order') }}
+                            </span>
+                            <span class="text-sm font-bold text-orange-700 dark:text-orange-400">
+                                {{ $this->customData['months'] }} {{ __('app.months_short') }}
+                                @if ($this->customSavings['monthsSaved'] > 0)
+                                    <span class="text-xs">({{ $this->customSavings['monthsSaved'] }}{{ __('app.months_short') }} {{ __('app.faster') }})</span>
+                                @endif
+                            </span>
+                        </div>
+                        <div class="relative h-10 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
+                            <div
+                                class="absolute inset-y-0 left-0 bg-gradient-to-r from-orange-500 to-orange-600 dark:from-orange-600 dark:to-orange-700 flex items-center justify-center transition-all duration-500"
+                                style="width: {{ $this->minimumPaymentMonths > 0 ? ($this->customData['months'] / $this->minimumPaymentMonths * 100) : 0 }}%"
+                            >
+                                <span class="text-xs font-semibold text-white">{{ $this->customData['months'] }}{{ __('app.months_short') }}</span>
+                            </div>
+                        </div>
+                        {{-- Custom Milestones --}}
+                        @if (count($this->customMilestones) > 0)
+                            <div class="mt-3 flex flex-wrap gap-2">
+                                @foreach ($this->customMilestones as $milestone)
+                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800">
+                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        {{ $milestone['name'] }} ({{ __('app.month') }} {{ $milestone['month'] }})
+                                    </span>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
                 </div>
 
                 {{-- Interest Savings Comparison --}}
@@ -381,6 +491,38 @@
                                     <div
                                         class="absolute inset-y-0 bg-green-500/30 dark:bg-green-700/30 border-l-2 border-green-500 dark:border-green-400"
                                         style="left: {{ $this->minimumPaymentInterest > 0 ? ($this->avalancheData['totalInterest'] / $this->minimumPaymentInterest * 100) : 0 }}%; right: 0"
+                                    ></div>
+                                @endif
+                            </div>
+                        </div>
+
+                        {{-- Custom Interest --}}
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    {{ __('app.custom_order') }}
+                                </span>
+                                <div class="text-right">
+                                    <span class="text-sm font-bold text-orange-700 dark:text-orange-400">
+                                        {{ number_format($this->customData['totalInterest'], 0, ',', ' ') }} kr
+                                    </span>
+                                    @if ($this->customData['savings'] > 0)
+                                        <span class="block text-xs text-green-600 dark:text-green-400">
+                                            {{ __('app.saves') }} {{ number_format($this->customData['savings'], 0, ',', ' ') }} kr
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="relative h-8 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
+                                <div
+                                    class="absolute inset-y-0 left-0 bg-gradient-to-r from-orange-400 to-orange-500 dark:from-orange-600 dark:to-orange-700 transition-all duration-500"
+                                    style="width: {{ $this->minimumPaymentInterest > 0 ? ($this->customData['totalInterest'] / $this->minimumPaymentInterest * 100) : 0 }}%"
+                                ></div>
+                                {{-- Savings visualization --}}
+                                @if ($this->customData['savings'] > 0)
+                                    <div
+                                        class="absolute inset-y-0 bg-green-500/30 dark:bg-green-700/30 border-l-2 border-orange-500 dark:border-orange-400"
+                                        style="left: {{ $this->minimumPaymentInterest > 0 ? ($this->customData['totalInterest'] / $this->minimumPaymentInterest * 100) : 0 }}%; right: 0"
                                     ></div>
                                 @endif
                             </div>

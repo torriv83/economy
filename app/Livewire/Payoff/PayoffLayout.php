@@ -8,7 +8,7 @@ use Livewire\Component;
 
 class PayoffLayout extends Component
 {
-    public string $currentView = 'strategies';
+    public string $currentView = 'calendar';
 
     public function showStrategies(): void
     {
