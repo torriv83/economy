@@ -9,6 +9,7 @@ use App\Services\DebtCalculationService;
 use App\Services\PaymentService;
 use App\Services\PayoffSettingsService;
 use App\Services\YnabService;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Livewire\Component;
 
@@ -186,15 +187,20 @@ class DebtList extends Component
         $strategy = $this->settingsService->getStrategy();
 
         $schedule = $this->calculationService->generatePaymentSchedule($debts, $extraPayment, $strategy);
-        $months = $schedule['months'];
 
-        $years = (int) floor($months / 12);
-        $remainingMonths = $months % 12;
+        if (empty($schedule['payoffDate'])) {
+            return null;
+        }
+
+        // Calculate months directly from the payoff date for accuracy
+        $payoffDate = Carbon::parse($schedule['payoffDate']);
+        $now = now();
+        $diff = $now->diff($payoffDate);
 
         return [
-            'years' => $years,
-            'months' => $remainingMonths,
-            'totalMonths' => $months,
+            'years' => $diff->y,
+            'months' => $diff->m,
+            'totalMonths' => ($diff->y * 12) + $diff->m,
         ];
     }
 

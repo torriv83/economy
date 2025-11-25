@@ -7,6 +7,7 @@ namespace App\Livewire;
 use App\Models\Debt;
 use App\Models\Payment;
 use App\Services\DebtCalculationService;
+use App\Services\PayoffSettingsService;
 use Carbon\Carbon;
 use Livewire\Component;
 
@@ -14,9 +15,12 @@ class DebtProgress extends Component
 {
     protected DebtCalculationService $calculationService;
 
-    public function boot(DebtCalculationService $calculationService): void
+    protected PayoffSettingsService $settingsService;
+
+    public function boot(DebtCalculationService $calculationService, PayoffSettingsService $settingsService): void
     {
         $this->calculationService = $calculationService;
+        $this->settingsService = $settingsService;
     }
 
     /**
@@ -128,8 +132,8 @@ class DebtProgress extends Component
 
         $schedule = $this->calculationService->generatePaymentSchedule(
             $debts,
-            2000,
-            'avalanche'
+            $this->settingsService->getExtraPayment(),
+            $this->settingsService->getStrategy()
         );
 
         $months = $schedule['months'] ?? 0;
@@ -150,8 +154,8 @@ class DebtProgress extends Component
 
         $schedule = $this->calculationService->generatePaymentSchedule(
             $debts,
-            2000,
-            'avalanche'
+            $this->settingsService->getExtraPayment(),
+            $this->settingsService->getStrategy()
         );
 
         /** @var string $payoffDate */
@@ -172,8 +176,8 @@ class DebtProgress extends Component
 
         $schedule = $this->calculationService->generatePaymentSchedule(
             $debts,
-            2000,
-            'avalanche'
+            $this->settingsService->getExtraPayment(),
+            $this->settingsService->getStrategy()
         );
 
         $totalInterest = $schedule['totalInterest'] ?? 0;
