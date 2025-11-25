@@ -241,6 +241,20 @@ class DebtCalculationService
 
             $hasActualPayments = isset($actualPayments[$month]);
 
+            // Calculate how much of the extra payment budget has already been used this month
+            // This handles the case where user changes strategy after paying one debt with extra
+            $extraPaymentUsedThisMonth = 0;
+            if ($hasActualPayments) {
+                foreach ($actualPayments[$month] as $debtName => $paymentData) {
+                    $debtMinimum = collect($remainingDebts)->firstWhere('name', $debtName)['minimum_payment'] ?? 0;
+                    $extraPaid = max(0, $paymentData['actual_amount'] - $debtMinimum);
+                    $extraPaymentUsedThisMonth += $extraPaid;
+                }
+            }
+
+            // Calculate remaining extra budget for this month (never negative)
+            $availableExtraThisMonth = max(0, $availableExtraPayment - $extraPaymentUsedThisMonth);
+
             foreach ($remainingDebts as $index => $debt) {
                 if ($debt['balance'] <= 0.01) {
                     continue;
@@ -267,8 +281,11 @@ class DebtCalculationService
                     $paymentNotes = $paymentData['notes'] ?? null;
                 } else {
                     $minimumPayment = $debt['minimum_payment'];
-                    $extraForThisDebt = $isPriority ? $availableExtraPayment : 0;
+                    // Use remaining extra budget (accounts for payments already made this month)
+                    $extraForThisDebt = $isPriority ? $availableExtraThisMonth : 0;
                     $totalPayment = $minimumPayment + $extraForThisDebt;
+                    // Reduce available extra for subsequent debts this month
+                    $availableExtraThisMonth -= $extraForThisDebt;
                 }
 
                 $maxPayment = $debt['balance'] + $interest;

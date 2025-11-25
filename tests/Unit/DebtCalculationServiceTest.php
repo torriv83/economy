@@ -562,3 +562,195 @@ describe('calculateMinimumPaymentsInterest', function () {
         expect($interest)->toBe(0.0);
     });
 });
+
+describe('extra payment budget tracking', function () {
+    it('uses remaining budget when extra payment already used on another debt this month', function () {
+        // Scenario: User paid debt A with extra, then changed strategy so debt B is priority
+        // Debt B should get 0 extra since budget is already spent
+
+        // Create two debts with different interest rates
+        $debtA = Debt::factory()->create([
+            'name' => 'High Rate',
+            'original_balance' => 5000,
+            'balance' => 5000,
+            'interest_rate' => 20, // Avalanche priority
+            'minimum_payment' => 200,
+        ]);
+
+        $debtB = Debt::factory()->create([
+            'name' => 'Low Balance',
+            'original_balance' => 1000,
+            'balance' => 1000,
+            'interest_rate' => 10, // Snowball priority (lower balance)
+            'minimum_payment' => 100,
+        ]);
+
+        // Record payment for High Rate (month 1) with full extra payment
+        $debtA->payments()->create([
+            'planned_amount' => 1200,
+            'actual_amount' => 1200, // 200 minimum + 1000 extra
+            'interest_paid' => 83.33,
+            'principal_paid' => 1116.67,
+            'payment_date' => now(),
+            'month_number' => 1,
+            'payment_month' => now()->format('Y-m'),
+        ]);
+
+        // Update balance
+        $debtA->update(['balance' => 5000 - 1116.67]);
+
+        $debts = collect([$debtA->fresh('payments'), $debtB->fresh('payments')]);
+
+        // Generate schedule with SNOWBALL strategy (Low Balance first)
+        // Extra budget is 1000, but already spent on High Rate this month
+        $result = $this->service->generatePaymentSchedule($debts, 1000, 'snowball');
+
+        // Month 1: Low Balance should only get minimum (100), not minimum + extra
+        $month1 = $result['schedule'][0];
+        $lowBalancePayment = collect($month1['payments'])->firstWhere('name', 'Low Balance');
+
+        // Extra should be 0 because budget was already used
+        expect($lowBalancePayment['extra'])->toBe(0.0);
+        expect($lowBalancePayment['amount'])->toBe(100.0); // Only minimum payment
+    });
+
+    it('uses partial remaining budget when some extra payment already used', function () {
+        // Scenario: User paid debt A with only partial extra (500), budget is 1000
+        // Debt B should get remaining 500 extra
+
+        $debtA = Debt::factory()->create([
+            'name' => 'Debt A',
+            'original_balance' => 5000,
+            'balance' => 5000,
+            'interest_rate' => 15,
+            'minimum_payment' => 200,
+        ]);
+
+        $debtB = Debt::factory()->create([
+            'name' => 'Debt B',
+            'original_balance' => 3000,
+            'balance' => 3000,
+            'interest_rate' => 20, // Higher rate = avalanche priority
+            'minimum_payment' => 150,
+        ]);
+
+        // Record payment for Debt A with partial extra (500 instead of 1000)
+        $debtA->payments()->create([
+            'planned_amount' => 700,
+            'actual_amount' => 700, // 200 minimum + 500 extra
+            'interest_paid' => 62.50,
+            'principal_paid' => 637.50,
+            'payment_date' => now(),
+            'month_number' => 1,
+            'payment_month' => now()->format('Y-m'),
+        ]);
+
+        $debtA->update(['balance' => 5000 - 637.50]);
+
+        $debts = collect([$debtA->fresh('payments'), $debtB->fresh('payments')]);
+
+        // Generate schedule with AVALANCHE strategy (Debt B is priority now)
+        // Extra budget is 1000, but 500 already spent
+        $result = $this->service->generatePaymentSchedule($debts, 1000, 'avalanche');
+
+        $month1 = $result['schedule'][0];
+        $debtBPayment = collect($month1['payments'])->firstWhere('name', 'Debt B');
+
+        // Extra should be 500 (remaining budget: 1000 - 500)
+        expect($debtBPayment['extra'])->toBe(500.0);
+        expect($debtBPayment['amount'])->toBe(650.0); // 150 minimum + 500 extra
+    });
+
+    it('gives zero extra when budget is exceeded', function () {
+        // Scenario: User paid debt A with 1500 extra when budget is 1000
+        // Debt B should get 0 extra (cannot go negative)
+
+        $debtA = Debt::factory()->create([
+            'name' => 'Debt A',
+            'original_balance' => 5000,
+            'balance' => 5000,
+            'interest_rate' => 10,
+            'minimum_payment' => 200,
+        ]);
+
+        $debtB = Debt::factory()->create([
+            'name' => 'Debt B',
+            'original_balance' => 3000,
+            'balance' => 3000,
+            'interest_rate' => 20, // Higher rate = avalanche priority
+            'minimum_payment' => 150,
+        ]);
+
+        // Record payment for Debt A with MORE than budgeted extra (1500 instead of 1000)
+        $debtA->payments()->create([
+            'planned_amount' => 1700,
+            'actual_amount' => 1700, // 200 minimum + 1500 extra (over budget)
+            'interest_paid' => 41.67,
+            'principal_paid' => 1658.33,
+            'payment_date' => now(),
+            'month_number' => 1,
+            'payment_month' => now()->format('Y-m'),
+        ]);
+
+        $debtA->update(['balance' => 5000 - 1658.33]);
+
+        $debts = collect([$debtA->fresh('payments'), $debtB->fresh('payments')]);
+
+        // Generate schedule with AVALANCHE strategy (Debt B is priority now)
+        // Extra budget is 1000, but 1500 already spent = 0 remaining
+        $result = $this->service->generatePaymentSchedule($debts, 1000, 'avalanche');
+
+        $month1 = $result['schedule'][0];
+        $debtBPayment = collect($month1['payments'])->firstWhere('name', 'Debt B');
+
+        // Extra should be 0 (budget exceeded, max(0, 1000-1500) = 0)
+        expect($debtBPayment['extra'])->toBe(0.0);
+        expect($debtBPayment['amount'])->toBe(150.0); // Only minimum payment
+    });
+
+    it('does not affect future months extra payment', function () {
+        // Scenario: Budget used this month, but future months should get full extra
+
+        $debtA = Debt::factory()->create([
+            'name' => 'Small Debt',
+            'original_balance' => 500,
+            'balance' => 500,
+            'interest_rate' => 10,
+            'minimum_payment' => 100,
+        ]);
+
+        $debtB = Debt::factory()->create([
+            'name' => 'Large Debt',
+            'original_balance' => 5000,
+            'balance' => 5000,
+            'interest_rate' => 15,
+            'minimum_payment' => 200,
+        ]);
+
+        // Record payment for Small Debt (month 1) with full extra
+        $debtA->payments()->create([
+            'planned_amount' => 600,
+            'actual_amount' => 600, // 100 minimum + 500 extra
+            'interest_paid' => 4.17,
+            'principal_paid' => 500, // Pays off entire debt (rounded for simplicity)
+            'payment_date' => now(),
+            'month_number' => 1,
+            'payment_month' => now()->format('Y-m'),
+        ]);
+
+        $debtA->update(['balance' => 0]); // Debt A is paid off
+
+        $debts = collect([$debtA->fresh('payments'), $debtB->fresh('payments')]);
+
+        $result = $this->service->generatePaymentSchedule($debts, 500, 'snowball');
+
+        // Month 2 should have full extra payment available for Large Debt
+        if (count($result['schedule']) > 1) {
+            $month2 = $result['schedule'][1];
+            $largeDebtPayment = collect($month2['payments'])->firstWhere('name', 'Large Debt');
+
+            // Month 2: Large Debt should get full extra (500) + rolled-over minimum from paid-off debt (100)
+            expect($largeDebtPayment['extra'])->toBeGreaterThanOrEqual(500.0);
+        }
+    });
+});
