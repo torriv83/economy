@@ -1,5 +1,5 @@
 <div>
-    @if(empty($this->progressData))
+    @if(empty($this->progressData['datasets']))
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-12 text-center">
             <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900/20 mb-4">
                 <svg class="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -154,6 +154,7 @@
                         const isDarkMode = document.documentElement.classList.contains('dark');
                         const ctx = canvas.getContext('2d');
 
+                        // Create gradient for total line
                         const gradient = ctx.createLinearGradient(0, 0, 0, 400);
                         if (isDarkMode) {
                             gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)');
@@ -163,13 +164,15 @@
                             gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
                         }
 
-                        this.chart = new Chart(ctx, {
-                            type: 'line',
-                            data: {
-                                labels: this.chartData.map(d => d.month),
-                                datasets: [{
-                                    label: '{{ __("app.total_debt_balance") }}',
-                                    data: this.chartData.map(d => d.balance),
+                        // Build datasets from chartData
+                        const datasets = this.chartData.datasets.map((dataset, index) => {
+                            const isTotal = dataset.isTotal === true;
+
+                            if (isTotal) {
+                                // Total line with gradient fill
+                                return {
+                                    label: dataset.label,
+                                    data: dataset.data,
                                     borderColor: isDarkMode ? 'rgb(96, 165, 250)' : 'rgb(59, 130, 246)',
                                     backgroundColor: gradient,
                                     borderWidth: 3,
@@ -180,9 +183,33 @@
                                     pointBackgroundColor: isDarkMode ? 'rgb(96, 165, 250)' : 'rgb(59, 130, 246)',
                                     pointBorderColor: isDarkMode ? 'rgb(30, 41, 59)' : 'rgb(255, 255, 255)',
                                     pointBorderWidth: 2,
-                                    pointHoverBackgroundColor: isDarkMode ? 'rgb(147, 197, 253)' : 'rgb(96, 165, 250)',
-                                    pointHoverBorderColor: isDarkMode ? 'rgb(30, 41, 59)' : 'rgb(255, 255, 255)',
-                                }]
+                                    order: 1, // Draw behind individual debts
+                                };
+                            } else {
+                                // Individual debt lines
+                                return {
+                                    label: dataset.label,
+                                    data: dataset.data,
+                                    borderColor: dataset.borderColor,
+                                    backgroundColor: dataset.borderColor + '20',
+                                    borderWidth: 2,
+                                    fill: false,
+                                    tension: 0.4,
+                                    pointRadius: 3,
+                                    pointHoverRadius: 5,
+                                    pointBackgroundColor: dataset.borderColor,
+                                    pointBorderColor: isDarkMode ? 'rgb(30, 41, 59)' : 'rgb(255, 255, 255)',
+                                    pointBorderWidth: 2,
+                                    order: 0, // Draw on top
+                                };
+                            }
+                        });
+
+                        this.chart = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: this.chartData.labels,
+                                datasets: datasets
                             },
                             options: {
                                 responsive: true,
@@ -193,7 +220,17 @@
                                 },
                                 plugins: {
                                     legend: {
-                                        display: false
+                                        display: true,
+                                        position: 'top',
+                                        labels: {
+                                            color: isDarkMode ? 'rgb(203, 213, 225)' : 'rgb(75, 85, 99)',
+                                            usePointStyle: true,
+                                            pointStyle: 'circle',
+                                            padding: 20,
+                                            font: {
+                                                size: 12
+                                            }
+                                        }
                                     },
                                     tooltip: {
                                         backgroundColor: isDarkMode ? 'rgb(30, 41, 59)' : 'rgb(255, 255, 255)',
@@ -202,10 +239,9 @@
                                         borderColor: isDarkMode ? 'rgb(51, 65, 85)' : 'rgb(229, 231, 235)',
                                         borderWidth: 1,
                                         padding: 12,
-                                        displayColors: false,
                                         callbacks: {
                                             label: function(context) {
-                                                return context.parsed.y.toLocaleString('nb-NO') + ' kr';
+                                                return context.dataset.label + ': ' + context.parsed.y.toLocaleString('nb-NO') + ' kr';
                                             }
                                         }
                                     }

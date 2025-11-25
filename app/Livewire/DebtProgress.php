@@ -24,7 +24,7 @@ class DebtProgress extends Component
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @return array{labels: array<string>, datasets: array<array<string, mixed>>}
      */
     public function getProgressDataProperty(): array
     {
@@ -32,7 +32,7 @@ class DebtProgress extends Component
         $debts = Debt::with('payments')->get();
 
         if ($debts->isEmpty()) {
-            return [];
+            return ['labels' => [], 'datasets' => []];
         }
 
         // Get the earliest payment or debt creation date
@@ -40,20 +40,48 @@ class DebtProgress extends Component
         $earliestDebt = Debt::orderBy('created_at')->first();
 
         if (! $earliestDebt) {
-            return [];
+            return ['labels' => [], 'datasets' => []];
         }
 
         $startDate = $earliestPayment
             ? min($earliestPayment->payment_date, $earliestDebt->created_at)
             : $earliestDebt->created_at;
 
+        // Color palette for individual debt lines
+        $colors = [
+            '#10B981', // green
+            '#F59E0B', // amber
+            '#EF4444', // red
+            '#8B5CF6', // purple
+            '#EC4899', // pink
+            '#06B6D4', // cyan
+            '#84CC16', // lime
+        ];
+
+        // Initialize data structures
+        $labels = [];
+        $totalData = [];
+        $debtData = [];
+
+        // Initialize debt data arrays
+        foreach ($debts as $index => $debt) {
+            $debtData[$debt->name] = [
+                'label' => $debt->name,
+                'data' => [],
+                'borderColor' => $colors[$index % count($colors)],
+            ];
+        }
+
         // Generate monthly data points from start date to now
-        $dataPoints = [];
         $currentDate = Carbon::parse($startDate)->startOfMonth();
         $now = Carbon::now();
 
         while ($currentDate->lte($now)) {
-            $monthKey = $currentDate->format('Y-m');
+            $clonedDate = clone $currentDate;
+            $clonedDate->locale(app()->getLocale());
+            $formattedMonth = $clonedDate->isoFormat('MMM YYYY');
+            $labels[] = $formattedMonth;
+
             $totalBalance = 0;
 
             foreach ($debts as $debt) {
@@ -66,23 +94,32 @@ class DebtProgress extends Component
                 $originalBalance = $debt->original_balance ?? $debt->balance;
                 $remainingBalance = max(0, $originalBalance - $paidAmount);
 
+                $debtData[$debt->name]['data'][] = round($remainingBalance, 2);
                 $totalBalance += $remainingBalance;
             }
 
-            $clonedDate = clone $currentDate;
-            $clonedDate->locale(app()->getLocale());
-            $formattedMonth = $clonedDate->isoFormat('MMM YYYY');
-
-            $dataPoints[] = [
-                'month' => $formattedMonth,
-                'date' => $currentDate->format('Y-m-d'),
-                'balance' => round($totalBalance, 2),
-            ];
-
+            $totalData[] = round($totalBalance, 2);
             $currentDate->addMonth();
         }
 
-        return $dataPoints;
+        // Build datasets array - total first, then individual debts
+        $datasets = [
+            [
+                'label' => __('app.total_debt_balance'),
+                'data' => $totalData,
+                'borderColor' => '#3B82F6',
+                'isTotal' => true,
+            ],
+        ];
+
+        foreach ($debtData as $data) {
+            $datasets[] = $data;
+        }
+
+        return [
+            'labels' => $labels,
+            'datasets' => $datasets,
+        ];
     }
 
     public function getTotalPaidProperty(): float
