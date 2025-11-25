@@ -112,6 +112,8 @@ return [
     'interest_comparison' => 'Interest Comparison',
     'saves' => 'Saves',
     'interest_paid' => 'Interest Paid',
+    'debt_projection_comparison' => 'Debt Projection Comparison',
+    'debt_payoff_milestones' => 'Debt Payoff Milestones',
 
     // Payment Plan
     'payment_plan' => 'Payment Plan',

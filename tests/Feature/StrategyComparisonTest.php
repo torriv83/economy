@@ -219,9 +219,10 @@ test('displays savings in UI when debts exist', function () {
     $component = Livewire::test(StrategyComparison::class)
         ->set('extraPayment', 500);
 
-    // Check if savings are displayed in the UI
-    $component->assertSee('Faster than minimum payments')
-        ->assertSee('Interest Saved');
+    // Check if savings and chart section are displayed in the UI
+    $component->assertSee('Debt Projection Comparison')
+        ->assertSee('Debt Payoff Milestones')
+        ->assertSee('Saves');
 });
 
 test('uses current balance for projections', function () {
@@ -263,4 +264,107 @@ test('validates extra payment input', function () {
     Livewire::test(StrategyComparison::class)
         ->set('extraPayment', 2000)
         ->assertHasNoErrors('extraPayment');
+});
+
+test('strategy chart data contains all four strategies', function () {
+    Debt::factory()->create([
+        'name' => 'Test Debt',
+        'type' => 'kredittkort',
+        'balance' => 5000,
+        'original_balance' => 5000,
+        'interest_rate' => 18.0,
+        'minimum_payment' => 300,
+    ]);
+
+    $component = Livewire::test(StrategyComparison::class)
+        ->set('extraPayment', 500);
+
+    $chartData = $component->get('strategyChartData');
+
+    expect($chartData)->toBeArray()
+        ->and($chartData)->toHaveKeys(['labels', 'datasets'])
+        ->and($chartData['datasets'])->toHaveCount(4)
+        ->and($chartData['labels'])->not->toBeEmpty();
+});
+
+test('chart data starts with current total debt for all strategies', function () {
+    Debt::factory()->create([
+        'name' => 'Debt A',
+        'type' => 'kredittkort',
+        'balance' => 3000,
+        'original_balance' => 3000,
+        'interest_rate' => 15.0,
+        'minimum_payment' => 300,
+    ]);
+
+    Debt::factory()->create([
+        'name' => 'Debt B',
+        'type' => 'forbrukslån',
+        'balance' => 2000,
+        'original_balance' => 2000,
+        'interest_rate' => 10.0,
+        'minimum_payment' => 200,
+    ]);
+
+    $component = Livewire::test(StrategyComparison::class);
+    $chartData = $component->get('strategyChartData');
+
+    // First data point should be total debt (3000 + 2000 = 5000)
+    foreach ($chartData['datasets'] as $dataset) {
+        expect($dataset['data'][0])->toBe(5000.0);
+    }
+});
+
+test('chart data ends with zero for all strategies', function () {
+    Debt::factory()->create([
+        'name' => 'Test Debt',
+        'type' => 'kredittkort',
+        'balance' => 5000,
+        'original_balance' => 5000,
+        'interest_rate' => 18.0,
+        'minimum_payment' => 300,
+    ]);
+
+    $component = Livewire::test(StrategyComparison::class)
+        ->set('extraPayment', 500);
+
+    $chartData = $component->get('strategyChartData');
+
+    foreach ($chartData['datasets'] as $dataset) {
+        $lastValue = end($dataset['data']);
+        expect($lastValue)->toBe(0.0);
+    }
+});
+
+test('chart data is empty when no debts exist', function () {
+    $component = Livewire::test(StrategyComparison::class);
+    $chartData = $component->get('strategyChartData');
+
+    expect($chartData['labels'])->toBeEmpty()
+        ->and($chartData['datasets'])->toBeEmpty();
+});
+
+test('chart datasets have correct colors and labels', function () {
+    app()->setLocale('en');
+
+    Debt::factory()->create([
+        'name' => 'Test Debt',
+        'type' => 'kredittkort',
+        'balance' => 5000,
+        'original_balance' => 5000,
+        'interest_rate' => 18.0,
+        'minimum_payment' => 300,
+    ]);
+
+    $component = Livewire::test(StrategyComparison::class);
+    $chartData = $component->get('strategyChartData');
+
+    // Check colors
+    expect($chartData['datasets'][0]['borderColor'])->toBe('#6B7280') // Gray for minimum
+        ->and($chartData['datasets'][1]['borderColor'])->toBe('#3B82F6') // Blue for snowball
+        ->and($chartData['datasets'][2]['borderColor'])->toBe('#10B981') // Green for avalanche
+        ->and($chartData['datasets'][3]['borderColor'])->toBe('#F97316'); // Orange for custom
+
+    // Check that minimum has dashed line
+    expect($chartData['datasets'][0]['borderDash'])->toBe([5, 5]);
 });

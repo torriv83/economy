@@ -359,6 +359,133 @@ class StrategyComparison extends Component
         return $milestones;
     }
 
+    /**
+     * Get chart data for strategy comparison visualization.
+     * Returns monthly total debt balance for each strategy.
+     *
+     * @return array{labels: array<string>, datasets: array<array<string, mixed>>}
+     */
+    public function getStrategyChartDataProperty(): array
+    {
+        $debts = $this->getDebts();
+
+        if ($debts->isEmpty()) {
+            return ['labels' => [], 'datasets' => []];
+        }
+
+        // Generate schedules for all strategies
+        $minimumSchedule = $this->calculationService->generatePaymentSchedule($debts, 0, 'avalanche');
+        $snowballSchedule = $this->calculationService->generatePaymentSchedule($debts, $this->extraPayment, 'snowball');
+        $avalancheSchedule = $this->calculationService->generatePaymentSchedule($debts, $this->extraPayment, 'avalanche');
+        $customSchedule = $this->calculationService->generatePaymentSchedule($debts, $this->extraPayment, 'custom');
+
+        // Find maximum months across all strategies
+        $maxMonths = max(
+            count($minimumSchedule['schedule']),
+            count($snowballSchedule['schedule']),
+            count($avalancheSchedule['schedule']),
+            count($customSchedule['schedule'])
+        );
+
+        // Build labels (month names) and data arrays
+        $labels = [];
+        $minimumData = [];
+        $snowballData = [];
+        $avalancheData = [];
+        $customData = [];
+
+        // Calculate initial total debt
+        $initialTotal = $debts->sum('balance');
+
+        for ($i = 0; $i <= $maxMonths; $i++) {
+            if ($i === 0) {
+                $labels[] = __('app.today');
+                $minimumData[] = $initialTotal;
+                $snowballData[] = $initialTotal;
+                $avalancheData[] = $initialTotal;
+                $customData[] = $initialTotal;
+            } else {
+                // Get month label from first available schedule
+                $monthLabel = $this->getChartMonthLabel($i, $minimumSchedule, $snowballSchedule);
+                $labels[] = $monthLabel;
+
+                // Get remaining balance for each strategy
+                $minimumData[] = $this->getChartRemainingBalance($minimumSchedule, $i);
+                $snowballData[] = $this->getChartRemainingBalance($snowballSchedule, $i);
+                $avalancheData[] = $this->getChartRemainingBalance($avalancheSchedule, $i);
+                $customData[] = $this->getChartRemainingBalance($customSchedule, $i);
+            }
+        }
+
+        return [
+            'labels' => $labels,
+            'datasets' => [
+                [
+                    'label' => __('app.minimum_payments_only'),
+                    'data' => $minimumData,
+                    'borderColor' => '#6B7280',
+                    'backgroundColor' => 'rgba(107, 114, 128, 0.1)',
+                    'borderDash' => [5, 5],
+                ],
+                [
+                    'label' => __('app.snowball_method'),
+                    'data' => $snowballData,
+                    'borderColor' => '#3B82F6',
+                    'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
+                ],
+                [
+                    'label' => __('app.avalanche_method'),
+                    'data' => $avalancheData,
+                    'borderColor' => '#10B981',
+                    'backgroundColor' => 'rgba(16, 185, 129, 0.1)',
+                ],
+                [
+                    'label' => __('app.custom_order'),
+                    'data' => $customData,
+                    'borderColor' => '#F97316',
+                    'backgroundColor' => 'rgba(249, 115, 22, 0.1)',
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Get month label from schedule data for chart.
+     *
+     * @param  array<string, mixed>  $schedule1
+     * @param  array<string, mixed>  $schedule2
+     */
+    protected function getChartMonthLabel(int $month, array $schedule1, array $schedule2): string
+    {
+        $entry = $schedule1['schedule'][$month - 1] ?? $schedule2['schedule'][$month - 1] ?? null;
+
+        return $entry['monthName'] ?? __('app.month').' '.$month;
+    }
+
+    /**
+     * Get remaining total balance at a specific month for chart.
+     *
+     * @param  array<string, mixed>  $schedule
+     */
+    protected function getChartRemainingBalance(array $schedule, int $month): float
+    {
+        if ($month > count($schedule['schedule'])) {
+            return 0.0;
+        }
+
+        $monthData = $schedule['schedule'][$month - 1] ?? null;
+        if (! $monthData) {
+            return 0.0;
+        }
+
+        $total = 0.0;
+        foreach ($monthData['payments'] as $payment) {
+            $total += $payment['remaining'];
+        }
+
+        return round($total, 2);
+    }
+
     public function render(): \Illuminate\Contracts\View\View
     {
         return view('livewire.strategy-comparison')->layout('components.layouts.app');

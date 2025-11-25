@@ -275,272 +275,243 @@
             </div>
         </div>
 
-        {{-- Visual Comparison Section --}}
+        {{-- Strategy Projection Chart --}}
         @if ($this->minimumPaymentMonths > 0 && count($this->getDebts()) > 0)
-            <div class="mt-8 space-y-6">
-                {{-- Timeline Comparison --}}
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">
-                        {{ __('app.timeline_comparison') }}
-                    </h2>
+            <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">
+                    {{ __('app.debt_projection_comparison') }}
+                </h2>
 
-                    {{-- Minimum Payments Timeline --}}
-                    <div class="mb-6">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {{ __('app.minimum_payments_only') }}
-                            </span>
-                            <span class="text-sm font-bold text-gray-900 dark:text-white">
-                                {{ $this->minimumPaymentMonths }} {{ __('app.months_short') }}
-                            </span>
+                {{-- Chart Container --}}
+                <div class="relative h-96"
+                    x-data="{
+                        chart: null,
+                        chartData: @js($this->strategyChartData),
+                        init() {
+                            this.loadChartJs();
+                        },
+                        loadChartJs() {
+                            if (typeof Chart !== 'undefined') {
+                                this.initChart();
+                                return;
+                            }
+
+                            const script = document.createElement('script');
+                            script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+                            script.onload = () => this.initChart();
+                            document.head.appendChild(script);
+                        },
+                        initChart() {
+                            const canvas = this.$refs.canvas;
+                            if (!canvas) return;
+
+                            const isDarkMode = document.documentElement.classList.contains('dark');
+                            const ctx = canvas.getContext('2d');
+
+                            const datasets = this.chartData.datasets.map((dataset) => ({
+                                label: dataset.label,
+                                data: dataset.data,
+                                borderColor: dataset.borderColor,
+                                backgroundColor: dataset.backgroundColor,
+                                borderWidth: 2,
+                                borderDash: dataset.borderDash || [],
+                                fill: false,
+                                tension: 0.4,
+                                pointRadius: 3,
+                                pointHoverRadius: 6,
+                                pointBackgroundColor: dataset.borderColor,
+                                pointBorderColor: isDarkMode ? 'rgb(30, 41, 59)' : 'rgb(255, 255, 255)',
+                                pointBorderWidth: 2,
+                            }));
+
+                            this.chart = new Chart(ctx, {
+                                type: 'line',
+                                data: {
+                                    labels: this.chartData.labels,
+                                    datasets: datasets
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    interaction: {
+                                        intersect: false,
+                                        mode: 'index'
+                                    },
+                                    plugins: {
+                                        legend: {
+                                            display: true,
+                                            position: 'top',
+                                            labels: {
+                                                color: isDarkMode ? 'rgb(203, 213, 225)' : 'rgb(75, 85, 99)',
+                                                usePointStyle: true,
+                                                pointStyle: 'circle',
+                                                padding: 20,
+                                                font: { size: 12 }
+                                            }
+                                        },
+                                        tooltip: {
+                                            backgroundColor: isDarkMode ? 'rgb(30, 41, 59)' : 'rgb(255, 255, 255)',
+                                            titleColor: isDarkMode ? 'rgb(248, 250, 252)' : 'rgb(17, 24, 39)',
+                                            bodyColor: isDarkMode ? 'rgb(203, 213, 225)' : 'rgb(75, 85, 99)',
+                                            borderColor: isDarkMode ? 'rgb(51, 65, 85)' : 'rgb(229, 231, 235)',
+                                            borderWidth: 1,
+                                            padding: 12,
+                                            callbacks: {
+                                                label: function(context) {
+                                                    return context.dataset.label + ': ' + context.parsed.y.toLocaleString('nb-NO') + ' kr';
+                                                }
+                                            }
+                                        }
+                                    },
+                                    scales: {
+                                        y: {
+                                            beginAtZero: true,
+                                            grid: {
+                                                color: isDarkMode ? 'rgba(51, 65, 85, 0.5)' : 'rgba(229, 231, 235, 0.5)',
+                                                drawBorder: false
+                                            },
+                                            ticks: {
+                                                color: isDarkMode ? 'rgb(148, 163, 184)' : 'rgb(107, 114, 128)',
+                                                callback: function(value) {
+                                                    return value.toLocaleString('nb-NO') + ' kr';
+                                                }
+                                            }
+                                        },
+                                        x: {
+                                            grid: {
+                                                display: false,
+                                                drawBorder: false
+                                            },
+                                            ticks: {
+                                                color: isDarkMode ? 'rgb(148, 163, 184)' : 'rgb(107, 114, 128)',
+                                                maxRotation: 45,
+                                                minRotation: 45
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    }"
+                    wire:key="strategy-chart-{{ $this->extraPayment }}">
+                    <canvas x-ref="canvas"></canvas>
+                </div>
+
+                {{-- Summary Statistics Grid --}}
+                <div class="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    {{-- Minimum Payments --}}
+                    <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-600">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-3 h-3 rounded-full bg-gray-500"></div>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('app.minimum_payments_only') }}</span>
                         </div>
-                        <div class="relative h-10 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
-                            <div class="absolute inset-0 bg-gradient-to-r from-gray-400 to-gray-500 dark:from-gray-600 dark:to-gray-700 flex items-center justify-center">
-                                <span class="text-xs font-semibold text-white">{{ $this->minimumPaymentMonths }}{{ __('app.months_short') }}</span>
-                            </div>
+                        <div class="text-lg font-bold text-gray-900 dark:text-white">
+                            {{ $this->minimumPaymentMonths }} {{ __('app.months_short') }}
+                        </div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                            {{ number_format($this->minimumPaymentInterest, 0, ',', ' ') }} kr {{ __('app.interest_paid') }}
                         </div>
                     </div>
 
-                    {{-- Snowball Timeline --}}
-                    <div class="mb-6">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {{ __('app.snowball_method') }}
-                            </span>
-                            <span class="text-sm font-bold text-blue-700 dark:text-blue-400">
-                                {{ $this->snowballData['months'] }} {{ __('app.months_short') }}
-                                @if ($this->snowballSavings['monthsSaved'] > 0)
-                                    <span class="text-xs">({{ $this->snowballSavings['monthsSaved'] }}{{ __('app.months_short') }} {{ __('app.faster') }})</span>
-                                @endif
-                            </span>
+                    {{-- Snowball --}}
+                    <div class="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+                            <span class="text-sm font-medium text-blue-700 dark:text-blue-300">{{ __('app.snowball_method') }}</span>
                         </div>
-                        <div class="relative h-10 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
-                            <div
-                                class="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 flex items-center justify-center transition-all duration-500"
-                                style="width: {{ $this->minimumPaymentMonths > 0 ? ($this->snowballData['months'] / $this->minimumPaymentMonths * 100) : 0 }}%"
-                            >
-                                <span class="text-xs font-semibold text-white">{{ $this->snowballData['months'] }}{{ __('app.months_short') }}</span>
-                            </div>
+                        <div class="text-lg font-bold text-blue-900 dark:text-white">
+                            {{ $this->snowballData['months'] }} {{ __('app.months_short') }}
                         </div>
-                        {{-- Snowball Milestones --}}
-                        @if (count($this->snowballMilestones) > 0)
-                            <div class="mt-3 flex flex-wrap gap-2">
-                                @foreach ($this->snowballMilestones as $milestone)
-                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                        </svg>
-                                        {{ $milestone['name'] }} ({{ __('app.month') }} {{ $milestone['month'] }})
-                                    </span>
-                                @endforeach
-                            </div>
-                        @endif
+                        <div class="text-sm text-blue-600 dark:text-blue-400">
+                            {{ __('app.saves') }} {{ number_format($this->snowballData['savings'], 0, ',', ' ') }} kr
+                        </div>
                     </div>
 
-                    {{-- Avalanche Timeline --}}
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {{ __('app.avalanche_method') }}
-                            </span>
-                            <span class="text-sm font-bold text-green-700 dark:text-green-400">
-                                {{ $this->avalancheData['months'] }} {{ __('app.months_short') }}
-                                @if ($this->avalancheSavings['monthsSaved'] > 0)
-                                    <span class="text-xs">({{ $this->avalancheSavings['monthsSaved'] }}{{ __('app.months_short') }} {{ __('app.faster') }})</span>
-                                @endif
-                            </span>
+                    {{-- Avalanche --}}
+                    <div class="p-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            <span class="text-sm font-medium text-green-700 dark:text-green-300">{{ __('app.avalanche_method') }}</span>
                         </div>
-                        <div class="relative h-10 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
-                            <div
-                                class="absolute inset-y-0 left-0 bg-gradient-to-r from-green-500 to-green-600 dark:from-green-600 dark:to-green-700 flex items-center justify-center transition-all duration-500"
-                                style="width: {{ $this->minimumPaymentMonths > 0 ? ($this->avalancheData['months'] / $this->minimumPaymentMonths * 100) : 0 }}%"
-                            >
-                                <span class="text-xs font-semibold text-white">{{ $this->avalancheData['months'] }}{{ __('app.months_short') }}</span>
-                            </div>
+                        <div class="text-lg font-bold text-green-900 dark:text-white">
+                            {{ $this->avalancheData['months'] }} {{ __('app.months_short') }}
                         </div>
-                        {{-- Avalanche Milestones --}}
-                        @if (count($this->avalancheMilestones) > 0)
-                            <div class="mt-3 flex flex-wrap gap-2">
-                                @foreach ($this->avalancheMilestones as $milestone)
-                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800">
-                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                        </svg>
-                                        {{ $milestone['name'] }} ({{ __('app.month') }} {{ $milestone['month'] }})
-                                    </span>
-                                @endforeach
-                            </div>
-                        @endif
+                        <div class="text-sm text-green-600 dark:text-green-400">
+                            {{ __('app.saves') }} {{ number_format($this->avalancheData['savings'], 0, ',', ' ') }} kr
+                        </div>
                     </div>
 
-                    {{-- Custom Timeline --}}
-                    <div class="mt-6">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {{ __('app.custom_order') }}
-                            </span>
-                            <span class="text-sm font-bold text-orange-700 dark:text-orange-400">
-                                {{ $this->customData['months'] }} {{ __('app.months_short') }}
-                                @if ($this->customSavings['monthsSaved'] > 0)
-                                    <span class="text-xs">({{ $this->customSavings['monthsSaved'] }}{{ __('app.months_short') }} {{ __('app.faster') }})</span>
-                                @endif
-                            </span>
+                    {{-- Custom --}}
+                    <div class="p-4 rounded-lg bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-3 h-3 rounded-full bg-orange-500"></div>
+                            <span class="text-sm font-medium text-orange-700 dark:text-orange-300">{{ __('app.custom_order') }}</span>
                         </div>
-                        <div class="relative h-10 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
-                            <div
-                                class="absolute inset-y-0 left-0 bg-gradient-to-r from-orange-500 to-orange-600 dark:from-orange-600 dark:to-orange-700 flex items-center justify-center transition-all duration-500"
-                                style="width: {{ $this->minimumPaymentMonths > 0 ? ($this->customData['months'] / $this->minimumPaymentMonths * 100) : 0 }}%"
-                            >
-                                <span class="text-xs font-semibold text-white">{{ $this->customData['months'] }}{{ __('app.months_short') }}</span>
-                            </div>
+                        <div class="text-lg font-bold text-orange-900 dark:text-white">
+                            {{ $this->customData['months'] }} {{ __('app.months_short') }}
                         </div>
-                        {{-- Custom Milestones --}}
-                        @if (count($this->customMilestones) > 0)
-                            <div class="mt-3 flex flex-wrap gap-2">
-                                @foreach ($this->customMilestones as $milestone)
-                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800">
-                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                        </svg>
-                                        {{ $milestone['name'] }} ({{ __('app.month') }} {{ $milestone['month'] }})
-                                    </span>
-                                @endforeach
-                            </div>
-                        @endif
+                        <div class="text-sm text-orange-600 dark:text-orange-400">
+                            {{ __('app.saves') }} {{ number_format($this->customData['savings'], 0, ',', ' ') }} kr
+                        </div>
                     </div>
                 </div>
 
-                {{-- Interest Savings Comparison --}}
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">
-                        {{ __('app.interest_comparison') }}
-                    </h2>
-
-                    <div class="space-y-6">
-                        {{-- Minimum Payments Interest --}}
-                        <div>
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    {{ __('app.minimum_payments_only') }}
-                                </span>
-                                <span class="text-sm font-bold text-red-600 dark:text-red-400">
-                                    {{ number_format($this->minimumPaymentInterest, 0, ',', ' ') }} kr
-                                </span>
-                            </div>
-                            <div class="relative h-8 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
-                                <div class="absolute inset-0 bg-gradient-to-r from-red-400 to-red-500 dark:from-red-600 dark:to-red-700"></div>
-                            </div>
-                        </div>
-
-                        {{-- Snowball Interest --}}
-                        <div>
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    {{ __('app.snowball_method') }}
-                                </span>
-                                <div class="text-right">
-                                    <span class="text-sm font-bold text-blue-700 dark:text-blue-400">
-                                        {{ number_format($this->snowballData['totalInterest'], 0, ',', ' ') }} kr
-                                    </span>
-                                    @if ($this->snowballData['savings'] > 0)
-                                        <span class="block text-xs text-green-600 dark:text-green-400">
-                                            {{ __('app.saves') }} {{ number_format($this->snowballData['savings'], 0, ',', ' ') }} kr
+                {{-- Milestones Section --}}
+                <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
+                        {{ __('app.debt_payoff_milestones') }}
+                    </h3>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                        {{-- Snowball Milestones --}}
+                        @if (count($this->snowballMilestones) > 0)
+                            <div>
+                                <div class="text-xs font-medium text-blue-600 dark:text-blue-400 mb-2">{{ __('app.snowball_method') }}</div>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach ($this->snowballMilestones as $milestone)
+                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            {{ $milestone['name'] }} ({{ __('app.month') }} {{ $milestone['month'] }})
                                         </span>
-                                    @endif
+                                    @endforeach
                                 </div>
                             </div>
-                            <div class="relative h-8 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
-                                <div
-                                    class="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-400 to-blue-500 dark:from-blue-600 dark:to-blue-700 transition-all duration-500"
-                                    style="width: {{ $this->minimumPaymentInterest > 0 ? ($this->snowballData['totalInterest'] / $this->minimumPaymentInterest * 100) : 0 }}%"
-                                ></div>
-                                {{-- Savings visualization --}}
-                                @if ($this->snowballData['savings'] > 0)
-                                    <div
-                                        class="absolute inset-y-0 bg-green-500/30 dark:bg-green-700/30 border-l-2 border-blue-500 dark:border-blue-400"
-                                        style="left: {{ $this->minimumPaymentInterest > 0 ? ($this->snowballData['totalInterest'] / $this->minimumPaymentInterest * 100) : 0 }}%; right: 0"
-                                    ></div>
-                                @endif
-                            </div>
-                        </div>
+                        @endif
 
-                        {{-- Avalanche Interest --}}
-                        <div>
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    {{ __('app.avalanche_method') }}
-                                </span>
-                                <div class="text-right">
-                                    <span class="text-sm font-bold text-green-700 dark:text-green-400">
-                                        {{ number_format($this->avalancheData['totalInterest'], 0, ',', ' ') }} kr
-                                    </span>
-                                    @if ($this->avalancheData['savings'] > 0)
-                                        <span class="block text-xs text-green-600 dark:text-green-400">
-                                            {{ __('app.saves') }} {{ number_format($this->avalancheData['savings'], 0, ',', ' ') }} kr
+                        {{-- Avalanche Milestones --}}
+                        @if (count($this->avalancheMilestones) > 0)
+                            <div>
+                                <div class="text-xs font-medium text-green-600 dark:text-green-400 mb-2">{{ __('app.avalanche_method') }}</div>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach ($this->avalancheMilestones as $milestone)
+                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800">
+                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            {{ $milestone['name'] }} ({{ __('app.month') }} {{ $milestone['month'] }})
                                         </span>
-                                    @endif
+                                    @endforeach
                                 </div>
                             </div>
-                            <div class="relative h-8 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
-                                <div
-                                    class="absolute inset-y-0 left-0 bg-gradient-to-r from-green-400 to-green-500 dark:from-green-600 dark:to-green-700 transition-all duration-500"
-                                    style="width: {{ $this->minimumPaymentInterest > 0 ? ($this->avalancheData['totalInterest'] / $this->minimumPaymentInterest * 100) : 0 }}%"
-                                ></div>
-                                {{-- Savings visualization --}}
-                                @if ($this->avalancheData['savings'] > 0)
-                                    <div
-                                        class="absolute inset-y-0 bg-green-500/30 dark:bg-green-700/30 border-l-2 border-green-500 dark:border-green-400"
-                                        style="left: {{ $this->minimumPaymentInterest > 0 ? ($this->avalancheData['totalInterest'] / $this->minimumPaymentInterest * 100) : 0 }}%; right: 0"
-                                    ></div>
-                                @endif
-                            </div>
-                        </div>
+                        @endif
 
-                        {{-- Custom Interest --}}
-                        <div>
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    {{ __('app.custom_order') }}
-                                </span>
-                                <div class="text-right">
-                                    <span class="text-sm font-bold text-orange-700 dark:text-orange-400">
-                                        {{ number_format($this->customData['totalInterest'], 0, ',', ' ') }} kr
-                                    </span>
-                                    @if ($this->customData['savings'] > 0)
-                                        <span class="block text-xs text-green-600 dark:text-green-400">
-                                            {{ __('app.saves') }} {{ number_format($this->customData['savings'], 0, ',', ' ') }} kr
+                        {{-- Custom Milestones --}}
+                        @if (count($this->customMilestones) > 0)
+                            <div>
+                                <div class="text-xs font-medium text-orange-600 dark:text-orange-400 mb-2">{{ __('app.custom_order') }}</div>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach ($this->customMilestones as $milestone)
+                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800">
+                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            {{ $milestone['name'] }} ({{ __('app.month') }} {{ $milestone['month'] }})
                                         </span>
-                                    @endif
+                                    @endforeach
                                 </div>
                             </div>
-                            <div class="relative h-8 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
-                                <div
-                                    class="absolute inset-y-0 left-0 bg-gradient-to-r from-orange-400 to-orange-500 dark:from-orange-600 dark:to-orange-700 transition-all duration-500"
-                                    style="width: {{ $this->minimumPaymentInterest > 0 ? ($this->customData['totalInterest'] / $this->minimumPaymentInterest * 100) : 0 }}%"
-                                ></div>
-                                {{-- Savings visualization --}}
-                                @if ($this->customData['savings'] > 0)
-                                    <div
-                                        class="absolute inset-y-0 bg-green-500/30 dark:bg-green-700/30 border-l-2 border-orange-500 dark:border-orange-400"
-                                        style="left: {{ $this->minimumPaymentInterest > 0 ? ($this->customData['totalInterest'] / $this->minimumPaymentInterest * 100) : 0 }}%; right: 0"
-                                    ></div>
-                                @endif
-                            </div>
-                        </div>
-
-                        {{-- Legend --}}
-                        <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
-                            <div class="flex items-center gap-6 text-xs text-gray-600 dark:text-gray-400">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-4 h-4 rounded bg-gradient-to-r from-red-400 to-red-500 dark:from-red-600 dark:to-red-700"></div>
-                                    <span>{{ __('app.interest_paid') }}</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-4 h-4 rounded bg-green-500/30 dark:bg-green-700/30 border border-green-500 dark:border-green-400"></div>
-                                    <span>{{ __('app.interest_saved') }}</span>
-                                </div>
-                            </div>
-                        </div>
+                        @endif
                     </div>
                 </div>
             </div>

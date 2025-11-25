@@ -112,6 +112,8 @@ return [
     'interest_comparison' => 'Rentesammenligning',
     'saves' => 'Sparer',
     'interest_paid' => 'Rente betalt',
+    'debt_projection_comparison' => 'Sammenligning av gjeldsprosjeksjon',
+    'debt_payoff_milestones' => 'Milepæler for nedbetaling',
 
     // Payment Plan
     'payment_plan' => 'Nedbetalingsplan',
