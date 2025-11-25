@@ -33,7 +33,7 @@ class DebtLayout extends Component
         $this->currentView = 'progress';
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\View
     {
         return view('livewire.debts.debt-layout')->layout('components.layouts.app');
     }

@@ -44,6 +44,9 @@ class Overview extends Component
 
     public string $loanNameToDelete = '';
 
+    /**
+     * @return array<int, array{id: int, name: string, description: string|null, original_amount: float, current_balance: float, total_repaid: float, progress_percentage: float, created_at: string}>
+     */
     public function getSelfLoansProperty(): array
     {
         $loans = SelfLoan::where('current_balance', '>', 0)->get();
@@ -244,7 +247,7 @@ class Overview extends Component
         $this->loanNameToDelete = '';
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\View
     {
         return view('livewire.self-loans.overview');
     }

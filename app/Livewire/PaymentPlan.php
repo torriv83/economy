@@ -9,7 +9,7 @@ use Livewire\Component;
 
 /**
  * @property int $totalMonths
- * @property array $detailedSchedule
+ * @property array<int, array<string, mixed>> $detailedSchedule
  */
 class PaymentPlan extends Component
 {
@@ -19,10 +19,13 @@ class PaymentPlan extends Component
 
     public int $visibleMonths = 12;
 
+    /** @var array<string, float> */
     public array $editingPayments = [];
 
+    /** @var array<string, string> */
     public array $editingNotes = [];
 
+    /** @var array<string, bool> */
     public array $showNoteInput = [];
 
     protected DebtCalculationService $calculationService;
@@ -41,6 +44,9 @@ class PaymentPlan extends Component
         $this->strategy = $strategy;
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function getPaymentScheduleProperty(): array
     {
         $debts = Debt::with('payments')->get();
@@ -58,6 +64,9 @@ class PaymentPlan extends Component
         return array_slice($fullSchedule['schedule'], 0, 6);
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function getDetailedScheduleProperty(): array
     {
         $debts = Debt::with('payments')->get();
@@ -119,11 +128,17 @@ class PaymentPlan extends Component
         return $this->paymentService->calculateOverallProgress();
     }
 
-    public function getDebtsProperty()
+    /**
+     * @return \Illuminate\Database\Eloquent\Collection<string, Debt>
+     */
+    public function getDebtsProperty(): \Illuminate\Database\Eloquent\Collection
     {
         return Debt::with('payments')->get()->keyBy('name');
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function getDebtPayoffScheduleProperty(): array
     {
         $debts = Debt::with('payments')->get();
@@ -162,6 +177,7 @@ class PaymentPlan extends Component
             ];
         }
 
+        /** @var array<int, array<string, mixed>> */
         return collect($payoffDates)->sortBy('payoff_month')->values()->toArray();
     }
 
@@ -187,7 +203,9 @@ class PaymentPlan extends Component
             return;
         }
 
-        $payment = collect($monthData['payments'])->firstWhere('name', $debt->name);
+        /** @var array<int, array<string, mixed>> $payments */
+        $payments = $monthData['payments'];
+        $payment = collect($payments)->firstWhere('name', $debt->name);
 
         if (! $payment || $payment['amount'] <= 0) {
             return;
@@ -350,7 +368,7 @@ class PaymentPlan extends Component
         session()->flash('message', __('app.payment_saved'));
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\View
     {
         return view('livewire.payment-plan')->layout('components.layouts.app');
     }

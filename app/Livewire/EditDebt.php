@@ -34,6 +34,9 @@ class EditDebt extends Component
         $this->dueDay = $debt->due_day ? (string) $debt->due_day : null;
     }
 
+    /**
+     * @return array<string, array<int, mixed>|string>
+     */
     public function rules(): array
     {
         return [
@@ -72,6 +75,9 @@ class EditDebt extends Component
         ];
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function messages(): array
     {
         return [
@@ -109,7 +115,7 @@ class EditDebt extends Component
     }
 
     #[Title('Edit Debt')]
-    public function render()
+    public function render(): \Illuminate\Contracts\View\View
     {
         return view('livewire.edit-debt')
             ->layout('components.layouts.app');

@@ -19,6 +19,9 @@ class DebtProgress extends Component
         $this->calculationService = $calculationService;
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function getProgressDataProperty(): array
     {
         // Get all debts with their payments
@@ -31,6 +34,10 @@ class DebtProgress extends Component
         // Get the earliest payment or debt creation date
         $earliestPayment = Payment::orderBy('payment_date')->first();
         $earliestDebt = Debt::orderBy('created_at')->first();
+
+        if (! $earliestDebt) {
+            return [];
+        }
 
         $startDate = $earliestPayment
             ? min($earliestPayment->payment_date, $earliestDebt->created_at)
@@ -58,8 +65,12 @@ class DebtProgress extends Component
                 $totalBalance += $remainingBalance;
             }
 
+            $clonedDate = clone $currentDate;
+            $clonedDate->locale(app()->getLocale());
+            $formattedMonth = $clonedDate->isoFormat('MMM YYYY');
+
             $dataPoints[] = [
-                'month' => $currentDate->locale(app()->getLocale())->translatedFormat('M Y'),
+                'month' => $formattedMonth,
                 'date' => $currentDate->format('Y-m-d'),
                 'balance' => round($totalBalance, 2),
             ];
@@ -86,7 +97,9 @@ class DebtProgress extends Component
 
     public function getTotalInterestPaidProperty(): float
     {
-        return round(Payment::sum('interest_paid'), 2);
+        $interestPaid = Payment::sum('interest_paid');
+
+        return round((float) $interestPaid, 2);
     }
 
     public function getAverageMonthlyPaymentProperty(): float
@@ -99,7 +112,8 @@ class DebtProgress extends Component
             return 0;
         }
 
-        $totalPaid = $payments->sum('monthly_total');
+        $totalPaidValue = $payments->sum('monthly_total');
+        $totalPaid = is_numeric($totalPaidValue) ? (float) $totalPaidValue : 0;
 
         return round($totalPaid / $payments->count(), 2);
     }
@@ -118,7 +132,9 @@ class DebtProgress extends Component
             'avalanche'
         );
 
-        return $schedule['months'];
+        $months = $schedule['months'] ?? 0;
+
+        return is_numeric($months) ? (int) $months : 0;
     }
 
     public function getProjectedPayoffDateProperty(): string
@@ -126,7 +142,10 @@ class DebtProgress extends Component
         $debts = Debt::with('payments')->get();
 
         if ($debts->isEmpty()) {
-            return now()->locale('nb')->translatedFormat('F Y');
+            $carbon = now();
+            $carbon->locale('nb');
+
+            return $carbon->isoFormat('MMMM YYYY');
         }
 
         $schedule = $this->calculationService->generatePaymentSchedule(
@@ -135,7 +154,12 @@ class DebtProgress extends Component
             'avalanche'
         );
 
-        return now()->parse($schedule['payoffDate'])->locale('nb')->translatedFormat('F Y');
+        /** @var string $payoffDate */
+        $payoffDate = $schedule['payoffDate'] ?? now()->toDateString();
+        $carbon = Carbon::parse($payoffDate);
+        $carbon->locale('nb');
+
+        return $carbon->isoFormat('MMMM YYYY');
     }
 
     public function getProjectedTotalInterestProperty(): float
@@ -152,10 +176,12 @@ class DebtProgress extends Component
             'avalanche'
         );
 
-        return $schedule['totalInterest'];
+        $totalInterest = $schedule['totalInterest'] ?? 0;
+
+        return is_numeric($totalInterest) ? (float) $totalInterest : 0;
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\View
     {
         return view('livewire.debt-progress');
     }

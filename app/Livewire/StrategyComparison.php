@@ -8,9 +8,9 @@ use Illuminate\Support\Collection;
 use Livewire\Component;
 
 /**
- * @property array $snowballData
- * @property array $avalancheData
- * @property array $customData
+ * @property array<string, mixed> $snowballData
+ * @property array<string, mixed> $avalancheData
+ * @property array<string, mixed> $customData
  * @property int $minimumPaymentMonths
  * @property float $minimumPaymentInterest
  */
@@ -25,6 +25,9 @@ class StrategyComparison extends Component
         $this->calculationService = $service;
     }
 
+    /**
+     * @return array<string, array<int, string>>
+     */
     public function rules(): array
     {
         return [
@@ -32,6 +35,9 @@ class StrategyComparison extends Component
         ];
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function messages(): array
     {
         return [
@@ -50,12 +56,17 @@ class StrategyComparison extends Component
     /**
      * Get all debts with caching to prevent N+1 queries.
      * Uses Laravel's once() helper to cache within a single request.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, \App\Models\Debt>
      */
     protected function getDebts(): Collection
     {
         return once(fn () => Debt::all());
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getSnowballDataProperty(): array
     {
         $debts = $this->getDebts();
@@ -74,6 +85,9 @@ class StrategyComparison extends Component
         return $comparison['snowball'];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getAvalancheDataProperty(): array
     {
         $debts = $this->getDebts();
@@ -92,6 +106,9 @@ class StrategyComparison extends Component
         return $comparison['avalanche'];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getCustomDataProperty(): array
     {
         $debts = $this->getDebts();
@@ -194,6 +211,9 @@ class StrategyComparison extends Component
         ];
     }
 
+    /**
+     * @return array<string, array<int, array<string, mixed>>>
+     */
     public function getOrderedDebtsProperty(): array
     {
         $debts = $this->getDebts();
@@ -253,7 +273,7 @@ class StrategyComparison extends Component
     /**
      * Get milestone data for Snowball strategy showing when each debt is paid off.
      *
-     * @return array Array of milestones with debt name and month paid off
+     * @return array<int, array<string, mixed>> Array of milestones with debt name and month paid off
      */
     public function getSnowballMilestonesProperty(): array
     {
@@ -271,7 +291,7 @@ class StrategyComparison extends Component
     /**
      * Get milestone data for Avalanche strategy showing when each debt is paid off.
      *
-     * @return array Array of milestones with debt name and month paid off
+     * @return array<int, array<string, mixed>> Array of milestones with debt name and month paid off
      */
     public function getAvalancheMilestonesProperty(): array
     {
@@ -289,7 +309,7 @@ class StrategyComparison extends Component
     /**
      * Get milestone data for Custom strategy showing when each debt is paid off.
      *
-     * @return array Array of milestones with debt name and month paid off
+     * @return array<int, array<string, mixed>> Array of milestones with debt name and month paid off
      */
     public function getCustomMilestonesProperty(): array
     {
@@ -308,8 +328,8 @@ class StrategyComparison extends Component
      * Extract milestone data from payment schedule.
      * Finds the month when each debt's balance reaches zero.
      *
-     * @param  array  $schedule  Payment schedule array
-     * @return array Array of milestones [debt_name => month_paid_off]
+     * @param  array<int, array<string, mixed>>  $schedule  Payment schedule array
+     * @return array<int, array<string, mixed>> Array of milestones [debt_name => month_paid_off]
      */
     protected function extractMilestones(array $schedule): array
     {
@@ -339,7 +359,7 @@ class StrategyComparison extends Component
         return $milestones;
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\View
     {
         return view('livewire.strategy-comparison')->layout('components.layouts.app');
     }

@@ -26,6 +26,9 @@ class SelfLoan extends Model
         ];
     }
 
+    /**
+     * @return HasMany<\App\Models\SelfLoan\SelfLoanRepayment, $this>
+     */
     public function repayments(): HasMany
     {
         return $this->hasMany(SelfLoanRepayment::class);

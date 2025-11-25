@@ -23,6 +23,9 @@ class CreateDebt extends Component
 
     public bool $showSuccessMessage = false;
 
+    /**
+     * @return array<string, array<int, mixed>|string>
+     */
     public function rules(): array
     {
         return [
@@ -59,6 +62,9 @@ class CreateDebt extends Component
         ];
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function messages(): array
     {
         return [
@@ -85,7 +91,8 @@ class CreateDebt extends Component
         $validated = $this->validate();
 
         // Auto-assign priority order: max + 1
-        $maxPriority = Debt::max('custom_priority_order') ?? 0;
+        $maxPriorityValue = Debt::max('custom_priority_order');
+        $maxPriority = is_numeric($maxPriorityValue) ? (int) $maxPriorityValue : 0;
 
         Debt::create([
             'name' => $validated['name'],
@@ -104,7 +111,7 @@ class CreateDebt extends Component
     }
 
     #[Title('Create Debt')]
-    public function render()
+    public function render(): \Illuminate\Contracts\View\View
     {
         return view('livewire.create-debt')
             ->layout('components.layouts.app');

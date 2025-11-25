@@ -11,8 +11,8 @@ use Livewire\Component;
 
 /**
  * @property string|null $debtFreeDate
- * @property array $paymentSchedule
- * @property Collection $actualPayments
+ * @property array<string, mixed> $paymentSchedule
+ * @property \Illuminate\Support\Collection<int, \App\Models\Payment> $actualPayments
  * @property int $daysRemaining
  */
 class PayoffCalendar extends Component
@@ -64,6 +64,9 @@ class PayoffCalendar extends Component
         $this->currentYear = (int) now()->year;
     }
 
+    /**
+     * @return array<int, int>
+     */
     public function getAvailableYearsProperty(): array
     {
         $startYear = (int) now()->year;
@@ -74,11 +77,17 @@ class PayoffCalendar extends Component
         return range($startYear, $endYear);
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Collection<int, \App\Models\Debt>
+     */
     protected function getDebts(): Collection
     {
         return once(fn () => Debt::all());
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getPaymentScheduleProperty(): array
     {
         $debts = $this->getDebts();
@@ -95,6 +104,9 @@ class PayoffCalendar extends Component
         return $this->calculationService->generatePaymentSchedule($debts, $this->extraPayment, $this->strategy);
     }
 
+    /**
+     * @return array<int, array<int, array<string, mixed>>>
+     */
     public function getCalendarProperty(): array
     {
         $firstOfMonth = Carbon::create($this->currentYear, $this->currentMonth, 1);
@@ -121,6 +133,9 @@ class PayoffCalendar extends Component
         return $weeks;
     }
 
+    /**
+     * @return \Illuminate\Support\Collection<int, \App\Models\Payment>
+     */
     public function getActualPaymentsProperty(): Collection
     {
         $monthStart = Carbon::create($this->currentYear, $this->currentMonth, 1)->startOfMonth();
@@ -132,6 +147,9 @@ class PayoffCalendar extends Component
             ->get();
     }
 
+    /**
+     * @return array<string, array<string, mixed>>
+     */
     public function getPaymentEventsProperty(): array
     {
         $events = [];
@@ -233,6 +251,9 @@ class PayoffCalendar extends Component
         return $events;
     }
 
+    /**
+     * @return array<string, array<int, array<string, string>>>
+     */
     public function getMilestonesProperty(): array
     {
         $milestones = [];
@@ -289,6 +310,9 @@ class PayoffCalendar extends Component
         return $schedule['payoffDate'];
     }
 
+    /**
+     * @return array<string, int|null>
+     */
     public function getCountdownProperty(): array
     {
         $debtFreeDate = $this->debtFreeDate;
@@ -334,7 +358,7 @@ class PayoffCalendar extends Component
             ->translatedFormat('F Y');
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\View
     {
         return view('livewire.payoff-calendar')->layout('components.layouts.app');
     }

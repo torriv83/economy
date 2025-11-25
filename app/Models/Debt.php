@@ -6,6 +6,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string|null $type
+ * @property float $balance
+ * @property float|null $original_balance
+ * @property float $interest_rate
+ * @property float|null $minimum_payment
+ * @property int|null $custom_priority_order
+ * @property int|null $due_day
+ * @property string|null $ynab_account_id
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
+ */
 class Debt extends Model
 {
     /** @use HasFactory<\Database\Factories\DebtFactory> */
@@ -77,6 +91,9 @@ class Debt extends Model
         return __('app.non_compliant_minimum', ['amount' => $requiredMinimum]);
     }
 
+    /**
+     * @return HasMany<\App\Models\Payment, $this>
+     */
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);

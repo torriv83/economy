@@ -15,8 +15,8 @@ class DebtCalculationService
      * Order debts by lowest balance first (Snowball method).
      * This method provides psychological wins by paying off smaller debts first.
      *
-     * @param  Collection  $debts  Collection of Debt models
-     * @return Collection Ordered collection with lowest balance first
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $debts  Collection of Debt models
+     * @return \Illuminate\Support\Collection<int, \App\Models\Debt> Ordered collection with lowest balance first
      */
     public function orderBySnowball(Collection $debts): Collection
     {
@@ -27,8 +27,8 @@ class DebtCalculationService
      * Order debts by highest interest rate first (Avalanche method).
      * This method minimizes total interest paid over time.
      *
-     * @param  Collection  $debts  Collection of Debt models
-     * @return Collection Ordered collection with highest interest rate first
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $debts  Collection of Debt models
+     * @return \Illuminate\Support\Collection<int, \App\Models\Debt> Ordered collection with highest interest rate first
      */
     public function orderByAvalanche(Collection $debts): Collection
     {
@@ -39,8 +39,8 @@ class DebtCalculationService
      * Order debts by custom priority order set by the user.
      * This method allows users to choose their own repayment priority.
      *
-     * @param  Collection  $debts  Collection of Debt models
-     * @return Collection Ordered collection by custom_priority_order (ascending)
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $debts  Collection of Debt models
+     * @return \Illuminate\Support\Collection<int, \App\Models\Debt> Ordered collection by custom_priority_order (ascending)
      */
     public function orderByCustom(Collection $debts): Collection
     {
@@ -102,6 +102,12 @@ class DebtCalculationService
         return round(max(0, $totalInterest), 2);
     }
 
+    /**
+     * Get actual payments organized by month and debt name.
+     *
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $debts
+     * @return array<int, array<string, array<string, mixed>>>
+     */
     protected function getActualPaymentsByMonth(Collection $debts): array
     {
         $payments = [];
@@ -121,13 +127,16 @@ class DebtCalculationService
 
             // Sort payments by month_number to ensure correct cumulative calculation
             // Exclude reconciliation adjustments (month_number = NULL) as they don't represent monthly payments
+            /** @var \Illuminate\Database\Eloquent\Collection<int, \App\Models\Payment> $sortedPayments */
             $sortedPayments = $debt->payments
-                ->filter(fn ($payment) => $payment->month_number !== null)
+                ->filter(fn (\App\Models\Payment $payment) => $payment->month_number !== null)
                 ->sortBy('month_number');
 
             foreach ($sortedPayments as $payment) {
+                /** @var \App\Models\Payment $payment */
                 $monthNumber = $payment->month_number;
-                $principalPaid = $payment->principal_paid ?? $payment->actual_amount;
+                $actualAmount = $payment->actual_amount;
+                $principalPaid = $payment->principal_paid ?? $actualAmount;
 
                 // Track cumulative principal paid up to and including this month
                 $cumulativePrincipal[$debtName] += $principalPaid;
@@ -137,7 +146,7 @@ class DebtCalculationService
                 }
 
                 $payments[$monthNumber][$debtName] = [
-                    'actual_amount' => $payment->actual_amount,
+                    'actual_amount' => $actualAmount,
                     'principal_paid' => $principalPaid,
                     'cumulative_principal_paid' => $cumulativePrincipal[$debtName],
                     'is_reconciliation' => $payment->is_reconciliation_adjustment ?? false,
@@ -149,6 +158,12 @@ class DebtCalculationService
         return $payments;
     }
 
+    /**
+     * Generate a payment schedule based on the selected strategy.
+     *
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $debts
+     * @return array<string, mixed>
+     */
     public function generatePaymentSchedule(Collection $debts, float $extraPayment, string $strategy = 'avalanche'): array
     {
         if ($debts->isEmpty()) {
@@ -356,9 +371,9 @@ class DebtCalculationService
     /**
      * Compare snowball, avalanche, and custom strategies.
      *
-     * @param  Collection  $debts  Collection of Debt models
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $debts  Collection of Debt models
      * @param  float  $extraPayment  Extra monthly payment beyond minimums
-     * @return array Comparison of all strategies with savings vs minimum payments
+     * @return array<string, array<string, mixed>> Comparison of all strategies with savings vs minimum payments
      */
     public function compareStrategies(Collection $debts, float $extraPayment): array
     {
@@ -405,7 +420,7 @@ class DebtCalculationService
      * Each debt is paid independently with NO reallocation of freed-up payments.
      * This is different from snowball/avalanche which reallocate freed-up minimum payments.
      *
-     * @param  Collection  $debts  Collection of Debt models
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $debts  Collection of Debt models
      * @return int Maximum months to pay off all debts (the longest-running debt)
      */
     public function calculateMinimumPaymentsOnly(Collection $debts): int
@@ -422,7 +437,15 @@ class DebtCalculationService
             $minimumPayment = $debt->minimum_payment;
 
             // Skip if no minimum payment set or if balance is already zero
-            if ($minimumPayment === null || $minimumPayment <= 0 || $balance <= 0.01) {
+            if ($minimumPayment === null) {
+                continue;
+            }
+
+            if ($balance <= 0.01) {
+                continue;
+            }
+
+            if ($minimumPayment <= 0) {
                 continue;
             }
 
@@ -442,7 +465,7 @@ class DebtCalculationService
      * Calculate total interest paid with minimum payments only.
      * Each debt is paid independently with NO reallocation of freed-up payments.
      *
-     * @param  Collection  $debts  Collection of Debt models
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $debts  Collection of Debt models
      * @return float Total interest paid across all debts
      */
     public function calculateMinimumPaymentsInterest(Collection $debts): float
@@ -459,7 +482,15 @@ class DebtCalculationService
             $minimumPayment = $debt->minimum_payment;
 
             // Skip if no minimum payment set or if balance is already zero
-            if ($minimumPayment === null || $minimumPayment <= 0 || $balance <= 0.01) {
+            if ($minimumPayment === null) {
+                continue;
+            }
+
+            if ($balance <= 0.01) {
+                continue;
+            }
+
+            if ($minimumPayment <= 0) {
                 continue;
             }
 

@@ -42,7 +42,8 @@ class PaymentService
     /**
      * Record multiple payments for a month
      *
-     * @param  array  $payments  Array of ['debt_id' => int, 'planned_amount' => float, 'actual_amount' => float]
+     * @param  array<int, array<string, mixed>>  $payments  Array of ['debt_id' => int, 'planned_amount' => float, 'actual_amount' => float]
+     * @return \Illuminate\Support\Collection<int, \App\Models\Payment>
      */
     public function recordMonthPayments(array $payments, string $paymentMonth, int $monthNumber): Collection
     {
@@ -117,6 +118,8 @@ class PaymentService
 
     /**
      * Get all payments for a specific month
+     *
+     * @return \Illuminate\Support\Collection<int, \App\Models\Payment>
      */
     public function getPaymentsForMonth(string $paymentMonth): Collection
     {
@@ -183,6 +186,8 @@ class PaymentService
 
     /**
      * Check if all payments for a month are paid
+     *
+     * @param  array<int, int>  $expectedDebts
      */
     public function isMonthFullyPaid(int $monthNumber, array $expectedDebts): bool
     {
@@ -249,6 +254,8 @@ class PaymentService
 
     /**
      * Get all historical payments grouped by month
+     *
+     * @return array<int, array<string, mixed>>
      */
     public function getHistoricalPayments(): array
     {

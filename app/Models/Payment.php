@@ -6,8 +6,24 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $debt_id
+ * @property float|null $planned_amount
+ * @property float $actual_amount
+ * @property float|null $interest_paid
+ * @property float|null $principal_paid
+ * @property \Carbon\Carbon $payment_date
+ * @property int|null $month_number
+ * @property string|null $payment_month
+ * @property string|null $notes
+ * @property bool $is_reconciliation_adjustment
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
+ */
 class Payment extends Model
 {
+    /** @use HasFactory<\Database\Factories\PaymentFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -36,6 +52,9 @@ class Payment extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<\App\Models\Debt, $this>
+     */
     public function debt(): BelongsTo
     {
         return $this->belongsTo(Debt::class);

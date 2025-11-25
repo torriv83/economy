@@ -12,6 +12,9 @@ class History extends Component
 {
     public ?int $selectedLoanId = null;
 
+    /**
+     * @return array<int, array{id: int, name: string}>
+     */
     public function getAvailableLoansProperty(): array
     {
         $loans = SelfLoan::orderBy('name')->get();
@@ -24,8 +27,12 @@ class History extends Component
         })->toArray();
     }
 
+    /**
+     * @return array<int, array{id: int, name: string, description: string|null, original_amount: float, created_at: string, repayments: array<int, array{amount: float, notes: string|null, paid_at: string}>}>
+     */
     public function getPaidOffLoansProperty(): array
     {
+        /** @var \Illuminate\Database\Eloquent\Collection<int, SelfLoan> $loans */
         $loans = SelfLoan::where('current_balance', '<=', 0)->latest()->get();
 
         return $loans->map(function (SelfLoan $loan) {
@@ -52,6 +59,9 @@ class History extends Component
         })->values()->toArray();
     }
 
+    /**
+     * @return array<int, array{id: int, loan_name: string, amount: float, notes: string|null, paid_at: string}>
+     */
     public function getAllRepaymentsProperty(): array
     {
         $query = SelfLoanRepayment::with('selfLoan')
@@ -85,7 +95,7 @@ class History extends Component
         $this->selectedLoanId = null;
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\View
     {
         return view('livewire.self-loans.history');
     }

@@ -19,6 +19,9 @@ class PayoffSettings extends Component
 
     protected PayoffSettingsService $settingsService;
 
+    /**
+     * @return array<string, array<int, string>|string>
+     */
     public function rules(): array
     {
         return [
@@ -26,6 +29,9 @@ class PayoffSettings extends Component
         ];
     }
 
+    /**
+     * @return array<string, array<int, string>|string>
+     */
     public function messages(): array
     {
         return [
@@ -112,7 +118,7 @@ class PayoffSettings extends Component
         return $schedule['totalInterest'];
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\View
     {
         return view('livewire.payoff.payoff-settings');
     }

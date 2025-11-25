@@ -36,6 +36,8 @@ class YnabService
      * Fetch all debt accounts from YNAB.
      * Returns accounts of type: personalLoan, otherDebt, creditCard.
      *
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     *
      * @throws \Illuminate\Http\Client\RequestException
      */
     public function fetchDebtAccounts(): Collection
@@ -45,7 +47,11 @@ class YnabService
             ->throw()
             ->json();
 
-        $accounts = collect($response['data']['accounts'] ?? []);
+        /** @var array<int, array<string, mixed>> $accountsData */
+        $accountsData = $response['data']['accounts'] ?? [];
+
+        /** @var \Illuminate\Support\Collection<int, array<string, mixed>> $accounts */
+        $accounts = collect($accountsData);
 
         return $accounts->filter(function ($account) {
             return in_array($account['type'], ['personalLoan', 'otherDebt', 'creditCard'])
@@ -57,6 +63,9 @@ class YnabService
 
     /**
      * Map YNAB account data to our app's debt structure.
+     *
+     * @param  array<string, mixed>  $account
+     * @return array<string, mixed>
      */
     protected function mapYnabAccount(array $account): array
     {
@@ -84,6 +93,8 @@ class YnabService
     /**
      * Extract the latest interest rate from YNAB's historical data.
      * YNAB format: {"2023-02-01": 11180, "2023-09-01": 15300}
+     *
+     * @param  array<string, int>  $rates
      */
     protected function getLatestInterestRate(array $rates): float
     {
@@ -102,6 +113,8 @@ class YnabService
     /**
      * Extract the latest minimum payment from YNAB's historical data.
      * YNAB format: {"2023-02-01": 590000, "2023-03-01": 592650}
+     *
+     * @param  array<string, int>  $payments
      */
     protected function getLatestMinimumPayment(array $payments): ?float
     {

@@ -26,6 +26,9 @@ class SelfLoanRepayment extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<\App\Models\SelfLoan\SelfLoan, $this>
+     */
     public function selfLoan(): BelongsTo
     {
         return $this->belongsTo(SelfLoan::class);

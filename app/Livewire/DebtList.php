@@ -17,14 +17,17 @@ class DebtList extends Component
 
     public bool $showYnabSync = false;
 
+    /** @var array<string, array<int, array<string, mixed>>> */
     public array $ynabDiscrepancies = [];
 
     public bool $showLinkConfirmation = false;
 
     public ?int $linkingLocalDebtId = null;
 
+    /** @var array<string, mixed> */
     public array $linkingYnabDebt = [];
 
+    /** @var array<int, string> */
     public array $selectedFieldsToUpdate = [];
 
     public bool $showDeleteModal = false;
@@ -33,12 +36,16 @@ class DebtList extends Component
 
     public string $debtNameToDelete = '';
 
+    /** @var array<int, bool> */
     public array $reconciliationModals = [];
 
+    /** @var array<int, string> */
     public array $reconciliationBalances = [];
 
+    /** @var array<int, string> */
     public array $reconciliationDates = [];
 
+    /** @var array<int, string|null> */
     public array $reconciliationNotes = [];
 
     protected DebtCalculationService $calculationService;
@@ -65,6 +72,9 @@ class DebtList extends Component
         }
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function getDebtsProperty(): array
     {
         $debts = Debt::all();
@@ -120,6 +130,9 @@ class DebtList extends Component
         return $latestDebt->updated_at->locale('nb')->translatedFormat('d. F Y \k\l. H:i');
     }
 
+    /**
+     * @return array<string, float|int>|null
+     */
     public function getPayoffEstimateProperty(): ?array
     {
         $debts = Debt::all();
@@ -181,6 +194,9 @@ class DebtList extends Component
         $this->reorderMode = false;
     }
 
+    /**
+     * @param  array<int, int>  $orderedIds
+     */
     public function updateOrder(array $orderedIds): void
     {
         foreach ($orderedIds as $index => $id) {
@@ -213,6 +229,11 @@ class DebtList extends Component
         }
     }
 
+    /**
+     * @param  \Illuminate\Support\Collection<int, array<string, mixed>>  $ynabDebts
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $localDebts
+     * @return array<string, array<int, array<string, mixed>>>
+     */
     public function findDiscrepancies(Collection $ynabDebts, Collection $localDebts): array
     {
         $discrepancies = [
@@ -273,6 +294,9 @@ class DebtList extends Component
         return $discrepancies;
     }
 
+    /**
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $localDebts
+     */
     protected function findPotentialMatch(string $ynabName, Collection $localDebts): ?Debt
     {
         // Normalize names for comparison
@@ -293,6 +317,9 @@ class DebtList extends Component
         });
     }
 
+    /**
+     * @param  array<string, mixed>  $ynabDebt
+     */
     public function importYnabDebt(array $ynabDebt): void
     {
         Debt::create([
@@ -360,6 +387,7 @@ class DebtList extends Component
     public function ignorePotentialMatch(string $ynabName): void
     {
         // Remove from potential matches and add to new debts
+        /** @var array<string, mixed>|null $match */
         $match = collect($this->ynabDiscrepancies['potential_matches'])->first(function ($item) use ($ynabName) {
             return $item['ynab']['name'] === $ynabName;
         });
@@ -374,6 +402,9 @@ class DebtList extends Component
         }
     }
 
+    /**
+     * @param  array<string, mixed>  $ynabDebt
+     */
     public function openLinkConfirmation(int $localDebtId, array $ynabDebt): void
     {
         $this->linkingLocalDebtId = $localDebtId;
@@ -530,7 +561,7 @@ class DebtList extends Component
         $this->dispatch('$refresh');
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\View
     {
         return view('livewire.debt-list')->layout('components.layouts.app');
     }

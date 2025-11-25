@@ -61,7 +61,7 @@ class PayoffLayout extends Component
         $this->currentView = 'settings';
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\View
     {
         return view('livewire.payoff.payoff-layout')->layout('components.layouts.app');
     }

@@ -15,13 +15,29 @@ class CreateSelfLoan extends Component
 
     public string $amount = '';
 
-    public function createLoan(): void
+    /**
+     * @return array<string, array<int, string>|string>
+     */
+    public function rules(): array
     {
-        $this->validate([
+        return [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:500',
             'amount' => 'required|numeric|min:0.01',
-        ]);
+        ];
+    }
+
+    /**
+     * @return array<string, array<int, string>|string>
+     */
+    public function messages(): array
+    {
+        return [];
+    }
+
+    public function createLoan(): void
+    {
+        $this->validate();
 
         SelfLoan::create([
             'name' => $this->name,
@@ -37,7 +53,7 @@ class CreateSelfLoan extends Component
         $this->reset();
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\View
     {
         return view('livewire.self-loans.create-self-loan');
     }

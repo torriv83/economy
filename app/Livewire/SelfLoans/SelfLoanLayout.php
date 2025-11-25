@@ -33,7 +33,7 @@ class SelfLoanLayout extends Component
         $this->currentView = 'history';
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\View
     {
         return view('livewire.self-loans.self-loan-layout')->layout('components.layouts.app');
     }
