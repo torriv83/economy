@@ -4,11 +4,23 @@ declare(strict_types=1);
 
 namespace App\Livewire\Payoff;
 
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class PayoffLayout extends Component
 {
     public string $currentView = 'calendar';
+
+    public float $extraPayment = 2000;
+
+    public string $strategy = 'avalanche';
+
+    #[On('planSettingsUpdated')]
+    public function updateSettings(float $extraPayment, string $strategy): void
+    {
+        $this->extraPayment = $extraPayment;
+        $this->strategy = $strategy;
+    }
 
     public function showStrategies(): void
     {

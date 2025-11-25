@@ -112,7 +112,7 @@
         @elseif ($currentView === 'plan')
             <livewire:payment-plan />
         @elseif ($currentView === 'calendar')
-            <livewire:payoff-calendar />
+            <livewire:payoff-calendar :extraPayment="$extraPayment" :strategy="$strategy" />
         @endif
     </div>
 </div>

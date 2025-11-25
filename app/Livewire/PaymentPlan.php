@@ -57,6 +57,12 @@ class PaymentPlan extends Component
     public function updatedExtraPayment(): void
     {
         $this->validate(['extraPayment' => $this->rules()['extraPayment']]);
+        $this->dispatch('planSettingsUpdated', extraPayment: $this->extraPayment, strategy: $this->strategy);
+    }
+
+    public function updatedStrategy(): void
+    {
+        $this->dispatch('planSettingsUpdated', extraPayment: $this->extraPayment, strategy: $this->strategy);
     }
 
     public function boot(DebtCalculationService $service, PaymentService $paymentService): void

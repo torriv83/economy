@@ -17,9 +17,9 @@ use Livewire\Component;
  */
 class PayoffCalendar extends Component
 {
-    public float $extraPayment = 2000;
+    public float $extraPayment;
 
-    public string $strategy = 'avalanche';
+    public string $strategy;
 
     public int $currentMonth;
 
@@ -32,38 +32,12 @@ class PayoffCalendar extends Component
         $this->calculationService = $service;
     }
 
-    public function mount(): void
+    public function mount(float $extraPayment = 2000, string $strategy = 'avalanche'): void
     {
+        $this->extraPayment = $extraPayment;
+        $this->strategy = $strategy;
         $this->currentMonth = (int) now()->month;
         $this->currentYear = (int) now()->year;
-    }
-
-    public function rules(): array
-    {
-        return [
-            'extraPayment' => ['required', 'numeric', 'min:0', 'max:1000000'],
-            'strategy' => ['required', 'in:snowball,avalanche,custom'],
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-            'extraPayment.required' => __('validation.required', ['attribute' => __('app.extra_monthly_payment')]),
-            'extraPayment.numeric' => __('validation.numeric', ['attribute' => __('app.extra_monthly_payment')]),
-            'extraPayment.min' => __('validation.min.numeric', ['attribute' => __('app.extra_monthly_payment'), 'min' => 0]),
-            'extraPayment.max' => __('validation.max.numeric', ['attribute' => __('app.extra_monthly_payment'), 'max' => '1 000 000']),
-        ];
-    }
-
-    public function updatedExtraPayment(): void
-    {
-        $this->validate(['extraPayment' => $this->rules()['extraPayment']]);
-    }
-
-    public function updatedStrategy(): void
-    {
-        $this->validate(['strategy' => $this->rules()['strategy']]);
     }
 
     public function previousMonth(): void
