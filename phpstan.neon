@@ -8,6 +8,6 @@ parameters:
         - database
         - lang
         - routes
-    level: 5
+    level: 6
     ignoreErrors:
     excludePaths:
