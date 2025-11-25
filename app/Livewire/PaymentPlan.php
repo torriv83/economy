@@ -151,6 +151,8 @@ class PaymentPlan extends Component
                 'balance' => $debt->balance,
                 'payoff_month' => $payoffMonth ? $payoffMonth['month'] : null,
                 'payoff_date' => $payoffMonth ? $payoffMonth['monthName'] : null,
+                'payments_made' => $debt->payments()->count(),
+                'total_payments' => $payoffMonth ? $payoffMonth['month'] : null,
             ];
         }
 

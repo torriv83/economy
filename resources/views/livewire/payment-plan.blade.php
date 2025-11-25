@@ -63,7 +63,7 @@
                                         $progress = $originalBalance > 0 ? round((($originalBalance - $debt['balance']) / $originalBalance) * 100, 1) : 0;
                                     @endphp
                                     <div class="flex flex-col items-center">
-                                        <span class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ number_format($progress, 0) }}%</span>
+                                        <span class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ number_format($progress, 0) }}% ({{ $debt['payments_made'] }}/{{ $debt['total_payments'] ?? '?' }})</span>
                                         <div class="w-20 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                                             <div class="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-500" style="width: {{ min($progress, 100) }}%"></div>
                                         </div>
@@ -106,7 +106,7 @@
                     <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                         <div class="flex items-center justify-between mb-1">
                             <span class="text-xs font-medium text-gray-600 dark:text-gray-400">{{ __('app.progress') }}</span>
-                            <span class="text-xs font-medium text-gray-600 dark:text-gray-400">{{ number_format($progressMobile, 0) }}%</span>
+                            <span class="text-xs font-medium text-gray-600 dark:text-gray-400">{{ number_format($progressMobile, 0) }}% ({{ $debt['payments_made'] }}/{{ $debt['total_payments'] ?? '?' }})</span>
                         </div>
                         <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                             <div class="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-500" style="width: {{ min($progressMobile, 100) }}%"></div>
