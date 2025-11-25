@@ -8,3 +8,26 @@
 }
 
 @variant dark (&:where(.dark, .dark *));
+
+/* Sortable.js drag styles (used by Alpine sort plugin) */
+.sortable-chosen,
+.sortable-drag {
+    transform: scale(1.02) rotate(1deg);
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.15), 0 8px 10px -6px rgb(0 0 0 / 0.15);
+    border-color: rgb(59 130 246) !important;
+    border-width: 2px !important;
+    z-index: 50;
+    opacity: 1 !important;
+}
+
+.sortable-ghost {
+    opacity: 0.4 !important;
+    border: 2px dashed rgb(59 130 246) !important;
+    background: rgb(239 246 255) !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.dark .sortable-ghost {
+    background: rgb(30 58 138 / 0.3) !important;
+}
