@@ -119,6 +119,7 @@ return [
     'selected_strategy' => 'Selected Strategy',
     'months_to_debt_free' => 'Months to Debt-Free',
     'payoff_date' => 'Payoff Date',
+    'debt_projection_per_debt' => 'Projection per Debt',
     'month' => 'Month',
     'priority_debt' => 'Priority Debt',
     'payment' => 'Payment',

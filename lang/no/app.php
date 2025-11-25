@@ -119,6 +119,7 @@ return [
     'selected_strategy' => 'Valgt strategi',
     'months_to_debt_free' => 'Måneder til gjeldsfri',
     'payoff_date' => 'Ferdigbetalt dato',
+    'debt_projection_per_debt' => 'Projeksjon per gjeld',
     'month' => 'Måned',
     'priority_debt' => 'Prioritert gjeld',
     'payment' => 'Betaling',

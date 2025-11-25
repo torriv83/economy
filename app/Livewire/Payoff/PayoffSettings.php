@@ -7,6 +7,7 @@ namespace App\Livewire\Payoff;
 use App\Models\Debt;
 use App\Services\DebtCalculationService;
 use App\Services\PayoffSettingsService;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 class PayoffSettings extends Component
@@ -116,6 +117,80 @@ class PayoffSettings extends Component
         );
 
         return $schedule['totalInterest'];
+    }
+
+    /**
+     * Generate chart data for debt projection visualization.
+     *
+     * @return array{labels: array<string>, datasets: array<array{label: string, data: array<float>, borderColor: string}>}
+     */
+    #[Computed]
+    public function debtProjectionData(): array
+    {
+        $debts = Debt::with('payments')->get();
+
+        if ($debts->isEmpty()) {
+            return ['labels' => [], 'datasets' => []];
+        }
+
+        $schedule = $this->calculationService->generatePaymentSchedule(
+            $debts,
+            $this->extraPayment,
+            $this->strategy
+        );
+
+        if (empty($schedule['schedule'])) {
+            return ['labels' => [], 'datasets' => []];
+        }
+
+        // Color palette for debt lines
+        $colors = [
+            '#3B82F6', // blue
+            '#10B981', // green
+            '#F59E0B', // amber
+            '#EF4444', // red
+            '#8B5CF6', // purple
+            '#EC4899', // pink
+            '#06B6D4', // cyan
+            '#84CC16', // lime
+        ];
+
+        // Get debt names from the first month's payments
+        $debtNames = collect($schedule['schedule'][0]['payments'])
+            ->pluck('name')
+            ->toArray();
+
+        // Build labels (month names) - start with "I dag" for current month
+        $labels = [__('app.today')];
+        foreach ($schedule['schedule'] as $monthData) {
+            $labels[] = $monthData['monthName'];
+        }
+
+        // Build datasets - one per debt
+        $datasets = [];
+        foreach ($debtNames as $index => $debtName) {
+            // Get initial balance for this debt
+            $debt = $debts->firstWhere('name', $debtName);
+            $initialBalance = $debt ? $debt->balance : 0;
+
+            // Collect remaining balances for each month
+            $data = [$initialBalance]; // Start with current balance
+            foreach ($schedule['schedule'] as $monthData) {
+                $payment = collect($monthData['payments'])->firstWhere('name', $debtName);
+                $data[] = $payment ? $payment['remaining'] : 0;
+            }
+
+            $datasets[] = [
+                'label' => $debtName,
+                'data' => $data,
+                'borderColor' => $colors[$index % count($colors)],
+            ];
+        }
+
+        return [
+            'labels' => $labels,
+            'datasets' => $datasets,
+        ];
     }
 
     public function render(): \Illuminate\Contracts\View\View

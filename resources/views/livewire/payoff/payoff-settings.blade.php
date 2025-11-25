@@ -158,4 +158,130 @@
             </div>
         </div>
     </div>
+
+    {{-- Debt Projection Chart --}}
+    @if (count($this->debtProjectionData['datasets']) > 0)
+        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">{{ __('app.debt_projection_per_debt') }}</h2>
+            <div class="relative h-96"
+                wire:key="debt-projection-chart-{{ $this->strategy }}-{{ $this->extraPayment }}"
+                x-data="{
+                    chart: null,
+                    chartData: @js($this->debtProjectionData),
+                    init() {
+                        this.loadChartJs();
+                    },
+                    loadChartJs() {
+                        if (typeof Chart !== 'undefined') {
+                            this.initChart();
+                            return;
+                        }
+
+                        const script = document.createElement('script');
+                        script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+                        script.onload = () => this.initChart();
+                        document.head.appendChild(script);
+                    },
+                    initChart() {
+                        const canvas = this.$refs.canvas;
+                        if (!canvas) {
+                            return;
+                        }
+
+                        const isDarkMode = document.documentElement.classList.contains('dark');
+                        const ctx = canvas.getContext('2d');
+
+                        // Build datasets with consistent styling
+                        const datasets = this.chartData.datasets.map((dataset, index) => ({
+                            label: dataset.label,
+                            data: dataset.data,
+                            borderColor: dataset.borderColor,
+                            backgroundColor: dataset.borderColor + '20',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: 3,
+                            pointHoverRadius: 5,
+                            pointBackgroundColor: dataset.borderColor,
+                            pointBorderColor: isDarkMode ? 'rgb(30, 41, 59)' : 'rgb(255, 255, 255)',
+                            pointBorderWidth: 2,
+                        }));
+
+                        this.chart = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: this.chartData.labels,
+                                datasets: datasets
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                interaction: {
+                                    intersect: false,
+                                    mode: 'index'
+                                },
+                                plugins: {
+                                    legend: {
+                                        display: true,
+                                        position: 'top',
+                                        labels: {
+                                            color: isDarkMode ? 'rgb(203, 213, 225)' : 'rgb(75, 85, 99)',
+                                            usePointStyle: true,
+                                            pointStyle: 'circle',
+                                            padding: 20,
+                                            font: {
+                                                size: 12
+                                            }
+                                        }
+                                    },
+                                    tooltip: {
+                                        backgroundColor: isDarkMode ? 'rgb(30, 41, 59)' : 'rgb(255, 255, 255)',
+                                        titleColor: isDarkMode ? 'rgb(248, 250, 252)' : 'rgb(17, 24, 39)',
+                                        bodyColor: isDarkMode ? 'rgb(203, 213, 225)' : 'rgb(75, 85, 99)',
+                                        borderColor: isDarkMode ? 'rgb(51, 65, 85)' : 'rgb(229, 231, 235)',
+                                        borderWidth: 1,
+                                        padding: 12,
+                                        callbacks: {
+                                            label: function(context) {
+                                                return context.dataset.label + ': ' + context.parsed.y.toLocaleString('nb-NO') + ' kr';
+                                            }
+                                        }
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        grid: {
+                                            color: isDarkMode ? 'rgba(51, 65, 85, 0.5)' : 'rgba(229, 231, 235, 0.5)',
+                                            drawBorder: false
+                                        },
+                                        ticks: {
+                                            color: isDarkMode ? 'rgb(148, 163, 184)' : 'rgb(107, 114, 128)',
+                                            callback: function(value) {
+                                                return value.toLocaleString('nb-NO') + ' kr';
+                                            }
+                                        }
+                                    },
+                                    x: {
+                                        grid: {
+                                            display: false,
+                                            drawBorder: false
+                                        },
+                                        ticks: {
+                                            color: isDarkMode ? 'rgb(148, 163, 184)' : 'rgb(107, 114, 128)',
+                                            maxRotation: 45,
+                                            minRotation: 45,
+                                            autoSkip: true,
+                                            maxTicksLimit: 12
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }">
+                <canvas x-ref="canvas"></canvas>
+            </div>
+        </div>
+    @endif
 </div>

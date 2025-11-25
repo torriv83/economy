@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\Payoff\PayoffSettings;
+use App\Models\Debt;
 use App\Models\PayoffSetting;
 use App\Services\PayoffSettingsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -122,4 +123,66 @@ test('payoff setting factory creates custom extra payment', function () {
     $setting = PayoffSetting::factory()->withExtraPayment(5000.0)->create();
 
     expect($setting->extra_payment)->toBe(5000.0);
+});
+
+// Debt Projection Chart Tests
+test('debt projection data returns empty arrays when no debts exist', function () {
+    $component = Livewire::test(PayoffSettings::class);
+
+    expect($component->instance()->debtProjectionData)
+        ->toBeArray()
+        ->and($component->instance()->debtProjectionData['labels'])->toBeEmpty()
+        ->and($component->instance()->debtProjectionData['datasets'])->toBeEmpty();
+});
+
+test('debt projection data returns correct structure with debts', function () {
+    Debt::factory()->create([
+        'name' => 'Kredittkort',
+        'balance' => 10000,
+        'original_balance' => 10000,
+        'interest_rate' => 20,
+        'minimum_payment' => 500,
+    ]);
+
+    Debt::factory()->create([
+        'name' => 'Forbrukslån',
+        'balance' => 25000,
+        'original_balance' => 25000,
+        'interest_rate' => 15,
+        'minimum_payment' => 1000,
+    ]);
+
+    $component = Livewire::test(PayoffSettings::class);
+    $data = $component->instance()->debtProjectionData;
+
+    expect($data)
+        ->toBeArray()
+        ->toHaveKeys(['labels', 'datasets'])
+        ->and($data['labels'])->toBeArray()->not->toBeEmpty()
+        ->and($data['datasets'])->toBeArray()->toHaveCount(2)
+        ->and($data['datasets'][0])->toHaveKeys(['label', 'data', 'borderColor'])
+        ->and($data['datasets'][1])->toHaveKeys(['label', 'data', 'borderColor']);
+});
+
+test('debt projection data updates when strategy changes', function () {
+    Debt::factory()->create([
+        'name' => 'Gjeld A',
+        'balance' => 5000,
+        'original_balance' => 5000,
+        'interest_rate' => 10,
+        'minimum_payment' => 200,
+    ]);
+
+    $component = Livewire::test(PayoffSettings::class);
+
+    // Get initial data with avalanche strategy
+    $avalancheData = $component->instance()->debtProjectionData;
+
+    // Change strategy to snowball
+    $component->set('strategy', 'snowball');
+    $snowballData = $component->instance()->debtProjectionData;
+
+    // Both should have data
+    expect($avalancheData['datasets'])->not->toBeEmpty()
+        ->and($snowballData['datasets'])->not->toBeEmpty();
 });
