@@ -98,16 +98,14 @@ class PayoffCalendar extends Component
     public function getCalendarProperty(): array
     {
         $firstOfMonth = Carbon::create($this->currentYear, $this->currentMonth, 1);
-        $daysInMonth = $firstOfMonth->daysInMonth;
-        $startDayOfWeek = (int) $firstOfMonth->dayOfWeek;
 
-        $monthStart = $firstOfMonth->copy()->startOfWeek(Carbon::MONDAY);
-        $monthEnd = $firstOfMonth->copy()->endOfMonth()->endOfWeek(Carbon::SUNDAY);
+        $calendarStart = $firstOfMonth->copy()->startOfWeek(Carbon::MONDAY);
+        $calendarEnd = $firstOfMonth->copy()->endOfMonth()->endOfWeek(Carbon::SUNDAY);
 
         $weeks = [];
-        $currentDate = $monthStart->copy();
+        $currentDate = $calendarStart->copy();
 
-        while ($currentDate->lte($monthEnd)) {
+        while ($currentDate->lte($calendarEnd)) {
             $week = [];
             for ($i = 0; $i < 7; $i++) {
                 $week[] = [
