@@ -18,7 +18,7 @@
                     <button
                         type="button"
                         wire:click="checkYnab"
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 hover:bg-purple-200 dark:bg-purple-900/30 dark:hover:bg-purple-900/50 text-purple-700 dark:text-purple-300 font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:ring-offset-2">
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
@@ -182,7 +182,7 @@
                                             <button
                                                 wire:click="openReconciliationModal({{ $debt['id'] }})"
                                                 type="button"
-                                                class="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 hover:underline ml-1 cursor-pointer"
+                                                class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline ml-1 cursor-pointer"
                                             >(Avstem)</button>
                                         @endif
                                     </span>
@@ -617,7 +617,7 @@
                                 <button
                                     type="button"
                                     @click="show = false"
-                                    class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 rounded-lg p-1 transition-colors"
+                                    class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg p-1 transition-colors"
                                 >
                                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -657,7 +657,7 @@
                                             step="0.01"
                                             min="0"
                                             placeholder="Skriv inn faktisk saldo"
-                                            class="w-full px-4 py-3 pr-14 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent transition-colors duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none @error('reconciliationBalances.' . $debtModel->id) border-red-500 dark:border-red-400 @enderror"
+                                            class="w-full px-4 py-3 pr-14 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none @error('reconciliationBalances.' . $debtModel->id) border-red-500 dark:border-red-400 @enderror"
                                         >
                                         <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
                                             <span class="text-gray-500 dark:text-gray-400 text-sm font-medium">NOK</span>
@@ -705,7 +705,7 @@
                                         id="reconciliationDate-{{ $debtModel->id }}"
                                         wire:model="reconciliationDates.{{ $debtModel->id }}"
                                         placeholder="DD.MM.ÅÅÅÅ"
-                                        class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent transition-colors duration-200 @error('reconciliationDates.' . $debtModel->id) border-red-500 dark:border-red-400 @enderror"
+                                        class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200 @error('reconciliationDates.' . $debtModel->id) border-red-500 dark:border-red-400 @enderror"
                                     >
                                     @error('reconciliationDates.' . $debtModel->id)
                                         <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -722,7 +722,7 @@
                                         wire:model="reconciliationNotes.{{ $debtModel->id }}"
                                         rows="3"
                                         placeholder="F.eks. 'Gebyr på 300 kr ikke registrert' eller 'Rentejustering fra bank'"
-                                        class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent transition-colors duration-200 @error('reconciliationNotes.' . $debtModel->id) border-red-500 dark:border-red-400 @enderror"
+                                        class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200 @error('reconciliationNotes.' . $debtModel->id) border-red-500 dark:border-red-400 @enderror"
                                     ></textarea>
                                     @error('reconciliationNotes.' . $debtModel->id)
                                         <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -736,14 +736,14 @@
                             <button
                                 type="button"
                                 @click="show = false"
-                                class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
+                                class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                             >
                                 Avbryt
                             </button>
                             <button
                                 type="submit"
                                 wire:loading.attr="disabled"
-                                class="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 <span wire:loading.remove>Avstem</span>
                                 <span wire:loading class="inline-flex items-center gap-2">

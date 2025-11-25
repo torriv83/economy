@@ -188,7 +188,7 @@
                             $hasAnyOverduePayment = $hasPayment && collect($this->paymentEvents[$dateKey]['debts'])->contains('isOverdue', true);
                         @endphp
                         <div
-                            class="aspect-square p-2 rounded-lg border transition-all {{ $day['isCurrentMonth'] ? 'border-gray-200 dark:border-gray-700' : 'border-transparent bg-gray-50 dark:bg-gray-900/50' }} {{ $day['isToday'] ? 'ring-2 ring-blue-500 dark:ring-blue-400' : '' }} {{ $isDebtFree ? 'bg-gradient-to-br from-green-400 to-green-500 dark:from-green-600 dark:to-green-700 border-green-500 dark:border-green-400' : ($hasMilestone ? 'bg-purple-50 dark:bg-purple-900/20 border-purple-300 dark:border-purple-700' : ($hasAnyOverduePayment ? 'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700' : ($hasAnyPaidPayment ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700' : ($hasPayment ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700' : '')))) }}"
+                            class="aspect-square p-2 rounded-lg border transition-all {{ $day['isCurrentMonth'] ? 'border-gray-200 dark:border-gray-700' : 'border-transparent bg-gray-50 dark:bg-gray-900/50' }} {{ $day['isToday'] ? 'ring-2 ring-blue-500 dark:ring-blue-400' : '' }} {{ $isDebtFree ? 'bg-gradient-to-br from-green-400 to-green-500 dark:from-green-600 dark:to-green-700 border-green-500 dark:border-green-400' : ($hasMilestone ? 'bg-cyan-50 dark:bg-cyan-900/20 border-cyan-300 dark:border-cyan-700' : ($hasAnyOverduePayment ? 'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700' : ($hasAnyPaidPayment ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700' : ($hasPayment ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700' : '')))) }}"
                         >
                             <div class="flex flex-col h-full">
                                 <div class="text-sm font-medium {{ $day['isCurrentMonth'] ? ($isDebtFree ? 'text-white' : 'text-gray-900 dark:text-white') : 'text-gray-400 dark:text-gray-600' }}">
@@ -202,7 +202,7 @@
                                     @endif
                                     @if ($hasMilestone)
                                         @foreach ($this->milestones[$dateKey] as $milestone)
-                                            <div class="text-xs font-medium text-purple-700 dark:text-purple-300 truncate" title="{{ __('app.paid_off') }}: {{ $milestone['debtName'] }}">
+                                            <div class="text-xs font-medium text-cyan-700 dark:text-cyan-300 truncate" title="{{ __('app.paid_off') }}: {{ $milestone['debtName'] }}">
                                                 {{ $milestone['debtName'] }}
                                             </div>
                                         @endforeach
@@ -274,7 +274,7 @@
                     <span class="text-xs text-gray-600 dark:text-gray-400">{{ __('app.payment_overdue') }}</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <div class="w-6 h-6 rounded bg-purple-50 dark:bg-purple-900/20 border border-purple-300 dark:border-purple-700"></div>
+                    <div class="w-6 h-6 rounded bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-300 dark:border-cyan-700"></div>
                     <span class="text-xs text-gray-600 dark:text-gray-400">{{ __('app.debt_paid_off') }}</span>
                 </div>
                 <div class="flex items-center gap-2">

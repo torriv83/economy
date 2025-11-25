@@ -72,8 +72,8 @@
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        <div class="flex items-center justify-center h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900/20">
-                            <svg class="h-6 w-6 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <div class="flex items-center justify-center h-12 w-12 rounded-full bg-cyan-100 dark:bg-cyan-900/20">
+                            <svg class="h-6 w-6 text-cyan-600 dark:text-cyan-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
