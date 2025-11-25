@@ -34,7 +34,9 @@
       "mcp__chrome-devtools__wait_for",
       "WebSearch",
       "Bash(vendor/bin/phpstan analyse:*)",
-      "mcp__chrome-devtools__new_page"
+      "mcp__chrome-devtools__new_page",
+      "WebFetch(domain:alpinejs.dev)",
+      "mcp__chrome-devtools__drag"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -1,35 +1,15 @@
 <div x-data="{
-    sortable: null,
-    init() {
-        if (@js($reorderMode)) {
-            this.initSortable();
+    order: @js(collect($this->debts)->pluck('id')->toArray()),
+    updatePosition(item, position) {
+        const itemId = parseInt(item);
+        const currentIndex = this.order.indexOf(itemId);
+        if (currentIndex > -1) {
+            this.order.splice(currentIndex, 1);
         }
-        this.$watch('$wire.reorderMode', value => {
-            if (value) {
-                this.initSortable();
-            } else if (this.sortable) {
-                this.sortable.destroy();
-                this.sortable = null;
-            }
-        });
-    },
-    initSortable() {
-        this.$nextTick(() => {
-            const el = document.getElementById('debt-grid');
-            if (el && !this.sortable) {
-                this.sortable = Sortable.create(el, {
-                    animation: 150,
-                    handle: '.drag-handle',
-                    ghostClass: 'opacity-50'
-                });
-            }
-        });
+        this.order.splice(position, 0, itemId);
     },
     saveOrder() {
-        if (this.sortable) {
-            const order = this.sortable.toArray();
-            $wire.updateOrder(order);
-        }
+        $wire.updateOrder(this.order);
     }
 }">
     {{-- Action Buttons --}}
@@ -134,11 +114,12 @@
             </div>
 
             {{-- Debt Cards Grid --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="debt-grid">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                 @if($reorderMode) x-sort.ghost="updatePosition($item, $position)" x-sort:config="{{ json_encode(['animation' => 150]) }}" @endif>
                 @foreach ($this->debts as $index => $debt)
                     <div wire:key="debt-{{ $debt['id'] }}"
-                         data-id="{{ $debt['id'] }}"
-                         class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 {{ $reorderMode ? 'cursor-move' : 'hover:border-gray-300 dark:hover:border-gray-600' }} transition-colors relative">
+                         @if($reorderMode) x-sort:item="{{ $debt['id'] }}" @endif
+                         class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 {{ $reorderMode ? 'cursor-grab active:cursor-grabbing' : 'hover:border-gray-300 dark:hover:border-gray-600' }} transition-colors relative">
                         {{-- Priority Number Badge --}}
                         <div class="absolute top-2 right-2 w-8 h-8 {{ $reorderMode ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400' }} rounded-full flex items-center justify-center text-sm font-bold transition-colors z-10">
                             {{ $debt['customPriority'] ?? $index + 1 }}
@@ -148,13 +129,6 @@
                             {{-- Debt Name --}}
                             <div class="flex items-start justify-between mb-4">
                                 <div class="flex items-center gap-2 flex-1">
-                                    @if ($reorderMode)
-                                        <div class="drag-handle cursor-grab active:cursor-grabbing">
-                                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                                            </svg>
-                                        </div>
-                                    @endif
                                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
                                         {{ $debt['name'] }}
                                     </h3>
@@ -788,6 +762,3 @@
     @endforeach
 </div>
 
-@push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-@endpush

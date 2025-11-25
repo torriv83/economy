@@ -158,21 +158,7 @@
         {{ $slot }}
     </main>
 
-    @livewireScripts
-
-    <script>
-        Livewire.hook('request', ({ fail }) => {
-            fail(({ status, content, preventDefault }) => {
-                if (status === 419) {
-                    preventDefault()
-
-                    if (confirm('Your session has expired. Refresh the page?')) {
-                        window.location.reload()
-                    }
-                }
-            })
-        })
-    </script>
+    @livewireScriptConfig
 
     @stack('scripts')
 </body>
