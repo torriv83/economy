@@ -18,7 +18,7 @@
         <div class="flex items-center h-16">
             <!-- Logo/Brand - Fixed width on left to align with sidebar (responsive) -->
             <div class="flex items-center justify-center {{ request()->routeIs('home', 'debts', 'debts.edit', 'payoff', 'self-loans') ? 'px-4 md:w-64' : 'px-4 sm:px-6 lg:px-8' }} flex-shrink-0">
-                <a href="{{ route('home') }}" class="text-base sm:text-xl font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded truncate">
+                <a href="{{ route('home') }}" wire:navigate.hover class="text-base sm:text-xl font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded truncate">
                     {{ __('app.app_name') }}
                 </a>
             </div>
@@ -26,13 +26,13 @@
             <!-- Navigation Links -->
             <div class="flex-1 flex justify-between items-center px-4 sm:px-6 lg:px-8">
                 <div class="hidden md:flex items-center gap-6">
-                    <a href="{{ route('debts') }}" class="{{ request()->routeIs('home', 'debts', 'debts.edit') ? 'border-b-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }} font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded px-3 py-2">
+                    <a href="{{ route('debts') }}" wire:navigate.hover class="{{ request()->routeIs('home', 'debts', 'debts.edit') ? 'border-b-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }} font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded px-3 py-2">
                         {{ __('app.debts') }}
                     </a>
-                    <a href="{{ route('payoff') }}" class="{{ request()->routeIs('payoff') ? 'border-b-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }} font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded px-3 py-2">
+                    <a href="{{ route('payoff') }}" wire:navigate.hover class="{{ request()->routeIs('payoff') ? 'border-b-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }} font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded px-3 py-2">
                         {{ __('app.payoff_planning') }}
                     </a>
-                    <a href="{{ route('self-loans') }}" class="{{ request()->routeIs('self-loans') ? 'border-b-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }} font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded px-3 py-2">
+                    <a href="{{ route('self-loans') }}" wire:navigate.hover class="{{ request()->routeIs('self-loans') ? 'border-b-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }} font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded px-3 py-2">
                         {{ __('app.self_loans') }}
                     </a>
                 </div>
@@ -128,13 +128,13 @@
                         </svg>
                     </button>
                     <div x-show="debtsOpen" x-collapse class="pl-4 space-y-1 mt-1">
-                        <a href="{{ route('debts', ['view' => 'overview']) }}" @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('home', 'debts', 'debts.edit') && $debtsView === 'overview' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <a href="{{ route('debts', ['view' => 'overview']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('home', 'debts', 'debts.edit') && $debtsView === 'overview' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                             {{ __('app.overview') }}
                         </a>
-                        <a href="{{ route('debts', ['view' => 'create']) }}" @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('home', 'debts', 'debts.edit') && $debtsView === 'create' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <a href="{{ route('debts', ['view' => 'create']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('home', 'debts', 'debts.edit') && $debtsView === 'create' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                             {{ __('app.add_debt') }}
                         </a>
-                        <a href="{{ route('debts', ['view' => 'progress']) }}" @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('home', 'debts', 'debts.edit') && $debtsView === 'progress' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <a href="{{ route('debts', ['view' => 'progress']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('home', 'debts', 'debts.edit') && $debtsView === 'progress' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                             {{ __('app.progress') }}
                         </a>
                     </div>
@@ -153,16 +153,16 @@
                         </svg>
                     </button>
                     <div x-show="payoffOpen" x-collapse class="pl-4 space-y-1 mt-1">
-                        <a href="{{ route('payoff', ['view' => 'calendar']) }}" @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('payoff') && $payoffView === 'calendar' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <a href="{{ route('payoff', ['view' => 'calendar']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('payoff') && $payoffView === 'calendar' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                             {{ __('app.calendar') }}
                         </a>
-                        <a href="{{ route('payoff', ['view' => 'plan']) }}" @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('payoff') && $payoffView === 'plan' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <a href="{{ route('payoff', ['view' => 'plan']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('payoff') && $payoffView === 'plan' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                             {{ __('app.repayments') }}
                         </a>
-                        <a href="{{ route('payoff', ['view' => 'strategies']) }}" @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('payoff') && $payoffView === 'strategies' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <a href="{{ route('payoff', ['view' => 'strategies']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('payoff') && $payoffView === 'strategies' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                             {{ __('app.strategies') }}
                         </a>
-                        <a href="{{ route('payoff', ['view' => 'settings']) }}" @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('payoff') && $payoffView === 'settings' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <a href="{{ route('payoff', ['view' => 'settings']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('payoff') && $payoffView === 'settings' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                             {{ __('app.settings') }}
                         </a>
                     </div>
@@ -181,13 +181,13 @@
                         </svg>
                     </button>
                     <div x-show="selfLoansOpen" x-collapse class="pl-4 space-y-1 mt-1">
-                        <a href="{{ route('self-loans', ['view' => 'overview']) }}" @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('self-loans') && $selfLoansView === 'overview' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <a href="{{ route('self-loans', ['view' => 'overview']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('self-loans') && $selfLoansView === 'overview' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                             {{ __('app.overview') }}
                         </a>
-                        <a href="{{ route('self-loans', ['view' => 'create']) }}" @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('self-loans') && $selfLoansView === 'create' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <a href="{{ route('self-loans', ['view' => 'create']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('self-loans') && $selfLoansView === 'create' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                             {{ __('app.new_loan') }}
                         </a>
-                        <a href="{{ route('self-loans', ['view' => 'history']) }}" @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('self-loans') && $selfLoansView === 'history' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <a href="{{ route('self-loans', ['view' => 'history']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('self-loans') && $selfLoansView === 'history' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                             {{ __('app.repayment_history') }}
                         </a>
                     </div>
@@ -225,6 +225,15 @@
     </main>
 
     @livewireScriptConfig
+
+    <script>
+        // Restore dark mode after Livewire SPA navigation
+        document.addEventListener('livewire:navigated', () => {
+            const darkMode = localStorage.getItem('darkMode') === 'true' ||
+                (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.classList.toggle('dark', darkMode);
+        });
+    </script>
 
     @stack('scripts')
 </body>
