@@ -358,10 +358,18 @@ class DebtCalculationService
             ];
         }
 
-        $payoffDate = now()->addMonths($month)->format('Y-m-d');
+        // Use the last schedule entry's date as the payoff date (when the final payment is made)
+        if (! empty($schedule)) {
+            $lastEntry = end($schedule);
+            $payoffDate = $lastEntry['date'];
+            $actualMonths = count($schedule);
+        } else {
+            $payoffDate = now()->format('Y-m-d');
+            $actualMonths = 0;
+        }
 
         return [
-            'months' => $month,
+            'months' => $actualMonths,
             'totalInterest' => round($totalInterest, 2),
             'payoffDate' => $payoffDate,
             'schedule' => $schedule,
