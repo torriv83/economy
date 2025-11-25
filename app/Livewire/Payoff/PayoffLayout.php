@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Payoff;
 
+use App\Services\PayoffSettingsService;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -15,11 +16,25 @@ class PayoffLayout extends Component
 
     public string $strategy = 'avalanche';
 
+    protected PayoffSettingsService $settingsService;
+
+    public function boot(PayoffSettingsService $service): void
+    {
+        $this->settingsService = $service;
+    }
+
+    public function mount(): void
+    {
+        $this->extraPayment = $this->settingsService->getExtraPayment();
+        $this->strategy = $this->settingsService->getStrategy();
+    }
+
     #[On('planSettingsUpdated')]
     public function updateSettings(float $extraPayment, string $strategy): void
     {
         $this->extraPayment = $extraPayment;
         $this->strategy = $strategy;
+        $this->settingsService->saveSettings($extraPayment, $strategy);
     }
 
     public function showStrategies(): void

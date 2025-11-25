@@ -13,9 +13,9 @@ use Livewire\Component;
  */
 class PaymentPlan extends Component
 {
-    public float $extraPayment = 2000;
+    public float $extraPayment;
 
-    public string $strategy = 'avalanche';
+    public string $strategy;
 
     public int $visibleMonths = 12;
 
@@ -33,6 +33,12 @@ class PaymentPlan extends Component
     {
         $this->calculationService = $service;
         $this->paymentService = $paymentService;
+    }
+
+    public function mount(float $extraPayment = 2000, string $strategy = 'avalanche'): void
+    {
+        $this->extraPayment = $extraPayment;
+        $this->strategy = $strategy;
     }
 
     public function getPaymentScheduleProperty(): array

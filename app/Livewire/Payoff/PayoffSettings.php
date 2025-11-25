@@ -6,6 +6,7 @@ namespace App\Livewire\Payoff;
 
 use App\Models\Debt;
 use App\Services\DebtCalculationService;
+use App\Services\PayoffSettingsService;
 use Livewire\Component;
 
 class PayoffSettings extends Component
@@ -15,6 +16,8 @@ class PayoffSettings extends Component
     public string $strategy = 'avalanche';
 
     protected DebtCalculationService $calculationService;
+
+    protected PayoffSettingsService $settingsService;
 
     public function rules(): array
     {
@@ -33,19 +36,28 @@ class PayoffSettings extends Component
         ];
     }
 
-    public function boot(DebtCalculationService $service): void
+    public function boot(DebtCalculationService $calculationService, PayoffSettingsService $settingsService): void
     {
-        $this->calculationService = $service;
+        $this->calculationService = $calculationService;
+        $this->settingsService = $settingsService;
+    }
+
+    public function mount(): void
+    {
+        $this->extraPayment = $this->settingsService->getExtraPayment();
+        $this->strategy = $this->settingsService->getStrategy();
     }
 
     public function updatedExtraPayment(): void
     {
         $this->validate(['extraPayment' => $this->rules()['extraPayment']]);
+        $this->settingsService->setExtraPayment($this->extraPayment);
         $this->dispatch('planSettingsUpdated', extraPayment: $this->extraPayment, strategy: $this->strategy);
     }
 
     public function updatedStrategy(): void
     {
+        $this->settingsService->setStrategy($this->strategy);
         $this->dispatch('planSettingsUpdated', extraPayment: $this->extraPayment, strategy: $this->strategy);
     }
 

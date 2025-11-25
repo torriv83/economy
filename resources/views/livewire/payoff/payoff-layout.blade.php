@@ -138,7 +138,7 @@
         @if ($currentView === 'strategies')
             <livewire:strategy-comparison />
         @elseif ($currentView === 'plan')
-            <livewire:payment-plan />
+            <livewire:payment-plan :extraPayment="$extraPayment" :strategy="$strategy" />
         @elseif ($currentView === 'calendar')
             <livewire:payoff-calendar :extraPayment="$extraPayment" :strategy="$strategy" />
         @elseif ($currentView === 'settings')
