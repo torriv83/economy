@@ -6,11 +6,19 @@ namespace App\Livewire;
 
 use App\Models\Debt;
 use App\Models\Payment;
+use App\Services\DebtCalculationService;
 use Carbon\Carbon;
 use Livewire\Component;
 
 class DebtProgress extends Component
 {
+    protected DebtCalculationService $calculationService;
+
+    public function boot(DebtCalculationService $calculationService): void
+    {
+        $this->calculationService = $calculationService;
+    }
+
     public function getProgressDataProperty(): array
     {
         // Get all debts with their payments
@@ -94,6 +102,57 @@ class DebtProgress extends Component
         $totalPaid = $payments->sum('monthly_total');
 
         return round($totalPaid / $payments->count(), 2);
+    }
+
+    public function getMonthsToDebtFreeProperty(): int
+    {
+        $debts = Debt::with('payments')->get();
+
+        if ($debts->isEmpty()) {
+            return 0;
+        }
+
+        $schedule = $this->calculationService->generatePaymentSchedule(
+            $debts,
+            2000,
+            'avalanche'
+        );
+
+        return $schedule['months'];
+    }
+
+    public function getProjectedPayoffDateProperty(): string
+    {
+        $debts = Debt::with('payments')->get();
+
+        if ($debts->isEmpty()) {
+            return now()->locale('nb')->translatedFormat('F Y');
+        }
+
+        $schedule = $this->calculationService->generatePaymentSchedule(
+            $debts,
+            2000,
+            'avalanche'
+        );
+
+        return now()->parse($schedule['payoffDate'])->locale('nb')->translatedFormat('F Y');
+    }
+
+    public function getProjectedTotalInterestProperty(): float
+    {
+        $debts = Debt::with('payments')->get();
+
+        if ($debts->isEmpty()) {
+            return 0;
+        }
+
+        $schedule = $this->calculationService->generatePaymentSchedule(
+            $debts,
+            2000,
+            'avalanche'
+        );
+
+        return $schedule['totalInterest'];
     }
 
     public function render()

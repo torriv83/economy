@@ -12,6 +12,11 @@ return [
     'overview' => 'Overview',
     'debts' => 'Debts',
     'strategies' => 'Strategies',
+    'settings' => 'Settings',
+    'repayments' => 'Repayments',
+    'payoff_settings' => 'Repayment Settings',
+    'payoff_settings_description' => 'Configure your repayment strategy and extra payment',
+    'settings_impact' => 'Settings Impact',
 
     // Create Debt Form
     'create_debt' => 'Add New Debt',

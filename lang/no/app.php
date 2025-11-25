@@ -12,6 +12,11 @@ return [
     'overview' => 'Oversikt',
     'debts' => 'Gjeld',
     'strategies' => 'Strategier',
+    'settings' => 'Innstillinger',
+    'repayments' => 'Nedbetalinger',
+    'payoff_settings' => 'Nedbetalingsinnstillinger',
+    'payoff_settings_description' => 'Konfigurer din nedbetalingsstrategi og ekstra betaling',
+    'settings_impact' => 'Effekt av innstillingene',
 
     // Create Debt Form
     'create_debt' => 'Legg til ny gjeld',

@@ -67,6 +67,63 @@
             </div>
         </div>
 
+        {{-- Projection Statistics --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="flex items-center justify-center h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900/20">
+                            <svg class="h-6 w-6 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{{ __('app.months_to_debt_free') }}</dt>
+                        <dd class="flex items-baseline">
+                            <div class="text-2xl font-semibold text-gray-900 dark:text-white">{{ $this->monthsToDebtFree }} {{ trans_choice('app.months', $this->monthsToDebtFree) }}</div>
+                        </dd>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="flex items-center justify-center h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-900/20">
+                            <svg class="h-6 w-6 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{{ __('app.payoff_date') }}</dt>
+                        <dd class="flex items-baseline">
+                            <div class="text-2xl font-semibold text-gray-900 dark:text-white">{{ $this->projectedPayoffDate }}</div>
+                        </dd>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="flex items-center justify-center h-12 w-12 rounded-full bg-amber-100 dark:bg-amber-900/20">
+                            <svg class="h-6 w-6 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{{ __('app.total_interest') }}</dt>
+                        <dd class="flex items-baseline">
+                            <div class="text-2xl font-semibold text-gray-900 dark:text-white">{{ number_format($this->projectedTotalInterest, 0, ',', ' ') }} kr</div>
+                        </dd>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {{-- Progress Chart --}}
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">{{ __('app.debt_reduction_over_time') }}</h2>

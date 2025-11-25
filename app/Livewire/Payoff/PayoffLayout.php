@@ -37,6 +37,11 @@ class PayoffLayout extends Component
         $this->currentView = 'calendar';
     }
 
+    public function showSettings(): void
+    {
+        $this->currentView = 'settings';
+    }
+
     public function render()
     {
         return view('livewire.payoff.payoff-layout')->layout('components.layouts.app');
