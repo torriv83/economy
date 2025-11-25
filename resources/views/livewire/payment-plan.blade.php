@@ -11,11 +11,26 @@
     </div>
 
     {{-- Debt Payoff Overview --}}
-    <div class="space-y-4">
-        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">{{ __('app.debt_payoff_overview') }}</h2>
+    <div class="space-y-4" x-data="{ showOverview: $persist(true).as('payoff-overview-expanded') }">
+        <button
+            type="button"
+            @click="showOverview = !showOverview"
+            class="w-full flex items-center justify-between text-left cursor-pointer group"
+        >
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ __('app.debt_payoff_overview') }}</h2>
+            <svg
+                class="w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform duration-200 group-hover:text-gray-700 dark:group-hover:text-gray-300"
+                :class="{ 'rotate-180': showOverview }"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+            >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+        </button>
 
         {{-- Desktop Table View --}}
-        <div class="hidden md:block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div x-show="showOverview" x-collapse class="hidden md:block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-gray-50 dark:bg-gray-700">
@@ -77,7 +92,7 @@
         </div>
 
         {{-- Mobile Card View --}}
-        <div class="md:hidden space-y-4">
+        <div x-show="showOverview" x-collapse class="md:hidden space-y-4">
             @foreach ($this->debtPayoffSchedule as $debt)
                 <div wire:key="payoff-card-{{ $loop->index }}" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                     <div class="flex justify-between items-start mb-2">

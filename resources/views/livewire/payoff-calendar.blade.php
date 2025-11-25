@@ -2,8 +2,10 @@
     {{-- Countdown Widget (Prominent) --}}
     @if ($this->debtFreeDate && $this->countdown['months'] > 0)
         <div wire:key="countdown-{{ $strategy }}-{{ $extraPayment }}"
-             class="bg-gradient-to-r from-green-500 to-green-600 dark:from-green-600 dark:to-green-700 rounded-lg shadow-lg border border-green-400 dark:border-green-500 p-4 sm:p-6 md:p-8 mb-6 sm:mb-8"
+             class="bg-gradient-to-r from-green-500 to-green-600 dark:from-green-600 dark:to-green-700 rounded-lg shadow-lg border border-green-400 dark:border-green-500 mb-6 sm:mb-8 transition-all duration-200"
+             :class="showCountdown ? 'p-4 sm:p-6 md:p-8' : 'px-4 py-2'"
              x-data="{
+                 showCountdown: $persist(true).as('countdown-expanded'),
                  years: {{ $this->countdown['years'] }},
                  months: {{ $this->countdown['months'] }},
                  days: {{ $this->countdown['days'] }},
@@ -71,9 +73,26 @@
              }"
              x-init="setInterval(() => updateCountdown(), 1000)">
             <div class="text-center">
-                <h2 class="text-white text-lg font-medium mb-4">
-                    {{ __('app.countdown_to_freedom') }}
-                </h2>
+                <button
+                    type="button"
+                    @click="showCountdown = !showCountdown"
+                    class="w-full flex items-center justify-center gap-2 cursor-pointer group"
+                    :class="showCountdown ? 'mb-4' : 'mb-0'"
+                >
+                    <h2 class="text-white text-lg font-medium">
+                        {{ __('app.countdown_to_freedom') }}
+                    </h2>
+                    <svg
+                        class="w-5 h-5 text-green-100 transition-transform duration-200 group-hover:text-white"
+                        :class="{ 'rotate-180': showCountdown }"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div x-show="showCountdown" x-collapse>
                 <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-4 md:gap-8 mb-4">
                     @if ($this->countdown['years'] > 0)
                         <div class="flex flex-col items-center min-w-0">
@@ -108,6 +127,7 @@
                     {{ __('app.debt_free_by') }} {{ Carbon\Carbon::parse($this->debtFreeDate)->locale(app()->getLocale())->translatedFormat('j. F Y') }}
                     (<span x-text="totalDays"></span> {{ __('app.days') }})
                 </p>
+                </div>
             </div>
         </div>
     @endif
