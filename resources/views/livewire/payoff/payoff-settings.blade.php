@@ -1,117 +1,109 @@
 <div class="space-y-8">
-    {{-- Settings Card --}}
-    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">{{ __('app.payoff_settings') }}</h2>
-
-        <div class="space-y-6">
-            {{-- Strategy Selection --}}
-            <div>
-                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 block">
-                    {{ __('app.selected_strategy') }}
-                </label>
-                <div class="inline-flex rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-1">
-                    <button
-                        type="button"
-                        wire:click="$set('strategy', 'avalanche')"
-                        class="px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 {{ $this->strategy === 'avalanche' ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-sm' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}"
-                    >
-                        <span class="flex items-center gap-2">
-                            @if ($this->strategy === 'avalanche')
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                            @endif
-                            {{ __('app.avalanche_method') }}
-                        </span>
-                    </button>
-                    <button
-                        type="button"
-                        wire:click="$set('strategy', 'snowball')"
-                        class="px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 {{ $this->strategy === 'snowball' ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-sm' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}"
-                    >
-                        <span class="flex items-center gap-2">
-                            @if ($this->strategy === 'snowball')
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                            @endif
-                            {{ __('app.snowball_method') }}
-                        </span>
-                    </button>
-                    <button
-                        type="button"
-                        wire:click="$set('strategy', 'custom')"
-                        class="px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 {{ $this->strategy === 'custom' ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-sm' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}"
-                    >
-                        <span class="flex items-center gap-2">
-                            @if ($this->strategy === 'custom')
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                            @endif
-                            {{ __('app.custom_order') }}
-                        </span>
-                    </button>
-                </div>
-                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                    @if ($this->strategy === 'avalanche')
-                        {{ __('app.avalanche_description') }}
-                    @elseif ($this->strategy === 'snowball')
-                        {{ __('app.snowball_description') }}
-                    @else
-                        {{ __('app.custom_order_description') }}
-                    @endif
-                </p>
+    {{-- Settings Cards --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {{-- Strategy Selection Card --}}
+        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">{{ __('app.selected_strategy') }}</h2>
+            <div class="inline-flex rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-1">
+                <button
+                    type="button"
+                    wire:click="$set('strategy', 'avalanche')"
+                    class="px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 {{ $this->strategy === 'avalanche' ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-sm' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}"
+                >
+                    <span class="flex items-center gap-2">
+                        @if ($this->strategy === 'avalanche')
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        @endif
+                        {{ __('app.avalanche_method') }}
+                    </span>
+                </button>
+                <button
+                    type="button"
+                    wire:click="$set('strategy', 'snowball')"
+                    class="px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 {{ $this->strategy === 'snowball' ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-sm' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}"
+                >
+                    <span class="flex items-center gap-2">
+                        @if ($this->strategy === 'snowball')
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        @endif
+                        {{ __('app.snowball_method') }}
+                    </span>
+                </button>
+                <button
+                    type="button"
+                    wire:click="$set('strategy', 'custom')"
+                    class="px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 {{ $this->strategy === 'custom' ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-sm' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}"
+                >
+                    <span class="flex items-center gap-2">
+                        @if ($this->strategy === 'custom')
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        @endif
+                        {{ __('app.custom_order') }}
+                    </span>
+                </button>
             </div>
+            <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                @if ($this->strategy === 'avalanche')
+                    {{ __('app.avalanche_description') }}
+                @elseif ($this->strategy === 'snowball')
+                    {{ __('app.snowball_description') }}
+                @else
+                    {{ __('app.custom_order_description') }}
+                @endif
+            </p>
+        </div>
 
-            {{-- Extra Payment Input --}}
-            <div>
-                <label for="extraPayment" class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 block">
-                    {{ __('app.extra_monthly_payment') }}
-                </label>
-                <div class="flex items-center gap-3">
-                    <button
-                        type="button"
-                        wire:click="$set('extraPayment', {{ max(0, $this->extraPayment - 500) }})"
-                        class="h-12 w-12 flex items-center justify-center bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
-                        aria-label="Decrease by 500"
+        {{-- Extra Payment Card --}}
+        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">{{ __('app.extra_monthly_payment') }}</h2>
+            <div class="flex items-center gap-3">
+                <button
+                    type="button"
+                    wire:click="$set('extraPayment', {{ max(0, $this->extraPayment - 500) }})"
+                    class="h-12 w-12 flex items-center justify-center bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
+                    aria-label="Decrease by 500"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                    </svg>
+                </button>
+                <div class="relative flex-1">
+                    <input
+                        type="number"
+                        id="extraPayment"
+                        wire:model.live.debounce.300ms="extraPayment"
+                        min="0"
+                        max="1000000"
+                        step="100"
+                        class="w-full px-4 py-3 pr-12 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white font-bold text-center text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all"
                     >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
-                        </svg>
-                    </button>
-                    <div class="relative flex-1 max-w-xs">
-                        <input
-                            type="number"
-                            id="extraPayment"
-                            wire:model.live.debounce.300ms="extraPayment"
-                            min="0"
-                            max="1000000"
-                            step="100"
-                            class="w-full px-4 py-3 pr-12 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white font-bold text-center text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all"
-                        >
-                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium pointer-events-none">
-                            kr
-                        </span>
-                    </div>
-                    <button
-                        type="button"
-                        wire:click="$set('extraPayment', {{ $this->extraPayment + 500 }})"
-                        class="h-12 w-12 flex items-center justify-center bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
-                        aria-label="Increase by 500"
-                    >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                    </button>
+                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium pointer-events-none">
+                        kr
+                    </span>
                 </div>
-                @error('extraPayment')
-                    <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                @enderror
-                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                    {{ __('app.enter_extra_payment_description') }}
-                </p>
+                <button
+                    type="button"
+                    wire:click="$set('extraPayment', {{ $this->extraPayment + 500 }})"
+                    class="h-12 w-12 flex items-center justify-center bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2"
+                    aria-label="Increase by 500"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                </button>
             </div>
+            @error('extraPayment')
+                <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+            @enderror
+            <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                {{ __('app.enter_extra_payment_description') }}
+            </p>
         </div>
     </div>
 
