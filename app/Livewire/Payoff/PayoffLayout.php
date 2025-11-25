@@ -27,6 +27,11 @@ class PayoffLayout extends Component
     {
         $this->extraPayment = $this->settingsService->getExtraPayment();
         $this->strategy = $this->settingsService->getStrategy();
+
+        $view = request()->query('view');
+        if (in_array($view, ['calendar', 'plan', 'strategies', 'settings'])) {
+            $this->currentView = $view;
+        }
     }
 
     #[On('planSettingsUpdated')]

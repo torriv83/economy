@@ -10,6 +10,14 @@ class DebtLayout extends Component
 {
     public string $currentView = 'overview';
 
+    public function mount(): void
+    {
+        $view = request()->query('view');
+        if (in_array($view, ['overview', 'create', 'progress'])) {
+            $this->currentView = $view;
+        }
+    }
+
     public function showOverview(): void
     {
         $this->currentView = 'overview';

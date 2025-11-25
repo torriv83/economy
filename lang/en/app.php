@@ -218,6 +218,8 @@ return [
     'fri' => 'Fri',
     'sat' => 'Sat',
     'sun' => 'Sun',
+    'no_payments' => 'No payments',
+    'no_events_this_month' => 'No payment events this month',
 
     // Due Date
     'due_day' => 'Payment Due Day',

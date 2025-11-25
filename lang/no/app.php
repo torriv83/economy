@@ -220,6 +220,8 @@ return [
     'fri' => 'Fre',
     'sat' => 'Lør',
     'sun' => 'Søn',
+    'no_payments' => 'Ingen betalinger',
+    'no_events_this_month' => 'Ingen betalinger denne måneden',
 
     // Due Date
     'due_day' => 'Forfallsdag',
