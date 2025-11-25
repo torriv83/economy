@@ -34,7 +34,6 @@ class PayoffLayout extends Component
     {
         $this->extraPayment = $extraPayment;
         $this->strategy = $strategy;
-        $this->settingsService->saveSettings($extraPayment, $strategy);
     }
 
     public function showStrategies(): void

@@ -8,9 +8,11 @@ use App\Models\PayoffSetting;
 
 class PayoffSettingsService
 {
+    protected ?PayoffSetting $cachedSettings = null;
+
     public function getSettings(): PayoffSetting
     {
-        return PayoffSetting::firstOrCreate([], [
+        return $this->cachedSettings ??= PayoffSetting::firstOrCreate([], [
             'extra_payment' => 2000.00,
             'strategy' => 'avalanche',
         ]);
@@ -18,7 +20,7 @@ class PayoffSettingsService
 
     public function getExtraPayment(): float
     {
-        return (float) $this->getSettings()->extra_payment;
+        return $this->getSettings()->extra_payment;
     }
 
     public function getStrategy(): string
