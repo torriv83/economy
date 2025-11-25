@@ -83,17 +83,20 @@
                             <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">
                                 {{ __('app.debt_free_in') }}
                             </p>
-                            @if ($this->payoffEstimate)
+                            @if ($this->strategyEstimate)
                                 <p class="text-3xl font-bold text-gray-900 dark:text-white">
-                                    @if ($this->payoffEstimate['years'] > 0)
-                                        {{ $this->payoffEstimate['years'] }} {{ trans_choice('app.years', $this->payoffEstimate['years']) }}
+                                    @if ($this->strategyEstimate['years'] > 0)
+                                        {{ $this->strategyEstimate['years'] }} {{ trans_choice('app.years', $this->strategyEstimate['years']) }}
                                     @endif
-                                    @if ($this->payoffEstimate['months'] > 0)
-                                        {{ $this->payoffEstimate['months'] }} {{ trans_choice('app.months', $this->payoffEstimate['months']) }}
+                                    @if ($this->strategyEstimate['months'] > 0)
+                                        {{ $this->strategyEstimate['months'] }} {{ trans_choice('app.months', $this->strategyEstimate['months']) }}
                                     @endif
                                 </p>
                                 <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                                    {{ __('app.with_minimum_payments') }}
+                                    <span>{{ __('app.with_chosen_strategy') }}</span>
+                                    @if ($this->payoffEstimate)
+                                        <span class="text-xs text-gray-500 dark:text-gray-400 ml-1">({{ $this->payoffEstimate['years'] > 0 ? $this->payoffEstimate['years'] . ' ' . trans_choice('app.years', $this->payoffEstimate['years']) . ' ' : '' }}{{ $this->payoffEstimate['months'] > 0 ? $this->payoffEstimate['months'] . ' ' . trans_choice('app.months', $this->payoffEstimate['months']) . ' ' : '' }}{{ __('app.with_minimum_payments') }})</span>
+                                    @endif
                                 </p>
                             @else
                                 <p class="text-2xl font-bold text-gray-500 dark:text-gray-400">

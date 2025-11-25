@@ -7,6 +7,7 @@ namespace App\Livewire;
 use App\Models\Debt;
 use App\Services\DebtCalculationService;
 use App\Services\PaymentService;
+use App\Services\PayoffSettingsService;
 use App\Services\YnabService;
 use Illuminate\Support\Collection;
 use Livewire\Component;
@@ -54,11 +55,18 @@ class DebtList extends Component
 
     protected PaymentService $paymentService;
 
-    public function boot(DebtCalculationService $calculationService, YnabService $ynabService, PaymentService $paymentService): void
-    {
+    protected PayoffSettingsService $settingsService;
+
+    public function boot(
+        DebtCalculationService $calculationService,
+        YnabService $ynabService,
+        PaymentService $paymentService,
+        PayoffSettingsService $settingsService
+    ): void {
         $this->calculationService = $calculationService;
         $this->ynabService = $ynabService;
         $this->paymentService = $paymentService;
+        $this->settingsService = $settingsService;
     }
 
     public function mount(): void
@@ -152,6 +160,35 @@ class DebtList extends Component
         $months = $this->calculationService->calculateMinimumPaymentsOnly($debts);
 
         $years = floor($months / 12);
+        $remainingMonths = $months % 12;
+
+        return [
+            'years' => $years,
+            'months' => $remainingMonths,
+            'totalMonths' => $months,
+        ];
+    }
+
+    /**
+     * Get payoff estimate using the user's chosen strategy and extra payment.
+     *
+     * @return array<string, float|int>|null
+     */
+    public function getStrategyEstimateProperty(): ?array
+    {
+        $debts = Debt::all();
+
+        if ($debts->isEmpty()) {
+            return null;
+        }
+
+        $extraPayment = $this->settingsService->getExtraPayment();
+        $strategy = $this->settingsService->getStrategy();
+
+        $schedule = $this->calculationService->generatePaymentSchedule($debts, $extraPayment, $strategy);
+        $months = $schedule['months'];
+
+        $years = (int) floor($months / 12);
         $remainingMonths = $months % 12;
 
         return [
