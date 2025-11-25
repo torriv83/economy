@@ -30,7 +30,7 @@
                                 {{ __('app.payoff_date') }}
                             </th>
                             <th class="px-6 py-3 text-center text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                                Handlinger
+                                {{ __('app.progress') }}
                             </th>
                         </tr>
                     </thead>
@@ -56,19 +56,18 @@
                                         </div>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    @if (isset($this->debts[$debt['name']]))
-                                        <button
-                                            wire:click="openReconciliationModal({{ $this->debts[$debt['name']]->id }})"
-                                            type="button"
-                                            class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white text-sm font-medium rounded-lg transition-colors duration-200 cursor-pointer"
-                                        >
-                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                                            </svg>
-                                            Avstem
-                                        </button>
-                                    @endif
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @php
+                                        $debtModel = $this->debts[$debt['name']] ?? null;
+                                        $originalBalance = $debtModel?->original_balance ?? $debt['balance'];
+                                        $progress = $originalBalance > 0 ? round((($originalBalance - $debt['balance']) / $originalBalance) * 100, 1) : 0;
+                                    @endphp
+                                    <div class="flex flex-col items-center">
+                                        <span class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ number_format($progress, 0) }}%</span>
+                                        <div class="w-20 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                            <div class="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-500" style="width: {{ min($progress, 100) }}%"></div>
+                                        </div>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
@@ -98,20 +97,21 @@
                             @endif
                         </div>
                     </div>
-                    @if (isset($this->debts[$debt['name']]))
-                        <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                            <button
-                                wire:click="openReconciliationModal({{ $this->debts[$debt['name']]->id }})"
-                                type="button"
-                                class="w-full inline-flex items-center justify-center px-4 py-2 bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white text-sm font-medium rounded-lg transition-colors duration-200 cursor-pointer"
-                            >
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                                </svg>
-                                Avstem
-                            </button>
+                    {{-- Progress bar --}}
+                    @php
+                        $debtModel = $this->debts[$debt['name']] ?? null;
+                        $originalBalance = $debtModel?->original_balance ?? $debt['balance'];
+                        $progressMobile = $originalBalance > 0 ? round((($originalBalance - $debt['balance']) / $originalBalance) * 100, 1) : 0;
+                    @endphp
+                    <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs font-medium text-gray-600 dark:text-gray-400">{{ __('app.progress') }}</span>
+                            <span class="text-xs font-medium text-gray-600 dark:text-gray-400">{{ number_format($progressMobile, 0) }}%</span>
                         </div>
-                    @endif
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div class="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-500" style="width: {{ min($progressMobile, 100) }}%"></div>
+                        </div>
+                    </div>
                 </div>
             @endforeach
         </div>
@@ -591,198 +591,5 @@
             </div>
         @endif
     </div>
-
-    {{-- Reconciliation Modals --}}
-    @foreach ($this->debts as $debt)
-        <div
-            x-data="{ show: $wire.entangle('reconciliationModals.{{ $debt->id }}') }"
-            x-show="show"
-            x-cloak
-            @keydown.escape.window="show = false"
-            class="fixed inset-0 z-50 overflow-y-auto"
-            aria-labelledby="modal-title"
-            role="dialog"
-            aria-modal="true"
-            style="display: none;"
-        >
-            <!-- Background overlay -->
-            <div
-                class="fixed inset-0 z-40 bg-black/50 transition-opacity"
-                aria-hidden="true"
-                x-show="show"
-                x-transition:enter="ease-out duration-300"
-                x-transition:enter-start="opacity-0"
-                x-transition:enter-end="opacity-100"
-                x-transition:leave="ease-in duration-200"
-                x-transition:leave-start="opacity-100"
-                x-transition:leave-end="opacity-0"
-                @click="show = false"
-            ></div>
-
-            <div class="relative z-50 flex items-center justify-center min-h-screen p-4">
-                <div
-                    class="w-full max-w-lg bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all"
-                    x-show="show"
-                    x-transition:enter="ease-out duration-300"
-                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-                    x-transition:leave="ease-in duration-200"
-                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    @click.away="show = false"
-                >
-                        <form wire:submit.prevent="reconcileDebt({{ $debt->id }})">
-                            <!-- Header -->
-                            <div class="bg-white dark:bg-gray-800 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                                <div class="flex items-center justify-between">
-                                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white" id="modal-title">
-                                        Avstem gjeld
-                                    </h3>
-                                    <button
-                                        type="button"
-                                        @click="show = false"
-                                        class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 rounded-lg p-1 transition-colors"
-                                    >
-                                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                        </svg>
-                                    </button>
-                                </div>
-                                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{{ $debt->name }}</p>
-                            </div>
-
-                            <!-- Content -->
-                            <div class="bg-white dark:bg-gray-800 px-6 py-5">
-                                <div class="space-y-5">
-                                            <!-- Current Calculated Balance -->
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                                    Beregnet saldo
-                                                </label>
-                                                <div class="text-lg font-semibold text-gray-900 dark:text-white">
-                                                    {{ number_format($debt->balance, 2, ',', ' ') }} kr
-                                                </div>
-                                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                                    Basert på opprinnelig saldo og innbetalinger
-                                                </p>
-                                            </div>
-
-                                            <!-- Actual Balance Input -->
-                                            <div>
-                                                <label for="actualBalance-{{ $debt->id }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                    Faktisk saldo (fra kontoutskrift)
-                                                    <span class="text-red-500">*</span>
-                                                </label>
-                                                <div class="relative">
-                                                    <input
-                                                        type="number"
-                                                        id="actualBalance-{{ $debt->id }}"
-                                                        wire:model.live="reconciliationBalances.{{ $debt->id }}"
-                                                        step="0.01"
-                                                        min="0"
-                                                        placeholder="Skriv inn faktisk saldo"
-                                                        class="w-full px-4 py-3 pr-14 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent transition-colors duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none @error('reconciliationBalances.' . $debt->id) border-red-500 dark:border-red-400 @enderror"
-                                                    >
-                                                    <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                                                        <span class="text-gray-500 dark:text-gray-400 text-sm font-medium">NOK</span>
-                                                    </div>
-                                                </div>
-                                                @error('reconciliationBalances.' . $debt->id)
-                                                    <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                                @enderror
-                                            </div>
-
-                                            <!-- Difference Display -->
-                                            @if (isset($this->reconciliationBalances[$debt->id]) && $this->reconciliationBalances[$debt->id] !== '')
-                                                @php
-                                                    $difference = $this->getReconciliationDifference($debt->id);
-                                                @endphp
-                                                <div class="p-4 rounded-lg {{ $difference < 0 ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' : ($difference > 0 ? 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800' : 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800') }}">
-                                                    <div class="flex items-center justify-between">
-                                                        <span class="text-sm font-medium {{ $difference < 0 ? 'text-green-900 dark:text-green-200' : ($difference > 0 ? 'text-yellow-900 dark:text-yellow-200' : 'text-blue-900 dark:text-blue-200') }}">
-                                                            Differanse:
-                                                        </span>
-                                                        <span class="text-lg font-bold {{ $difference < 0 ? 'text-green-900 dark:text-green-200' : ($difference > 0 ? 'text-yellow-900 dark:text-yellow-200' : 'text-blue-900 dark:text-blue-200') }}">
-                                                            {{ $difference >= 0 ? '+' : '' }}{{ number_format($difference, 2, ',', ' ') }} kr
-                                                        </span>
-                                                    </div>
-                                                    <p class="mt-1 text-xs {{ $difference < 0 ? 'text-green-700 dark:text-green-300' : ($difference > 0 ? 'text-yellow-700 dark:text-yellow-300' : 'text-blue-700 dark:text-blue-300') }}">
-                                                        @if (abs($difference) < 0.01)
-                                                            Saldo er korrekt - ingen justering nødvendig
-                                                        @elseif ($difference < 0)
-                                                            Du har betalt {{ number_format(abs($difference), 2, ',', ' ') }} kr mer enn registrert
-                                                        @else
-                                                            Saldo er {{ number_format($difference, 2, ',', ' ') }} kr høyere enn beregnet
-                                                        @endif
-                                                    </p>
-                                                </div>
-                                            @endif
-
-                                            <!-- Reconciliation Date -->
-                                            <div>
-                                                <label for="reconciliationDate-{{ $debt->id }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                    Avstemmingsdato
-                                                    <span class="text-red-500">*</span>
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    id="reconciliationDate-{{ $debt->id }}"
-                                                    wire:model="reconciliationDates.{{ $debt->id }}"
-                                                    placeholder="DD.MM.ÅÅÅÅ"
-                                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent transition-colors duration-200 @error('reconciliationDates.' . $debt->id) border-red-500 dark:border-red-400 @enderror"
-                                                >
-                                                @error('reconciliationDates.' . $debt->id)
-                                                    <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                                @enderror
-                                            </div>
-
-                                            <!-- Notes -->
-                                            <div>
-                                                <label for="notes-{{ $debt->id }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                    Notater (valgfritt)
-                                                </label>
-                                                <textarea
-                                                    id="notes-{{ $debt->id }}"
-                                                    wire:model="reconciliationNotes.{{ $debt->id }}"
-                                                    rows="3"
-                                                    placeholder="F.eks. 'Gebyr på 300 kr ikke registrert' eller 'Rentejustering fra bank'"
-                                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent transition-colors duration-200 @error('reconciliationNotes.' . $debt->id) border-red-500 dark:border-red-400 @enderror"
-                                                ></textarea>
-                                                @error('reconciliationNotes.' . $debt->id)
-                                                    <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-
-                            <!-- Footer -->
-                            <div class="bg-gray-50 dark:bg-gray-900 px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
-                                <button
-                                    type="button"
-                                    @click="show = false"
-                                    class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
-                                >
-                                    Avbryt
-                                </button>
-                                <button
-                                    type="submit"
-                                    wire:loading.attr="disabled"
-                                    class="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                >
-                                    <span wire:loading.remove>Avstem</span>
-                                    <span wire:loading class="inline-flex items-center gap-2">
-                                        <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                        Avstemmer...
-                                    </span>
-                                </button>
-                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                        </div>
-                    @endforeach
 
 </div>

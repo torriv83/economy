@@ -6,6 +6,7 @@ namespace App\Livewire;
 
 use App\Models\Debt;
 use App\Services\DebtCalculationService;
+use App\Services\PaymentService;
 use App\Services\YnabService;
 use Illuminate\Support\Collection;
 use Livewire\Component;
@@ -32,14 +33,36 @@ class DebtList extends Component
 
     public string $debtNameToDelete = '';
 
+    public array $reconciliationModals = [];
+
+    public array $reconciliationBalances = [];
+
+    public array $reconciliationDates = [];
+
+    public array $reconciliationNotes = [];
+
     protected DebtCalculationService $calculationService;
 
     protected YnabService $ynabService;
 
-    public function boot(DebtCalculationService $calculationService, YnabService $ynabService): void
+    protected PaymentService $paymentService;
+
+    public function boot(DebtCalculationService $calculationService, YnabService $ynabService, PaymentService $paymentService): void
     {
         $this->calculationService = $calculationService;
         $this->ynabService = $ynabService;
+        $this->paymentService = $paymentService;
+    }
+
+    public function mount(): void
+    {
+        // Initialize reconciliation arrays with all debt IDs
+        foreach (Debt::pluck('id') as $debtId) {
+            $this->reconciliationModals[$debtId] = false;
+            $this->reconciliationBalances[$debtId] = '';
+            $this->reconciliationDates[$debtId] = now()->format('d.m.Y');
+            $this->reconciliationNotes[$debtId] = '';
+        }
     }
 
     public function getDebtsProperty(): array
@@ -419,6 +442,92 @@ class DebtList extends Component
     {
         $this->showYnabSync = false;
         $this->ynabDiscrepancies = [];
+    }
+
+    public function openReconciliationModal(int $debtId): void
+    {
+        $this->reconciliationModals[$debtId] = true;
+
+        $debt = Debt::find($debtId);
+        if ($debt) {
+            $this->reconciliationBalances[$debtId] = (string) $debt->balance;
+            $this->reconciliationDates[$debtId] = now()->format('d.m.Y');
+            $this->reconciliationNotes[$debtId] = null;
+        }
+    }
+
+    public function closeReconciliationModal(int $debtId): void
+    {
+        unset($this->reconciliationModals[$debtId]);
+        unset($this->reconciliationBalances[$debtId]);
+        unset($this->reconciliationNotes[$debtId]);
+
+        $debt = Debt::find($debtId);
+        if ($debt) {
+            $this->reconciliationBalances[$debtId] = (string) $debt->balance;
+            $this->reconciliationDates[$debtId] = now()->format('d.m.Y');
+        }
+    }
+
+    public function getReconciliationDifference(int $debtId): float
+    {
+        $debt = Debt::find($debtId);
+        if (! $debt) {
+            return 0;
+        }
+
+        $actualBalance = isset($this->reconciliationBalances[$debtId])
+            ? (float) $this->reconciliationBalances[$debtId]
+            : $debt->balance;
+
+        return round($actualBalance - $debt->balance, 2);
+    }
+
+    public function reconcileDebt(int $debtId): void
+    {
+        $debt = Debt::find($debtId);
+        if (! $debt) {
+            return;
+        }
+
+        $this->validate([
+            "reconciliationBalances.{$debtId}" => ['required', 'numeric', 'min:0'],
+            "reconciliationDates.{$debtId}" => ['required', 'date_format:d.m.Y'],
+            "reconciliationNotes.{$debtId}" => ['nullable', 'string', 'max:500'],
+        ], [
+            "reconciliationBalances.{$debtId}.required" => 'Faktisk saldo er påkrevd.',
+            "reconciliationBalances.{$debtId}.numeric" => 'Faktisk saldo må være et tall.',
+            "reconciliationBalances.{$debtId}.min" => 'Faktisk saldo kan ikke være negativ.',
+            "reconciliationDates.{$debtId}.required" => 'Avstemmingsdato er påkrevd.',
+            "reconciliationDates.{$debtId}.date_format" => 'Avstemmingsdato må være i formatet DD.MM.ÅÅÅÅ.',
+            "reconciliationNotes.{$debtId}.max" => 'Notater kan ikke være lengre enn 500 tegn.',
+        ]);
+
+        $difference = $this->getReconciliationDifference($debtId);
+
+        if (abs($difference) < 0.01) {
+            session()->flash('message', 'Ingen justering nødvendig - saldo er allerede korrekt.');
+            $this->closeReconciliationModal($debtId);
+
+            return;
+        }
+
+        // Convert Norwegian date format (DD.MM.YYYY) to database format (YYYY-MM-DD)
+        $dateObject = \DateTime::createFromFormat('d.m.Y', $this->reconciliationDates[$debtId]);
+        $databaseDate = $dateObject ? $dateObject->format('Y-m-d') : now()->format('Y-m-d');
+
+        $this->paymentService->reconcileDebt(
+            $debt,
+            (float) $this->reconciliationBalances[$debtId],
+            $databaseDate,
+            $this->reconciliationNotes[$debtId] ?? null
+        );
+
+        session()->flash('message', 'Gjeld avstemt.');
+
+        $this->closeReconciliationModal($debtId);
+
+        $this->dispatch('$refresh');
     }
 
     public function render()

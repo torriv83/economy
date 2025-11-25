@@ -48,7 +48,8 @@ test('can delete a debt', function () {
 
     Livewire::test(DebtList::class)
         ->assertSee('Billån')
-        ->call('deleteDebt', $billaan->id)
+        ->call('confirmDelete', $billaan->id, 'Billån')
+        ->call('deleteDebt')
         ->assertDontSee('Billån')
         ->assertSee('250 000 kr');
 });

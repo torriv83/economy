@@ -74,7 +74,7 @@ test('can add repayment to a self-loan', function () {
         ->call('openRepaymentModal', $loan->id)
         ->set('repaymentAmount', 2000)
         ->set('repaymentNotes', 'First payment')
-        ->set('repaymentDate', now()->format('Y-m-d'))
+        ->set('repaymentDate', now()->format('d.m.Y'))
         ->call('addRepayment');
 
     $loan->refresh();
@@ -113,18 +113,18 @@ test('can add repayment with custom date', function () {
         'current_balance' => 10000,
     ]);
 
-    $customDate = now()->subDays(5)->format('Y-m-d');
+    $customDate = now()->subDays(5);
 
     Livewire::test(Overview::class)
         ->call('openRepaymentModal', $loan->id)
         ->set('repaymentAmount', 1500)
-        ->set('repaymentDate', $customDate)
+        ->set('repaymentDate', $customDate->format('d.m.Y'))
         ->call('addRepayment');
 
     $loan->refresh();
 
     expect($loan->repayments()->count())->toBe(1);
-    expect($loan->repayments()->first()->paid_at->format('Y-m-d'))->toBe($customDate);
+    expect($loan->repayments()->first()->paid_at->format('Y-m-d'))->toBe($customDate->format('Y-m-d'));
 });
 
 test('cannot add repayment with future date', function () {
@@ -132,7 +132,7 @@ test('cannot add repayment with future date', function () {
         'current_balance' => 5000,
     ]);
 
-    $futureDate = now()->addDays(1)->format('Y-m-d');
+    $futureDate = now()->addDays(1)->format('d.m.Y');
 
     Livewire::test(Overview::class)
         ->call('openRepaymentModal', $loan->id)
@@ -149,7 +149,7 @@ test('repayment date defaults to today when opening modal', function () {
 
     Livewire::test(Overview::class)
         ->call('openRepaymentModal', $loan->id)
-        ->assertSet('repaymentDate', now()->format('Y-m-d'));
+        ->assertSet('repaymentDate', now()->format('d.m.Y'));
 });
 
 test('can withdraw more from a self-loan', function () {
@@ -161,7 +161,7 @@ test('can withdraw more from a self-loan', function () {
     Livewire::test(Overview::class)
         ->call('openWithdrawalModal', $loan->id)
         ->set('withdrawalAmount', 3000)
-        ->set('withdrawalDate', now()->format('Y-m-d'))
+        ->set('withdrawalDate', now()->format('d.m.Y'))
         ->call('addWithdrawal');
 
     $loan->refresh();
@@ -177,7 +177,7 @@ test('withdrawal date defaults to today when opening modal', function () {
 
     Livewire::test(Overview::class)
         ->call('openWithdrawalModal', $loan->id)
-        ->assertSet('withdrawalDate', now()->format('Y-m-d'));
+        ->assertSet('withdrawalDate', now()->format('d.m.Y'));
 });
 
 test('cannot add withdrawal with future date', function () {
@@ -185,7 +185,7 @@ test('cannot add withdrawal with future date', function () {
         'current_balance' => 5000,
     ]);
 
-    $futureDate = now()->addDays(1)->format('Y-m-d');
+    $futureDate = now()->addDays(1)->format('d.m.Y');
 
     Livewire::test(Overview::class)
         ->call('openWithdrawalModal', $loan->id)
@@ -201,7 +201,7 @@ test('can withdraw with custom date', function () {
         'current_balance' => 10000,
     ]);
 
-    $customDate = now()->subDays(10)->format('Y-m-d');
+    $customDate = now()->subDays(10)->format('d.m.Y');
 
     Livewire::test(Overview::class)
         ->call('openWithdrawalModal', $loan->id)

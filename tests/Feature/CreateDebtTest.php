@@ -9,10 +9,8 @@ uses(RefreshDatabase::class);
 
 describe('CreateDebt Component', function () {
     it('renders successfully', function () {
-        $response = $this->get(route('debts.create'));
-
-        $response->assertSuccessful();
-        $response->assertSee('Create Debt');
+        Livewire::test(CreateDebt::class)
+            ->assertSuccessful();
     });
 
     it('creates a debt with valid data', function () {

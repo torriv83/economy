@@ -15,7 +15,7 @@ test('shows user friendly message when YNAB is down', function () {
     Debt::factory()->create(['name' => 'Test Debt']);
 
     $component = new DebtList;
-    $component->boot(app(\App\Services\DebtCalculationService::class), $mockService);
+    $component->boot(app(\App\Services\DebtCalculationService::class), $mockService, app(\App\Services\PaymentService::class));
 
     $component->checkYnab();
 
@@ -32,7 +32,7 @@ test('shows user friendly message when YNAB times out', function () {
     Debt::factory()->create(['name' => 'Test Debt']);
 
     $component = new DebtList;
-    $component->boot(app(\App\Services\DebtCalculationService::class), $mockService);
+    $component->boot(app(\App\Services\DebtCalculationService::class), $mockService, app(\App\Services\PaymentService::class));
 
     $component->checkYnab();
 
@@ -60,7 +60,7 @@ test('proceeds with sync when YNAB is accessible', function () {
     Debt::factory()->create(['name' => 'Local Debt', 'ynab_account_id' => null]);
 
     $component = new DebtList;
-    $component->boot(app(\App\Services\DebtCalculationService::class), $mockService);
+    $component->boot(app(\App\Services\DebtCalculationService::class), $mockService, app(\App\Services\PaymentService::class));
 
     $component->checkYnab();
 

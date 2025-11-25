@@ -147,7 +147,7 @@ test('linked debts do not appear in potential matches', function () {
     $localDebts = Debt::all();
 
     $component = new DebtList;
-    $component->boot(app(\App\Services\DebtCalculationService::class), app(\App\Services\YnabService::class));
+    $component->boot(app(\App\Services\DebtCalculationService::class), app(\App\Services\YnabService::class), app(\App\Services\PaymentService::class));
 
     $discrepancies = $component->findDiscrepancies($ynabDebts, $localDebts);
 
