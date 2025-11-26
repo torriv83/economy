@@ -321,7 +321,7 @@
                     </div>
 
                     <div class="p-6">
-                        @if (count($ynabDiscrepancies['new']) === 0 && count($ynabDiscrepancies['closed']) === 0 && count($ynabDiscrepancies['potential_matches']) === 0)
+                        @if (count($ynabDiscrepancies['new']) === 0 && count($ynabDiscrepancies['closed']) === 0 && count($ynabDiscrepancies['potential_matches']) === 0 && empty($ynabDiscrepancies['balance_mismatch'] ?? []))
                             <div class="text-center py-8">
                                 <svg class="mx-auto h-12 w-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -415,6 +415,41 @@
                                                         wire:click="importYnabDebt({{ json_encode($debt) }})"
                                                         class="ml-4 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer">
                                                         Importer
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- Balance Mismatch Section --}}
+                            @if (!empty($ynabDiscrepancies['balance_mismatch'] ?? []))
+                                <div class="mb-6">
+                                    <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                                        <svg class="h-5 w-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                        Saldoavvik ({{ count($ynabDiscrepancies['balance_mismatch']) }})
+                                    </h4>
+                                    <div class="space-y-3">
+                                        @foreach ($ynabDiscrepancies['balance_mismatch'] as $mismatch)
+                                            <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                                                <div class="flex items-start justify-between">
+                                                    <div class="flex-1">
+                                                        <p class="font-semibold text-gray-900 dark:text-white">{{ $mismatch['local_debt']->name }}</p>
+                                                        <div class="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                                                            <p>I appen: <span class="font-medium">{{ number_format($mismatch['local_balance'], 0, ',', ' ') }} kr</span></p>
+                                                            <p>I YNAB: <span class="font-medium">{{ number_format($mismatch['ynab_balance'], 0, ',', ' ') }} kr</span></p>
+                                                            <p class="{{ $mismatch['difference'] > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400' }}">
+                                                                Differanse: <span class="font-medium">{{ $mismatch['difference'] >= 0 ? '+' : '' }}{{ number_format($mismatch['difference'], 0, ',', ' ') }} kr</span>
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        wire:click="openReconciliationFromYnab({{ $mismatch['local_debt']->id }}, {{ $mismatch['ynab_balance'] }})"
+                                                        class="ml-4 px-3 py-2 bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer">
+                                                        Avstem
                                                     </button>
                                                 </div>
                                             </div>

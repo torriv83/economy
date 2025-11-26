@@ -289,6 +289,7 @@ class DebtList extends Component
             'new' => [],
             'closed' => [],
             'potential_matches' => [],
+            'balance_mismatch' => [],
         ];
 
         // Find new debts in YNAB that don't exist locally
@@ -299,7 +300,18 @@ class DebtList extends Component
             });
 
             if ($linkedByAccountId) {
-                // Already linked, skip this YNAB debt
+                // Check if balances are different (use 0.001 tolerance for floating point)
+                if (abs($ynabDebt['balance'] - $linkedByAccountId->balance) > 0.001) {
+                    $discrepancies['balance_mismatch'][] = [
+                        'local_debt' => $linkedByAccountId,
+                        'ynab_debt' => $ynabDebt,
+                        'local_balance' => $linkedByAccountId->balance,
+                        'ynab_balance' => $ynabDebt['balance'],
+                        'difference' => round($ynabDebt['balance'] - $linkedByAccountId->balance, 2),
+                    ];
+                }
+
+                // Already linked, skip further processing for this YNAB debt
                 continue;
             }
 
@@ -534,6 +546,15 @@ class DebtList extends Component
             $this->reconciliationDates[$debtId] = now()->format('d.m.Y');
             $this->reconciliationNotes[$debtId] = null;
         }
+    }
+
+    public function openReconciliationFromYnab(int $debtId, float $ynabBalance): void
+    {
+        $this->reconciliationModals[$debtId] = true;
+        $this->reconciliationBalances[$debtId] = (string) $ynabBalance;
+        $this->reconciliationDates[$debtId] = now()->format('d.m.Y');
+        $this->reconciliationNotes[$debtId] = 'Avstemt mot YNAB';
+        $this->showYnabSync = false;
     }
 
     public function closeReconciliationModal(int $debtId): void
