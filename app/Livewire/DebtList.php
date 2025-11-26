@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Livewire;
 
 use App\Models\Debt;
+use App\Models\Payment;
 use App\Services\DebtCalculationService;
 use App\Services\PaymentService;
 use App\Services\PayoffSettingsService;
 use App\Services\YnabService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class DebtList extends Component
@@ -49,6 +51,10 @@ class DebtList extends Component
 
     /** @var array<int, string|null> */
     public array $reconciliationNotes = [];
+
+    public bool $showReconciliationHistory = false;
+
+    public ?int $viewingReconciliationHistoryForDebtId = null;
 
     protected DebtCalculationService $calculationService;
 
@@ -601,6 +607,58 @@ class DebtList extends Component
 
         $this->closeReconciliationModal($debtId);
 
+        $this->dispatch('$refresh');
+    }
+
+    public function openReconciliationHistory(int $debtId): void
+    {
+        $this->viewingReconciliationHistoryForDebtId = $debtId;
+        $this->showReconciliationHistory = true;
+    }
+
+    public function closeReconciliationHistory(): void
+    {
+        $this->showReconciliationHistory = false;
+        $this->viewingReconciliationHistoryForDebtId = null;
+    }
+
+    /**
+     * Get the name of the debt being viewed in the reconciliation history modal
+     */
+    public function getHistoryDebtNameProperty(): ?string
+    {
+        if (! $this->viewingReconciliationHistoryForDebtId) {
+            return null;
+        }
+
+        return Debt::where('id', $this->viewingReconciliationHistoryForDebtId)
+            ->value('name');
+    }
+
+    /**
+     * Get reconciliation counts for all debts (cached to prevent N+1 queries)
+     *
+     * @return array<int, int>
+     */
+    public function getReconciliationCountsProperty(): array
+    {
+        return Payment::where('is_reconciliation_adjustment', true)
+            ->selectRaw('debt_id, COUNT(*) as count')
+            ->groupBy('debt_id')
+            ->pluck('count', 'debt_id')
+            ->toArray();
+    }
+
+    public function getReconciliationCountForDebt(int $debtId): int
+    {
+        return $this->reconciliationCounts[$debtId] ?? 0;
+    }
+
+    #[On('reconciliation-deleted')]
+    #[On('reconciliation-updated')]
+    public function handleReconciliationChanged(): void
+    {
+        // Refresh the component to update balances after reconciliation changes
         $this->dispatch('$refresh');
     }
 

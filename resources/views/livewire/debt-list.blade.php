@@ -187,6 +187,16 @@
                                                 type="button"
                                                 class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline ml-1 cursor-pointer"
                                             >(Avstem)</button>
+                                            @php
+                                                $reconciliationCount = $this->getReconciliationCountForDebt($debt['id']);
+                                            @endphp
+                                            @if ($reconciliationCount > 0)
+                                                <button
+                                                    wire:click="openReconciliationHistory({{ $debt['id'] }})"
+                                                    type="button"
+                                                    class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:underline ml-1 cursor-pointer"
+                                                >({{ __('app.view_history') }} {{ $reconciliationCount }})</button>
+                                            @endif
                                         @endif
                                     </span>
                                     <span class="text-xl font-bold text-gray-900 dark:text-white">
@@ -763,5 +773,52 @@
             </div>
         </div>
     @endforeach
+
+    {{-- Reconciliation History Modal --}}
+    @if ($showReconciliationHistory && $viewingReconciliationHistoryForDebtId)
+        <div
+            x-data="{ show: true }"
+            x-show="show"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            @keydown.escape.window="$wire.closeReconciliationHistory()"
+            class="fixed inset-0 z-50 overflow-y-auto"
+        >
+            <div class="fixed inset-0 bg-black/50" wire:click="closeReconciliationHistory"></div>
+            <div class="relative z-50 flex items-center justify-center min-h-screen p-4">
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full max-h-[80vh] overflow-hidden"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 scale-95"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100 scale-100"
+                    x-transition:leave-end="opacity-0 scale-95"
+                    @click.stop
+                >
+                    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                {{ __('app.reconciliation_history') }}
+                            </h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $this->historyDebtName }}</p>
+                        </div>
+                        <button wire:click="closeReconciliationHistory" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 cursor-pointer">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="p-6 overflow-y-auto max-h-[calc(80vh-80px)]">
+                        <livewire:reconciliation-history :debt-id="$viewingReconciliationHistoryForDebtId" :key="'history-'.$viewingReconciliationHistoryForDebtId" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>
 

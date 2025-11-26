@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -58,5 +59,27 @@ class Payment extends Model
     public function debt(): BelongsTo
     {
         return $this->belongsTo(Debt::class);
+    }
+
+    /**
+     * Scope to get only reconciliation adjustments
+     *
+     * @param  Builder<Payment>  $query
+     * @return Builder<Payment>
+     */
+    public function scopeReconciliations(Builder $query): Builder
+    {
+        return $query->where('is_reconciliation_adjustment', true);
+    }
+
+    /**
+     * Scope to get payments for a specific debt
+     *
+     * @param  Builder<Payment>  $query
+     * @return Builder<Payment>
+     */
+    public function scopeForDebt(Builder $query, int $debtId): Builder
+    {
+        return $query->where('debt_id', $debtId);
     }
 }

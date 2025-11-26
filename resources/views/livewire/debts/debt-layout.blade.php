@@ -37,6 +37,18 @@
                         <span class="font-medium">{{ __('app.progress') }}</span>
                     </div>
                 </button>
+
+                <a
+                    href="{{ route('reconciliations') }}"
+                    wire:navigate.hover
+                    class="w-full text-left px-3 py-2 rounded-r-lg transition cursor-pointer block {{ request()->routeIs('reconciliations') ? 'border-l-3 border-blue-600 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:focus-visible:ring-blue-400 focus-visible:ring-offset-2">
+                    <div class="flex items-center gap-2">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="font-medium">{{ __('app.reconciliation_history') }}</span>
+                    </div>
+                </a>
             </div>
         </nav>
     </aside>

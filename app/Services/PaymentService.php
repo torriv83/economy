@@ -350,4 +350,99 @@ class PaymentService
 
         return $payment;
     }
+
+    /**
+     * Get all reconciliation adjustments for a specific debt
+     *
+     * @return Collection<int, Payment>
+     */
+    public function getReconciliationsForDebt(Debt $debt): Collection
+    {
+        return Payment::with('debt')
+            ->where('debt_id', $debt->id)
+            ->where('is_reconciliation_adjustment', true)
+            ->orderBy('payment_date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    /**
+     * Get all reconciliation adjustments across all debts
+     *
+     * @return Collection<int, Payment>
+     */
+    public function getAllReconciliations(): Collection
+    {
+        return Payment::with('debt')
+            ->where('is_reconciliation_adjustment', true)
+            ->orderBy('payment_date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    /**
+     * Update an existing reconciliation adjustment
+     *
+     * @param  Payment  $payment  The reconciliation payment to update
+     * @param  float  $newActualBalance  The corrected actual balance
+     * @param  string  $reconciliationDate  The date of reconciliation (Y-m-d format)
+     * @param  string|null  $notes  Optional notes
+     */
+    public function updateReconciliation(
+        Payment $payment,
+        float $newActualBalance,
+        string $reconciliationDate,
+        ?string $notes = null
+    ): Payment {
+        if (! $payment->is_reconciliation_adjustment) {
+            throw new \InvalidArgumentException('Payment is not a reconciliation adjustment.');
+        }
+
+        /** @var Debt $debt */
+        $debt = $payment->debt;
+
+        // Calculate current balance without this reconciliation's effect
+        // Current balance = original - sum(principal_paid), so:
+        // Balance without this reconciliation = current_balance + this_principal_paid
+        $balanceWithoutThisReconciliation = $debt->balance + $payment->principal_paid;
+
+        // Calculate new difference
+        $newDifference = round($newActualBalance - $balanceWithoutThisReconciliation, 2);
+
+        $newPrincipalPaid = -$newDifference;
+
+        DB::transaction(function () use ($payment, $newDifference, $newPrincipalPaid, $reconciliationDate, $notes) {
+            $dateObject = now()->parse($reconciliationDate);
+
+            $payment->update([
+                'actual_amount' => -$newDifference,
+                'principal_paid' => $newPrincipalPaid,
+                'interest_paid' => 0,
+                'payment_date' => $reconciliationDate,
+                'payment_month' => $dateObject->format('Y-m'),
+                'notes' => $notes ?? 'Avstemming: '.($newDifference > 0 ? 'Økning' : 'Reduksjon').' på '.number_format(abs($newDifference), 2, ',', ' ').' kr',
+            ]);
+
+            $this->updateDebtBalances();
+        });
+
+        return $payment->fresh();
+    }
+
+    /**
+     * Delete a reconciliation adjustment
+     */
+    public function deleteReconciliation(Payment $payment): bool
+    {
+        if (! $payment->is_reconciliation_adjustment) {
+            throw new \InvalidArgumentException('Payment is not a reconciliation adjustment.');
+        }
+
+        DB::transaction(function () use ($payment) {
+            $payment->delete();
+            $this->updateDebtBalances();
+        });
+
+        return true;
+    }
 }

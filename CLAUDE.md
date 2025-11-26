@@ -540,9 +540,27 @@ The application uses SQLite and stores debt records with:
 - Always verify calculation accuracy with financial edge cases
 
 ## Important Notes
-**ALWAYS Run subagents unless the change is a one liner** 
+**ALWAYS Run subagents unless the change is a one liner**
 
 - This is a **personal single-user application** for local use only
 - Financial calculations must be precise - always test with edge cases
 - YNAB integration is planned but not yet implemented
 - Keep the UI simple and responsive (mobile-first approach)
+
+## Shell Environment
+The shell is **bash** (Git Bash), not Windows CMD or PowerShell - regardless of Windows-style paths like `P:/Herd/economy`.
+
+- Always use Unix/bash commands: `rm`, `ls`, `cat`, `cp`, `mv`, `mkdir -p`
+- Never use Windows commands: `del`, `dir`, `type`, `copy`, `move`, `md`
+- Use `/dev/null` to discard output, not `nul` (which creates a file in bash)
+- **File operations**: Always use `Read`, `Edit`, and `Write` tools - never use bash commands like `cat << 'EOF'`, `echo >`, or heredocs to create/edit files
+
+## Tool Workarounds
+
+### Edit Tool "Unexpectedly Modified" Error
+When the `Edit` tool fails with "File has been unexpectedly modified" even though the file hasn't actually changed (verify with `git status` or `stat`), use the `Write` tool instead:
+
+1. The `Edit` tool tracks file state internally and can get corrupted (especially after failed subagent attempts)
+2. **Workaround**: Read the file fresh, then use `Write` to overwrite with the corrected content
+3. `Write` is stateless - it just overwrites without comparing against previous state
+4. Only requires having read the file at least once before writing

@@ -156,7 +156,9 @@ class PayoffSettings extends Component
         ];
 
         // Get debt names from the first month's payments
-        $debtNames = collect($schedule['schedule'][0]['payments'])
+        /** @var array<int, array{name: string, payment: float, interest: float, principal: float, remaining: float}> $firstMonthPayments */
+        $firstMonthPayments = $schedule['schedule'][0]['payments'];
+        $debtNames = collect($firstMonthPayments)
             ->pluck('name')
             ->toArray();
 
@@ -176,7 +178,9 @@ class PayoffSettings extends Component
             // Collect remaining balances for each month
             $data = [$initialBalance]; // Start with current balance
             foreach ($schedule['schedule'] as $monthData) {
-                $payment = collect($monthData['payments'])->firstWhere('name', $debtName);
+                /** @var array<int, array{name: string, payment: float, interest: float, principal: float, remaining: float}> $monthPayments */
+                $monthPayments = $monthData['payments'];
+                $payment = collect($monthPayments)->firstWhere('name', $debtName);
                 $data[] = $payment ? $payment['remaining'] : 0;
             }
 
