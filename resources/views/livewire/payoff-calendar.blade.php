@@ -1,4 +1,14 @@
 <div>
+    {{-- Success Message --}}
+    @if (session('payment_recorded'))
+        <div class="mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 px-4 py-3 rounded-lg flex items-center gap-2">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            {{ session('payment_recorded') }}
+        </div>
+    @endif
+
     {{-- Countdown Widget (Prominent) --}}
     @if ($this->debtFreeDate && $this->countdown['months'] > 0)
         <div wire:key="countdown-{{ $strategy }}-{{ $extraPayment }}"
@@ -283,24 +293,32 @@
                                                 $isOverdue = $debt['isOverdue'] ?? false;
                                                 $textColor = $isPaid ? 'text-green-700 dark:text-green-300' : ($isOverdue ? 'text-red-700 dark:text-red-300' : 'text-blue-700 dark:text-blue-300');
                                                 $amountColor = $isPaid ? 'text-green-600 dark:text-green-400' : ($isOverdue ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400');
-                                                $statusText = $isPaid ? ' - Betalt' : ($isOverdue ? ' - Forfalt' : '');
+                                                $statusText = $isPaid ? ' - ' . __('app.paid') : ($isOverdue ? ' - ' . __('app.payment_overdue') : '');
                                             @endphp
-                                            <div class="flex items-center gap-1">
-                                                @if ($isPaid)
-                                                    <svg class="w-3 h-3 text-green-600 dark:text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                    </svg>
-                                                @elseif ($isOverdue)
-                                                    <svg class="w-3 h-3 text-red-600 dark:text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                                                    </svg>
+                                            <div
+                                                @if (!$isPaid)
+                                                    wire:click="openPaymentModal({{ $debt['debt_id'] }}, @js($debt['name']), {{ $debt['amount'] }}, {{ $debt['month_number'] }}, @js($debt['payment_month']))"
+                                                    class="cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-800/30 rounded px-1 -mx-1 transition-colors"
+                                                    title="{{ __('app.click_to_register_payment') }}"
                                                 @endif
-                                                <div class="text-xs {{ $textColor }} font-medium truncate" title="{{ $debt['name'] }} ({{ number_format($debt['amount'], 0) }} kr){{ $statusText }}">
-                                                    {{ $debt['name'] }}
+                                            >
+                                                <div class="flex items-center gap-1">
+                                                    @if ($isPaid)
+                                                        <svg class="w-3 h-3 text-green-600 dark:text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                        </svg>
+                                                    @elseif ($isOverdue)
+                                                        <svg class="w-3 h-3 text-red-600 dark:text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                                        </svg>
+                                                    @endif
+                                                    <div class="text-xs {{ $textColor }} font-medium truncate" title="{{ $debt['name'] }} ({{ number_format($debt['amount'], 0) }} kr){{ $statusText }}">
+                                                        {{ $debt['name'] }}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div class="text-xs {{ $amountColor }}">
-                                                {{ number_format($debt['amount'], 0) }} kr
+                                                <div class="text-xs {{ $amountColor }}">
+                                                    {{ number_format($debt['amount'], 0) }} kr
+                                                </div>
                                             </div>
                                         @endforeach
                                     @endif
@@ -366,7 +384,14 @@
                                                 $isOverdue = $debt['isOverdue'] ?? false;
                                                 $textColor = $isPaid ? 'text-green-700 dark:text-green-300' : ($isOverdue ? 'text-red-700 dark:text-red-300' : 'text-blue-700 dark:text-blue-300');
                                             @endphp
-                                            <div class="flex items-center justify-between gap-2 {{ $textColor }}">
+                                            <div
+                                                @if (!$isPaid)
+                                                    wire:click="openPaymentModal({{ $debt['debt_id'] }}, @js($debt['name']), {{ $debt['amount'] }}, {{ $debt['month_number'] }}, @js($debt['payment_month']))"
+                                                    class="cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-800/30 rounded-lg px-2 py-1 -mx-2 transition-colors"
+                                                    title="{{ __('app.tap_to_register_payment') }}"
+                                                @endif
+                                                class="flex items-center justify-between gap-2 {{ $textColor }}"
+                                            >
                                                 <div class="flex items-center gap-2 min-w-0">
                                                     @if ($isPaid)
                                                         <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -462,6 +487,145 @@
             <a href="{{ route('debts.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2">
                 {{ __('app.add_first_debt') }}
             </a>
+        </div>
+    @endif
+
+    {{-- Payment Modal --}}
+    @if ($showPaymentModal)
+        <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+                {{-- Backdrop --}}
+                <div class="fixed inset-0 bg-gray-500/75 dark:bg-gray-900/75 transition-opacity" wire:click="closePaymentModal"></div>
+
+                {{-- Modal Content --}}
+                <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-auto transform transition-all" @click.stop>
+                    {{-- Header --}}
+                    <div class="border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
+                        <h3 id="modal-title" class="text-lg font-semibold text-gray-900 dark:text-white">
+                            {{ __('app.register_payment') }}
+                        </h3>
+                        <button wire:click="closePaymentModal" type="button" class="cursor-pointer text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    {{-- Form --}}
+                    <form wire:submit="recordPayment" class="p-6">
+                        {{-- Debt Info Display --}}
+                        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+                            <p class="text-sm text-blue-800 dark:text-blue-200">
+                                <span class="font-medium">{{ __('app.debt') }}:</span> {{ $selectedDebtName }}
+                            </p>
+                            <p class="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                                <span class="font-medium">{{ __('app.planned_amount') }}:</span> {{ number_format($plannedAmount, 0, ',', ' ') }} kr
+                            </p>
+                        </div>
+
+                        <div class="space-y-4">
+                            {{-- Amount Field --}}
+                            <div>
+                                <label for="payment-amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {{ __('app.amount_kr_required') }}
+                                </label>
+                                <input
+                                    type="number"
+                                    id="payment-amount"
+                                    wire:model="paymentAmount"
+                                    step="0.01"
+                                    min="0.01"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                                    required
+                                >
+                                @error('paymentAmount')
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            {{-- Date Field --}}
+                            <div>
+                                <label for="payment-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {{ __('app.payment_date_required') }}
+                                </label>
+                                <div class="relative" x-data="{
+                                    displayDate: @entangle('paymentDate'),
+                                    updateFromPicker(value) {
+                                        if (value) {
+                                            const parts = value.split('-');
+                                            this.displayDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
+                                        }
+                                    }
+                                }">
+                                    <input
+                                        type="text"
+                                        id="payment-date"
+                                        x-model="displayDate"
+                                        readonly
+                                        @click="$refs.datePicker.showPicker()"
+                                        placeholder="dd.mm.åååå"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white cursor-pointer"
+                                        required
+                                    >
+                                    <input
+                                        type="date"
+                                        x-ref="datePicker"
+                                        @change="updateFromPicker($event.target.value)"
+                                        max="{{ date('Y-m-d') }}"
+                                        class="absolute inset-0 opacity-0 cursor-pointer"
+                                    >
+                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                @error('paymentDate')
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            {{-- Notes Field --}}
+                            <div>
+                                <label for="payment-notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {{ __('app.notes_optional_field') }}
+                                </label>
+                                <textarea
+                                    id="payment-notes"
+                                    wire:model="paymentNotes"
+                                    rows="3"
+                                    maxlength="500"
+                                    placeholder="{{ __('app.notes_placeholder') }}"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white resize-none"
+                                ></textarea>
+                                @error('paymentNotes')
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+
+                        {{-- Action Buttons --}}
+                        <div class="flex gap-3 mt-6">
+                            <button
+                                type="button"
+                                wire:click="closePaymentModal"
+                                class="cursor-pointer flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                            >
+                                {{ __('app.cancel') }}
+                            </button>
+                            <button
+                                type="submit"
+                                wire:loading.attr="disabled"
+                                wire:loading.class="opacity-50 cursor-not-allowed"
+                                class="cursor-pointer flex-1 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
+                            >
+                                <span wire:loading.remove wire:target="recordPayment">{{ __('app.register_payment') }}</span>
+                                <span wire:loading wire:target="recordPayment">{{ __('app.registering') }}</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     @endif
 </div>

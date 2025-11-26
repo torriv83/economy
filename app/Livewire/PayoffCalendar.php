@@ -5,8 +5,10 @@ namespace App\Livewire;
 use App\Models\Debt;
 use App\Models\Payment;
 use App\Services\DebtCalculationService;
+use App\Services\PaymentService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 /**
@@ -26,6 +28,25 @@ class PayoffCalendar extends Component
     public int $currentYear;
 
     protected DebtCalculationService $calculationService;
+
+    // Modal state
+    public bool $showPaymentModal = false;
+
+    public int $selectedDebtId = 0;
+
+    public string $selectedDebtName = '';
+
+    public float $plannedAmount = 0;
+
+    public float $paymentAmount = 0;
+
+    public string $paymentDate = '';
+
+    public string $paymentNotes = '';
+
+    public int $selectedMonthNumber = 0;
+
+    public string $selectedPaymentMonth = '';
 
     public function boot(DebtCalculationService $service): void
     {
@@ -62,6 +83,92 @@ class PayoffCalendar extends Component
     {
         $this->currentMonth = (int) now()->month;
         $this->currentYear = (int) now()->year;
+    }
+
+    public function openPaymentModal(
+        int $debtId,
+        string $debtName,
+        float $plannedAmount,
+        int $monthNumber,
+        string $paymentMonth
+    ): void {
+        $this->selectedDebtId = $debtId;
+        $this->selectedDebtName = $debtName;
+        $this->plannedAmount = $plannedAmount;
+        $this->paymentAmount = $plannedAmount;
+        $this->selectedMonthNumber = $monthNumber;
+        $this->selectedPaymentMonth = $paymentMonth;
+        $this->paymentDate = now()->format('d.m.Y');
+        $this->paymentNotes = '';
+        $this->showPaymentModal = true;
+    }
+
+    public function closePaymentModal(): void
+    {
+        $this->showPaymentModal = false;
+        $this->selectedDebtId = 0;
+        $this->selectedDebtName = '';
+        $this->paymentAmount = 0;
+        $this->paymentDate = '';
+        $this->paymentNotes = '';
+        $this->selectedMonthNumber = 0;
+        $this->selectedPaymentMonth = '';
+        $this->plannedAmount = 0;
+        $this->resetValidation();
+    }
+
+    public function recordPayment(PaymentService $paymentService): void
+    {
+        $this->validate([
+            'paymentAmount' => 'required|numeric|min:0.01',
+            'paymentDate' => 'required|date_format:d.m.Y',
+            'paymentNotes' => 'nullable|string|max:500',
+        ], [
+            'paymentAmount.required' => __('app.payment_amount_required'),
+            'paymentAmount.numeric' => __('app.payment_amount_numeric'),
+            'paymentAmount.min' => __('app.payment_amount_min'),
+            'paymentDate.required' => __('app.payment_date_required_error'),
+            'paymentDate.date_format' => __('app.payment_date_format_error'),
+            'paymentNotes.max' => __('app.payment_notes_max'),
+        ]);
+
+        // Check for duplicate payment
+        if ($paymentService->paymentExists($this->selectedDebtId, $this->selectedMonthNumber)) {
+            $this->addError('paymentAmount', __('app.payment_duplicate_error'));
+
+            return;
+        }
+
+        $debt = Debt::findOrFail($this->selectedDebtId);
+        $dateObject = Carbon::createFromFormat('d.m.Y', $this->paymentDate);
+
+        // Validate date is not in the future
+        if ($dateObject->isFuture()) {
+            $this->addError('paymentDate', __('app.payment_date_future_error'));
+
+            return;
+        }
+
+        DB::transaction(function () use ($debt, $paymentService, $dateObject) {
+            $payment = $paymentService->recordPayment(
+                debt: $debt,
+                plannedAmount: $this->plannedAmount,
+                actualAmount: $this->paymentAmount,
+                monthNumber: $this->selectedMonthNumber,
+                paymentMonth: $this->selectedPaymentMonth
+            );
+
+            // Update with actual date and notes
+            $payment->update([
+                'payment_date' => $dateObject->format('Y-m-d'),
+                'notes' => $this->paymentNotes ?: null,
+            ]);
+
+            $paymentService->updateDebtBalances();
+        });
+
+        $this->closePaymentModal();
+        session()->flash('payment_recorded', 'Betaling på '.number_format($this->paymentAmount, 0, ',', ' ').' kr registrert for '.$this->selectedDebtName);
     }
 
     /**
@@ -237,11 +344,14 @@ class PayoffCalendar extends Component
 
                         $events[$plannedDateKey]['amount'] += $payment['amount'];
                         $events[$plannedDateKey]['debts'][] = [
+                            'debt_id' => $debt->id,
                             'name' => $payment['name'],
                             'amount' => $payment['amount'],
                             'isPriority' => $payment['isPriority'],
                             'isPaid' => false,
                             'isOverdue' => $isOverdue,
+                            'month_number' => $monthData['month'] ?? 1,
+                            'payment_month' => $currentMonthKey,
                         ];
                     }
                 }
