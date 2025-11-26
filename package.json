@@ -4,8 +4,7 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite",
-        "merge": "bash merge-to-master"
+        "dev": "vite"
     },
     "dependencies": {
         "@alpinejs/sort": "^3.15.2",
