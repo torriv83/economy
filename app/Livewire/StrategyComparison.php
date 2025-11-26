@@ -387,28 +387,24 @@ class StrategyComparison extends Component
             count($customSchedule['schedule'])
         );
 
-        // Build labels (month names) and data arrays
+        // Build labels (month names) - one per data point
+        $currentDate = now();
+        $locale = app()->getLocale();
         $labels = [];
-        $minimumData = [];
-        $snowballData = [];
-        $avalancheData = [];
-        $customData = [];
+        for ($i = 0; $i <= $maxMonths; $i++) {
+            $labels[] = $currentDate->copy()->addMonths($i)->locale($locale)->translatedFormat('F Y');
+        }
 
         // Calculate initial total debt
         $initialTotal = $debts->sum('balance');
 
-        // First point: current month with initial balance
-        $labels[] = now()->locale('nb')->translatedFormat('F Y');
-        $minimumData[] = $initialTotal;
-        $snowballData[] = $initialTotal;
-        $avalancheData[] = $initialTotal;
-        $customData[] = $initialTotal;
+        // Build data arrays - first point is initial balance, then each month's remaining balance
+        $minimumData = [$initialTotal];
+        $snowballData = [$initialTotal];
+        $avalancheData = [$initialTotal];
+        $customData = [$initialTotal];
 
-        // Remaining points: each month's balance after payment
         for ($i = 1; $i <= $maxMonths; $i++) {
-            $monthLabel = $this->getChartMonthLabel($i, $minimumSchedule, $snowballSchedule);
-            $labels[] = $monthLabel;
-
             $minimumData[] = $this->getChartRemainingBalance($minimumSchedule, $i);
             $snowballData[] = $this->getChartRemainingBalance($snowballSchedule, $i);
             $avalancheData[] = $this->getChartRemainingBalance($avalancheSchedule, $i);
@@ -445,19 +441,6 @@ class StrategyComparison extends Component
                 ],
             ],
         ];
-    }
-
-    /**
-     * Get month label from schedule data for chart.
-     *
-     * @param  array<string, mixed>  $schedule1
-     * @param  array<string, mixed>  $schedule2
-     */
-    protected function getChartMonthLabel(int $month, array $schedule1, array $schedule2): string
-    {
-        $entry = $schedule1['schedule'][$month] ?? $schedule2['schedule'][$month] ?? null;
-
-        return $entry['monthName'] ?? __('app.month').' '.$month;
     }
 
     /**
