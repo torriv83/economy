@@ -101,19 +101,33 @@ class PaymentService
 
     /**
      * Calculate overall progress percentage
+     *
+     * For debts where balance > original (e.g., credit cards with increased usage),
+     * we cap the individual progress at 0% so they don't drag down the total.
      */
     public function calculateOverallProgress(): float
     {
-        $totalOriginal = Debt::sum('original_balance');
+        $debts = Debt::all();
+
+        if ($debts->isEmpty()) {
+            return 0.0;
+        }
+
+        $totalOriginal = 0.0;
+        $totalPaidOff = 0.0;
+
+        foreach ($debts as $debt) {
+            $totalOriginal += $debt->original_balance;
+            // Cap individual debt progress at 0 (don't count negative progress)
+            $paidOff = max(0, $debt->original_balance - $debt->balance);
+            $totalPaidOff += $paidOff;
+        }
 
         if (abs($totalOriginal) < 0.01) {
             return 0.0;
         }
 
-        $totalCurrent = Debt::sum('balance');
-        $totalPaid = $totalOriginal - $totalCurrent;
-
-        return ($totalPaid / $totalOriginal) * 100;
+        return ($totalPaidOff / $totalOriginal) * 100;
     }
 
     /**

@@ -239,6 +239,31 @@ describe('calculateOverallProgress', function () {
         // (2500 / 10000) * 100 = 25%
         expect($progress)->toBe(25.0);
     });
+
+    it('caps negative progress at 0 when balance exceeds original', function () {
+        // Credit card where balance has increased above original (user charged more)
+        Debt::factory()->create(['balance' => 25000, 'original_balance' => 20000]);
+        // Normal debt with some progress
+        Debt::factory()->create(['balance' => 5000, 'original_balance' => 10000]);
+
+        $progress = $this->service->calculateOverallProgress();
+
+        // Credit card: max(0, 20000 - 25000) = 0 (not -5000)
+        // Normal debt: max(0, 10000 - 5000) = 5000
+        // Total original: 30000, Total paid off: 5000
+        // Progress: (5000 / 30000) * 100 = 16.67%
+        expect(round($progress, 2))->toBe(16.67);
+    });
+
+    it('returns 0 progress when all debts have increased', function () {
+        Debt::factory()->create(['balance' => 15000, 'original_balance' => 10000]);
+        Debt::factory()->create(['balance' => 8000, 'original_balance' => 5000]);
+
+        $progress = $this->service->calculateOverallProgress();
+
+        // Both debts have balance > original, so paid off = 0 for both
+        expect($progress)->toBe(0.0);
+    });
 });
 
 describe('getPaymentsForMonth', function () {

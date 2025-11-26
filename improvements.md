@@ -28,7 +28,7 @@ Long-term:
 
 ### New features from YNAB API
 
-#### 1. Transaction History (High value, Low complexity)
+#### 1. Transaction History (High value, Low complexity) !!IMPLEMENTED!!
 `GET /budgets/{budget_id}/accounts/{account_id}/transactions`
 - Auto-import actual payments to debts instead of manual entry
 - View payment history from YNAB directly

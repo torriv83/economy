@@ -124,16 +124,28 @@ class DebtProgress extends Component
 
     public function getTotalPaidProperty(): float
     {
-        $debts = Debt::with('payments')->get();
-        $totalPaid = 0;
+        // Sum of actual payments made (excluding reconciliation adjustments)
+        $totalPaid = Payment::where('is_reconciliation_adjustment', false)
+            ->sum('actual_amount');
+
+        return round((float) $totalPaid, 2);
+    }
+
+    /**
+     * Calculate the net change in total debt (positive = debt decreased, negative = debt increased)
+     */
+    public function getNetDebtChangeProperty(): float
+    {
+        $debts = Debt::all();
+        $netChange = 0;
 
         foreach ($debts as $debt) {
             $originalBalance = $debt->original_balance ?? $debt->balance;
             $currentBalance = $debt->balance;
-            $totalPaid += ($originalBalance - $currentBalance);
+            $netChange += ($originalBalance - $currentBalance);
         }
 
-        return round($totalPaid, 2);
+        return round($netChange, 2);
     }
 
     public function getTotalInterestPaidProperty(): float
@@ -145,8 +157,10 @@ class DebtProgress extends Component
 
     public function getAverageMonthlyPaymentProperty(): float
     {
+        // Sum actual payments (excluding reconciliations) grouped by payment_month
         $payments = Payment::selectRaw('SUM(actual_amount) as monthly_total')
-            ->groupBy('month_number')
+            ->where('is_reconciliation_adjustment', false)
+            ->groupBy('payment_month')
             ->get();
 
         if ($payments->isEmpty()) {
@@ -157,6 +171,28 @@ class DebtProgress extends Component
         $totalPaid = is_numeric($totalPaidValue) ? (float) $totalPaidValue : 0;
 
         return round($totalPaid / $payments->count(), 2);
+    }
+
+    /**
+     * Calculate the average net flow per month (includes reconciliation adjustments)
+     * This shows the actual net effect on debt - negative means debt increased on average
+     */
+    public function getAverageNetFlowProperty(): float
+    {
+        // Sum ALL payments (including reconciliations) grouped by payment_month
+        // This gives the "net" view - actual payments minus credit card charges etc.
+        $payments = Payment::selectRaw('SUM(actual_amount) as monthly_total')
+            ->groupBy('payment_month')
+            ->get();
+
+        if ($payments->isEmpty()) {
+            return 0;
+        }
+
+        $totalValue = $payments->sum('monthly_total');
+        $total = is_numeric($totalValue) ? (float) $totalValue : 0;
+
+        return round($total / $payments->count(), 2);
     }
 
     public function getMonthsToDebtFreeProperty(): int

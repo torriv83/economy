@@ -23,8 +23,13 @@
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{{ __('app.total_paid') }}</dt>
-                        <dd class="flex items-baseline">
+                        <dd class="flex flex-col">
                             <div class="text-2xl font-semibold text-gray-900 dark:text-white">{{ number_format($this->totalPaid, 0, ',', ' ') }} kr</div>
+                            @if ($this->netDebtChange >= 0)
+                                <span class="text-xs text-green-600 dark:text-green-400">{{ __('app.debt_decreased_by') }} {{ number_format($this->netDebtChange, 0, ',', ' ') }} kr</span>
+                            @else
+                                <span class="text-xs text-amber-600 dark:text-amber-400">{{ __('app.debt_increased_by') }} {{ number_format(abs($this->netDebtChange), 0, ',', ' ') }} kr</span>
+                            @endif
                         </dd>
                     </div>
                 </div>
@@ -59,8 +64,13 @@
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{{ __('app.average_monthly_payment') }}</dt>
-                        <dd class="flex items-baseline">
+                        <dd class="flex flex-col">
                             <div class="text-2xl font-semibold text-gray-900 dark:text-white">{{ number_format($this->averageMonthlyPayment, 0, ',', ' ') }} kr</div>
+                            @if ($this->averageNetFlow >= 0)
+                                <span class="text-xs text-green-600 dark:text-green-400">{{ __('app.avg_net_flow') }}: {{ number_format($this->averageNetFlow, 0, ',', ' ') }} kr</span>
+                            @else
+                                <span class="text-xs text-amber-600 dark:text-amber-400">{{ __('app.avg_net_flow') }}: {{ number_format($this->averageNetFlow, 0, ',', ' ') }} kr</span>
+                            @endif
                         </dd>
                     </div>
                 </div>
