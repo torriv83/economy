@@ -29,7 +29,7 @@ class PayoffLayout extends Component
         $this->strategy = $this->settingsService->getStrategy();
 
         $view = request()->query('view');
-        if (in_array($view, ['calendar', 'plan', 'strategies', 'settings'])) {
+        if (in_array($view, ['calendar', 'plan', 'strategies'])) {
             $this->currentView = $view;
         }
     }
@@ -54,11 +54,6 @@ class PayoffLayout extends Component
     public function showCalendar(): void
     {
         $this->currentView = 'calendar';
-    }
-
-    public function showSettings(): void
-    {
-        $this->currentView = 'settings';
     }
 
     public function render(): \Illuminate\Contracts\View\View

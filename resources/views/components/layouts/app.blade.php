@@ -17,7 +17,7 @@
     <nav class="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
         <div class="flex items-center h-16">
             <!-- Logo/Brand - Fixed width on left to align with sidebar (responsive) -->
-            <div class="flex items-center justify-center {{ request()->routeIs('home', 'debts', 'debts.edit', 'payoff', 'self-loans', 'reconciliations') ? 'px-4 md:w-64' : 'px-4 sm:px-6 lg:px-8' }} flex-shrink-0">
+            <div class="flex items-center justify-center {{ request()->routeIs('home', 'debts', 'debts.edit', 'payoff', 'self-loans', 'reconciliations', 'settings') ? 'px-4 md:w-64' : 'px-4 sm:px-6 lg:px-8' }} flex-shrink-0">
                 <a href="{{ route('home') }}" wire:navigate.hover class="text-base sm:text-xl font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded truncate">
                     {{ __('app.app_name') }}
                 </a>
@@ -37,8 +37,16 @@
                     </a>
                 </div>
 
-                <!-- Dark Mode Toggle and Language Switcher -->
+                <!-- Settings, Dark Mode Toggle and Language Switcher -->
                 <div class="hidden md:flex items-center gap-4 ml-auto">
+                    <!-- Settings Link -->
+                    <a href="{{ route('settings') }}" wire:navigate.hover aria-label="{{ __('app.settings') }}" class="p-2 rounded-lg {{ request()->routeIs('settings') ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }} transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                    </a>
+
                     <!-- Dark Mode Toggle -->
                     <button @click="darkMode = !darkMode" aria-label="{{ __('app.toggle_dark_mode') }}" class="p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2">
                         <svg x-show="!darkMode" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -165,9 +173,6 @@
                         <a href="{{ route('payoff', ['view' => 'strategies']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('payoff') && $payoffView === 'strategies' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                             {{ __('app.strategies') }}
                         </a>
-                        <a href="{{ route('payoff', ['view' => 'settings']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('payoff') && $payoffView === 'settings' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                            {{ __('app.settings') }}
-                        </a>
                     </div>
                 </div>
 
@@ -194,6 +199,17 @@
                             {{ __('app.repayment_history') }}
                         </a>
                     </div>
+                </div>
+
+                {{-- Settings Link --}}
+                <div class="pt-2">
+                    <a href="{{ route('settings') }}" wire:navigate.hover @click="mobileMenuOpen = false" class="flex items-center gap-2 px-3 py-2 rounded-lg text-base font-medium {{ request()->routeIs('settings') ? 'border-l-3 border-blue-600 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700' }} transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span>{{ __('app.settings') }}</span>
+                    </a>
                 </div>
 
                 <!-- Language Switcher (Mobile) -->
@@ -223,7 +239,7 @@
     </nav>
 
     <!-- Main Content with Sidebar Space -->
-    <main id="main-content" class="{{ request()->routeIs('home', 'debts', 'debts.edit', 'payoff', 'reconciliations', 'self-loans') ? 'md:ml-64' : '' }} pt-20 px-4 sm:px-6 lg:px-8 py-8">
+    <main id="main-content" class="{{ request()->routeIs('home', 'debts', 'debts.edit', 'payoff', 'reconciliations', 'self-loans', 'settings') ? 'md:ml-64' : '' }} pt-20 px-4 sm:px-6 lg:px-8 py-8">
         {{ $slot }}
     </main>
 

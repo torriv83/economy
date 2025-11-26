@@ -14,6 +14,8 @@ return [
     'strategies' => 'Strategies',
     'settings' => 'Settings',
     'repayments' => 'Repayments',
+    'plan_settings' => 'Plan Settings',
+    'settings_description' => 'Manage application settings',
     'payoff_settings' => 'Repayment Settings',
     'payoff_settings_description' => 'Configure your repayment strategy and extra payment',
     'settings_impact' => 'Settings Impact',

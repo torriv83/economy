@@ -14,6 +14,8 @@ return [
     'strategies' => 'Strategier',
     'settings' => 'Innstillinger',
     'repayments' => 'Nedbetalinger',
+    'plan_settings' => 'Planinnstillinger',
+    'settings_description' => 'Administrer applikasjonsinnstillinger',
     'payoff_settings' => 'Nedbetalingsinnstillinger',
     'payoff_settings_description' => 'Konfigurer din nedbetalingsstrategi og ekstra betaling',
     'settings_impact' => 'Effekt av innstillingene',

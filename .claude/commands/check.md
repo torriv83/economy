@@ -27,6 +27,7 @@ When you run `/check`, you are REQUIRED to:
 - ❌ "The linter reports these problems" → NO! RESOLVE THEM!
 - ❌ "Tests are failing because..." → NO! MAKE THEM PASS!
 - ❌ Stopping after listing issues → NO! KEEP WORKING!
+- ❌ Re-running tests after they already passed → WASTEFUL!
 
 **MANDATORY WORKFLOW:**
 ```
@@ -36,6 +37,14 @@ When you run `/check`, you are REQUIRED to:
 4. Fix those too
 5. REPEAT until EVERYTHING passes
 ```
+
+**🚫 DO NOT RE-RUN CHECKS UNNECESSARILY:**
+- If all checks pass on the first run → **STOP. Report success. Done.**
+- If subagents fixed issues and report all checks pass → **DO NOT re-run checks yourself**
+- Only re-run checks if:
+  - You made additional changes AFTER the last check
+  - A subagent reported failures that need verification
+- **TRUST THE RESULTS** - running the same check twice wastes time
 
 **YOU ARE NOT DONE UNTIL:**
 - All linters pass with zero warnings
