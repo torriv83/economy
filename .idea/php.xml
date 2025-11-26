@@ -5,7 +5,6 @@
       <LaravelPintConfiguration tool_path="$PROJECT_DIR$/vendor/bin/pint">
         <option name="timeout" value="10000" />
       </LaravelPintConfiguration>
-      <LaravelPintConfiguration asDefaultInterpreter="true" tool_path="$PROJECT_DIR$/vendor/bin/pint" />
     </laravel_pint_settings>
   </component>
   <component name="MessDetectorOptionsConfiguration">
@@ -63,8 +62,6 @@
       <path value="$PROJECT_DIR$/vendor/league/mime-type-detection" />
       <path value="$PROJECT_DIR$/vendor/league/uri" />
       <path value="$PROJECT_DIR$/vendor/league/uri-interfaces" />
-      <path value="$PROJECT_DIR$/vendor/livewire/livewire" />
-      <path value="$PROJECT_DIR$/vendor/livewire/volt" />
       <path value="$PROJECT_DIR$/vendor/mockery/mockery" />
       <path value="$PROJECT_DIR$/vendor/monolog/monolog" />
       <path value="$PROJECT_DIR$/vendor/myclabs/deep-copy" />
@@ -181,6 +178,7 @@
       <path value="$PROJECT_DIR$/vendor/larastan/larastan" />
       <path value="$PROJECT_DIR$/vendor/iamcal/sql-parser" />
       <path value="$PROJECT_DIR$/vendor/phpstan/phpstan" />
+      <path value="$PROJECT_DIR$/vendor/livewire/livewire" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.2" />
