@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $payment_month
  * @property string|null $notes
  * @property bool $is_reconciliation_adjustment
+ * @property string|null $ynab_transaction_id
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
  */
@@ -38,6 +39,7 @@ class Payment extends Model
         'payment_month',
         'notes',
         'is_reconciliation_adjustment',
+        'ynab_transaction_id',
     ];
 
     protected function casts(): array

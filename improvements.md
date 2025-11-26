@@ -1,56 +1,79 @@
-1. CALCULATIONS ✅
-
-Overall: Mathematically sound and well-implemented
-
-Minor improvements to consider:
-- (IMPLEMENTED) Add explicit rounding after each month's balance calculation to prevent floating-point accumulation over 600 iterations (app/Services/DebtCalculationService.php:224)
-- Consider an absolute minimum payment floor (e.g., 100 kr) for forbrukslån edge cases
-
-2. UX ASSESSMENT 🎨
-
-Key improvements suggested:
-
-1. (IMPLEMENTED) Strategy Comparison needs visuals - Currently just numbers. Add:
-   - Timeline bar comparing both strategies
-   - Visual interest savings comparison
-   - Milestone markers
-2. (IMPLEMENTED) Debt cards could show progress - Add visual progress bars showing how much is paid off
-3. Payment schedule is overwhelming - Consider:
-   - Collapsible month groupings
-   - "Milestones only" view toggle
-   - Quick jump to specific month
-4. Mobile payment tracking - Simplify to "This Month" focused view by default
-
-3. FEATURE IDEAS 💡
+FEATURE IDEAS 💡
 
 Quick wins (high value, relatively simple):
 - What-if scenarios: Compare 3-5 different extra payment amounts side-by-side
-- CSV/PDF export: Download payment plans
 - Snowflake tracking: Log one-time windfalls (tax refunds, bonuses) and see immediate impact
 
 High-value additions:
-- (IMPLEMENTED) Historical progress charts: Track balance reduction over time (requires monthly snapshots)
-- (IMPLEMENTED) Payoff calendar: Visual calendar with payment dates and debt-free countdown 
-- Interest saved meter: Running counter showing savings vs. minimum-only payments
 - Budget tracking: Set monthly debt budget and track adherence
 
 Advanced features:
-- Interest rate change tracking: Update rates and see impact on timeline
-- Notes system: Already have notes field in payments table - add UI for this! (IMPLEMENTED)
 - Keyboard shortcuts: Alt+H (home), Alt+S (strategies), Alt+P (plan)
 
 Long-term:
-- YNAB integration (already planned)
 - PWA conversion for offline access + home screen install
 - AI recommendations based on payment patterns
-
-  ---
-Bottom line: Your calculations are solid, the foundation is excellent, but the UX would benefit significantly from more visual data representation and motivation/gamification elements to make the debt payoff journey feel more tangible and
-rewarding.
 
 
 ## The user wishlist: ##
 - Be able to click on one debt, and get more details on that single debt (needs brainstorming)
   - first idea: have a what/if.. so i put in a sum i want to pay extra to get an idea how much faster the debt is paid off
-- In the calendar, be able to jump to a specific year (IMPLEMENTED)
 - Integrate YNAB so i can add any wishlist or things i need to save for (like an upcoming dental appointment next year), and get help to know how much i can afford to put aside and still keep debt payments on track.
+
+
+## YNAB Integration Ideas
+
+### Current integration
+- Syncs debt accounts from YNAB (balance, interest rate, minimum payment)
+
+### New features from YNAB API
+
+#### 1. Transaction History (High value, Low complexity)
+`GET /budgets/{budget_id}/accounts/{account_id}/transactions`
+- Auto-import actual payments to debts instead of manual entry
+- View payment history from YNAB directly
+- Verify that recorded payments match YNAB
+- Can fetch transactions for a specific month (added July 2024)
+
+#### 2. Category Budgets with Goals (High value, Medium complexity)
+`GET /budgets/{budget_id}/categories`
+- See how much you've budgeted for debt payments
+- `goal_target` - target amount for the category
+- `budgeted` - what you've set aside this month
+- `balance` - available in the category
+- `goal_needs_whole_amount` - rollover behavior for NEED-type goals (added June 2024)
+- Goal types: TB (Target Balance), TBD (Target Balance by Date), MF (Monthly Funding), NEED (Plan Your Spending)
+- Perfect for: Showing "available for extra debt payment"
+
+#### 3. Scheduled Transactions (Medium value, Low complexity)
+`GET /budgets/{budget_id}/scheduled_transactions`
+- Fetch upcoming debt payments automatically
+- Display in payment calendar
+- Predict cash flow
+- Can now create/update/delete via API (added June 2024)
+
+#### 4. "Ready to Assign" Balance (Medium value, Low complexity)
+From budget endpoint - shows how much money is available to budget:
+- Show "You have X kr available for extra debt payment"
+- Help balance savings vs. debt payment
+
+#### 5. Monthly Budget Data (Medium value, Medium complexity)
+`GET /budgets/{budget_id}/months/{month}`
+- Compare planned vs. actual over time
+- Build historical graphs of debt payments
+
+### Concrete use case: Balancing savings goals and debt
+Solution for the wishlist item about dental appointments etc:
+1. Fetch categories with savings goals (dentist, wishlist, etc.)
+2. Fetch "Ready to Assign" + category balances
+3. Calculate: `Available for extra debt payment = Ready to Assign - (Savings goals missing funding)`
+4. Display: "You can pay X kr extra on debt and still reach your savings goals"
+
+### Recommended priority
+
+| Feature | Value | Complexity |
+|---------|-------|------------|
+| 1. Transactions → auto-import payments | High | Low |
+| 2. Category goals → balance savings/debt | High | Medium |
+| 3. Scheduled transactions → calendar | Medium | Low |
+| 4. Ready to Assign → available extra | Medium | Low |

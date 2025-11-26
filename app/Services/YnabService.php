@@ -129,4 +129,65 @@ class YnabService
         // Convert milliunits to NOK (590000 = 590 kr)
         return $paymentInMilliunits / 1000;
     }
+
+    /**
+     * Fetch payment transactions for a specific debt account from YNAB.
+     * Only returns transactions that reduce the debt (positive amounts in YNAB).
+     *
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     *
+     * @throws \Illuminate\Http\Client\RequestException
+     */
+    public function fetchPaymentTransactions(string $accountId, ?\DateTimeInterface $sinceDate = null): Collection
+    {
+        $url = "https://api.ynab.com/v1/budgets/{$this->budgetId}/accounts/{$accountId}/transactions";
+
+        $query = [];
+        if ($sinceDate !== null) {
+            $query['since_date'] = $sinceDate->format('Y-m-d');
+        }
+
+        $response = Http::withToken($this->token)
+            ->get($url, $query)
+            ->throw()
+            ->json();
+
+        /** @var array<int, array<string, mixed>> $transactionsData */
+        $transactionsData = $response['data']['transactions'] ?? [];
+
+        /** @var \Illuminate\Support\Collection<int, array<string, mixed>> $transactions */
+        $transactions = collect($transactionsData);
+
+        // Filter to only include payments (positive amounts reduce debt in YNAB)
+        // and exclude deleted transactions
+        /** @var \Illuminate\Support\Collection<int, array<string, mixed>> */
+        return $transactions
+            ->filter(function ($transaction) {
+                return $transaction['amount'] > 0 && ! $transaction['deleted'];
+            })
+            ->map(function ($transaction) {
+                return $this->mapYnabTransaction($transaction);
+            })
+            ->values();
+    }
+
+    /**
+     * Map YNAB transaction data to our app's structure.
+     *
+     * @param  array<string, mixed>  $transaction
+     * @return array{id: string, date: string, amount: float, payee_name: string|null, memo: string|null}
+     */
+    protected function mapYnabTransaction(array $transaction): array
+    {
+        // YNAB stores amounts in milliunits (divide by 1000 to get NOK)
+        $amount = $transaction['amount'] / 1000;
+
+        return [
+            'id' => $transaction['id'],
+            'date' => $transaction['date'],
+            'amount' => $amount,
+            'payee_name' => $transaction['payee_name'] ?? null,
+            'memo' => $transaction['memo'] ?? null,
+        ];
+    }
 }

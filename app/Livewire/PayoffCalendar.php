@@ -6,6 +6,7 @@ use App\Models\Debt;
 use App\Models\Payment;
 use App\Services\DebtCalculationService;
 use App\Services\PaymentService;
+use App\Services\YnabService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -47,6 +48,16 @@ class PayoffCalendar extends Component
     public int $selectedMonthNumber = 0;
 
     public string $selectedPaymentMonth = '';
+
+    // YNAB Transaction Checker Modal state
+    public bool $showYnabModal = false;
+
+    public bool $isCheckingYnab = false;
+
+    /** @var array<int, array{debt_id: int, debt_name: string, ynab_transactions: array<int, array{id: string, date: string, amount: float, payee_name: string|null, memo: string|null, status: string, local_payment_id: int|null, local_amount: float|null}>}> */
+    public array $ynabComparisonResults = [];
+
+    public string $ynabError = '';
 
     public function boot(DebtCalculationService $service): void
     {
@@ -169,6 +180,231 @@ class PayoffCalendar extends Component
 
         $this->closePaymentModal();
         session()->flash('payment_recorded', 'Betaling på '.number_format($this->paymentAmount, 0, ',', ' ').' kr registrert for '.$this->selectedDebtName);
+    }
+
+    public function openYnabModal(): void
+    {
+        $this->showYnabModal = true;
+        $this->ynabComparisonResults = [];
+        $this->ynabError = '';
+        $this->checkYnabTransactions();
+    }
+
+    public function closeYnabModal(): void
+    {
+        $this->showYnabModal = false;
+        $this->ynabComparisonResults = [];
+        $this->ynabError = '';
+        $this->isCheckingYnab = false;
+    }
+
+    public function checkYnabTransactions(): void
+    {
+        $this->isCheckingYnab = true;
+        $this->ynabError = '';
+        $this->ynabComparisonResults = [];
+
+        $token = config('services.ynab.token');
+        $budgetId = config('services.ynab.budget_id');
+
+        if (! $token || ! $budgetId) {
+            $this->ynabError = __('app.ynab_not_configured');
+            $this->isCheckingYnab = false;
+
+            return;
+        }
+
+        $ynabService = new YnabService($token, $budgetId);
+
+        // Get debts with YNAB account ID
+        $debtsWithYnab = $this->getDebts()->filter(fn ($debt) => $debt->ynab_account_id !== null);
+
+        if ($debtsWithYnab->isEmpty()) {
+            $this->ynabError = __('app.no_debts_linked_to_ynab');
+            $this->isCheckingYnab = false;
+
+            return;
+        }
+
+        try {
+            foreach ($debtsWithYnab as $debt) {
+                // Get the latest payment date for this debt to use as "since" date
+                // If no payments exist, use the debt's created_at date
+                $latestPayment = Payment::where('debt_id', $debt->id)
+                    ->where('is_reconciliation_adjustment', false)
+                    ->orderBy('payment_date', 'desc')
+                    ->first();
+
+                $sinceDate = $latestPayment?->payment_date?->subDays(7) ?? $debt->created_at;
+
+                // Fetch transactions from YNAB
+                $ynabTransactions = $ynabService->fetchPaymentTransactions(
+                    $debt->ynab_account_id,
+                    $sinceDate
+                );
+
+                if ($ynabTransactions->isEmpty()) {
+                    continue;
+                }
+
+                // Get local payments for comparison
+                $localPayments = Payment::where('debt_id', $debt->id)
+                    ->where('is_reconciliation_adjustment', false)
+                    ->get()
+                    ->keyBy('ynab_transaction_id');
+
+                // Also group local payments by month for fuzzy matching
+                $localPaymentsByMonth = Payment::where('debt_id', $debt->id)
+                    ->where('is_reconciliation_adjustment', false)
+                    ->whereNull('ynab_transaction_id')
+                    ->get()
+                    ->groupBy(fn ($p) => $p->payment_date->format('Y-m'));
+
+                $comparedTransactions = [];
+
+                foreach ($ynabTransactions as $ynabTx) {
+                    $transactionMonth = Carbon::parse($ynabTx['date'])->format('Y-m');
+
+                    // Check if already linked by ynab_transaction_id
+                    if ($localPayments->has($ynabTx['id'])) {
+                        $localPayment = $localPayments->get($ynabTx['id']);
+                        $status = abs($localPayment->actual_amount - $ynabTx['amount']) < 0.01
+                            ? 'matched'
+                            : 'mismatch';
+
+                        $comparedTransactions[] = [
+                            'id' => $ynabTx['id'],
+                            'date' => $ynabTx['date'],
+                            'amount' => $ynabTx['amount'],
+                            'payee_name' => $ynabTx['payee_name'],
+                            'memo' => $ynabTx['memo'],
+                            'status' => $status,
+                            'local_payment_id' => $localPayment->id,
+                            'local_amount' => $localPayment->actual_amount,
+                        ];
+                    } else {
+                        // Try fuzzy matching by month and similar amount
+                        $potentialMatch = null;
+                        if (isset($localPaymentsByMonth[$transactionMonth])) {
+                            foreach ($localPaymentsByMonth[$transactionMonth] as $localP) {
+                                // Match if amount is within 5%
+                                $diff = abs($localP->actual_amount - $ynabTx['amount']);
+                                $threshold = $ynabTx['amount'] * 0.05;
+                                if ($diff <= $threshold) {
+                                    $potentialMatch = $localP;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if ($potentialMatch) {
+                            $status = abs($potentialMatch->actual_amount - $ynabTx['amount']) < 0.01
+                                ? 'matched'
+                                : 'mismatch';
+
+                            $comparedTransactions[] = [
+                                'id' => $ynabTx['id'],
+                                'date' => $ynabTx['date'],
+                                'amount' => $ynabTx['amount'],
+                                'payee_name' => $ynabTx['payee_name'],
+                                'memo' => $ynabTx['memo'],
+                                'status' => $status,
+                                'local_payment_id' => $potentialMatch->id,
+                                'local_amount' => $potentialMatch->actual_amount,
+                            ];
+                        } else {
+                            // No match found - this is a new transaction
+                            $comparedTransactions[] = [
+                                'id' => $ynabTx['id'],
+                                'date' => $ynabTx['date'],
+                                'amount' => $ynabTx['amount'],
+                                'payee_name' => $ynabTx['payee_name'],
+                                'memo' => $ynabTx['memo'],
+                                'status' => 'missing',
+                                'local_payment_id' => null,
+                                'local_amount' => null,
+                            ];
+                        }
+                    }
+                }
+
+                if (! empty($comparedTransactions)) {
+                    $this->ynabComparisonResults[] = [
+                        'debt_id' => $debt->id,
+                        'debt_name' => $debt->name,
+                        'ynab_transactions' => $comparedTransactions,
+                    ];
+                }
+            }
+
+            if (empty($this->ynabComparisonResults)) {
+                $this->ynabError = __('app.no_new_ynab_transactions');
+            }
+        } catch (\Exception $e) {
+            $this->ynabError = __('app.ynab_connection_error').': '.$e->getMessage();
+        }
+
+        $this->isCheckingYnab = false;
+    }
+
+    public function importYnabTransaction(string $ynabTransactionId, int $debtId, PaymentService $paymentService): void
+    {
+        // Find the transaction in our results
+        $transaction = null;
+        foreach ($this->ynabComparisonResults as $result) {
+            if ($result['debt_id'] === $debtId) {
+                foreach ($result['ynab_transactions'] as $tx) {
+                    if ($tx['id'] === $ynabTransactionId && $tx['status'] === 'missing') {
+                        $transaction = $tx;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        if (! $transaction) {
+            return;
+        }
+
+        $debt = Debt::findOrFail($debtId);
+        $paymentDate = Carbon::parse($transaction['date']);
+        $paymentMonth = $paymentDate->format('Y-m');
+
+        // Calculate month number based on payment date relative to debt creation
+        $monthNumber = $debt->created_at->diffInMonths($paymentDate) + 1;
+
+        DB::transaction(function () use ($debt, $transaction, $paymentDate, $paymentMonth, $monthNumber, $paymentService) {
+            $payment = Payment::create([
+                'debt_id' => $debt->id,
+                'planned_amount' => $transaction['amount'],
+                'actual_amount' => $transaction['amount'],
+                'payment_date' => $paymentDate->format('Y-m-d'),
+                'month_number' => $monthNumber,
+                'payment_month' => $paymentMonth,
+                'notes' => $transaction['memo'] ?? __('app.imported_from_ynab'),
+                'ynab_transaction_id' => $transaction['id'],
+                'is_reconciliation_adjustment' => false,
+            ]);
+
+            $paymentService->updateDebtBalances();
+        });
+
+        // Refresh the comparison results
+        $this->checkYnabTransactions();
+        session()->flash('ynab_import_success', __('app.ynab_payment_imported'));
+    }
+
+    public function updatePaymentFromYnab(string $ynabTransactionId, int $localPaymentId, float $ynabAmount): void
+    {
+        $payment = Payment::findOrFail($localPaymentId);
+        $payment->update([
+            'actual_amount' => $ynabAmount,
+            'ynab_transaction_id' => $ynabTransactionId,
+        ]);
+
+        // Refresh the comparison results
+        $this->checkYnabTransactions();
+        session()->flash('ynab_import_success', __('app.ynab_payment_updated'));
     }
 
     /**
