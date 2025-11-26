@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Merge dev into master and return to dev
+set -e
+
+echo "Switching to master..."
+git checkout master
+
+echo "Merging dev into master..."
+git merge dev
+
+echo "Switching back to dev..."
+git checkout dev
+
+echo "Done! dev has been merged into master."
