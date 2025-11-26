@@ -162,24 +162,27 @@ class PayoffSettings extends Component
             ->pluck('name')
             ->toArray();
 
-        // Build labels (month names) - start with "I dag" for current month
-        $labels = [__('app.today')];
-        foreach ($schedule['schedule'] as $monthData) {
-            $labels[] = $monthData['monthName'];
+        // Build labels (month names) - one label per data point (current month + each schedule month)
+        $scheduleCount = count($schedule['schedule']);
+        $labels = [];
+        $currentDate = now();
+        $locale = app()->getLocale();
+        for ($i = 0; $i <= $scheduleCount; $i++) {
+            $labels[] = $currentDate->copy()->addMonths($i)->locale($locale)->translatedFormat('F Y');
         }
 
         // Build datasets - one per debt
         $datasets = [];
-        foreach ($debtNames as $index => $debtName) {
+        foreach ($debtNames as $debtIndex => $debtName) {
             // Get initial balance for this debt
             $debt = $debts->firstWhere('name', $debtName);
             $initialBalance = $debt ? $debt->balance : 0;
 
             // Collect remaining balances for each month
             $data = [$initialBalance]; // Start with current balance
-            foreach ($schedule['schedule'] as $monthData) {
+            for ($i = 0; $i < $scheduleCount; $i++) {
                 /** @var array<int, array{name: string, payment: float, interest: float, principal: float, remaining: float}> $monthPayments */
-                $monthPayments = $monthData['payments'];
+                $monthPayments = $schedule['schedule'][$i]['payments'];
                 $payment = collect($monthPayments)->firstWhere('name', $debtName);
                 $data[] = $payment ? $payment['remaining'] : 0;
             }
@@ -187,7 +190,7 @@ class PayoffSettings extends Component
             $datasets[] = [
                 'label' => $debtName,
                 'data' => $data,
-                'borderColor' => $colors[$index % count($colors)],
+                'borderColor' => $colors[$debtIndex % count($colors)],
             ];
         }
 

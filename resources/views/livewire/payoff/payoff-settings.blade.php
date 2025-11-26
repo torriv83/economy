@@ -271,8 +271,7 @@
                                             color: isDarkMode ? 'rgb(148, 163, 184)' : 'rgb(107, 114, 128)',
                                             maxRotation: 45,
                                             minRotation: 45,
-                                            autoSkip: true,
-                                            maxTicksLimit: 12
+                                            autoSkip: false
                                         }
                                     }
                                 }
