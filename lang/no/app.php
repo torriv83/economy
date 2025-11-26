@@ -42,6 +42,7 @@ return [
     'debts_overview' => 'Gjeldsoversikt',
     'debts_overview_description' => 'Administrer alle dine gjeld på ett sted',
     'create_debt_description' => 'Legg til en ny gjeld i oversikten din',
+    'edit_debt_description' => 'Oppdater detaljene for denne gjelden',
     'progress' => 'Fremdrift',
     'debts_count' => '{count} gjeld|{count} gjeld',
     'per_month' => '/måned',

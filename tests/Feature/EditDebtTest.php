@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\Debts\DebtLayout;
 use App\Livewire\EditDebt;
 use App\Models\Debt;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -33,7 +34,7 @@ test('edit debt component loads debt data correctly', function () {
         ->assertSet('balance', '50000')
         ->assertSet('interestRate', '8.5')
         ->assertSet('minimumPayment', '1500')
-        ->assertSee('Edit Debt');
+        ->assertSee('Update Debt'); // Button text instead of header
 });
 
 test('can update debt with valid data', function () {
@@ -52,7 +53,7 @@ test('can update debt with valid data', function () {
         ->set('interestRate', '7.5')
         ->set('minimumPayment', '450')
         ->call('update')
-        ->assertRedirect(route('home'));
+        ->assertDispatched('debtUpdated'); // SPA mode dispatches event instead of redirect
 
     $debt->refresh();
 
@@ -133,12 +134,13 @@ test('validates minimum payment is numeric and meets requirements', function () 
         ->assertHasErrors(['minimumPayment']);
 });
 
-test('edit button links to correct route', function () {
+test('edit button uses SPA mode with parent editDebt call', function () {
     $debt = Debt::factory()->create(['name' => 'Test Debt']);
 
     $response = $this->get('/');
 
-    $response->assertSee("/debts/{$debt->id}/edit");
+    // SPA mode uses wire:click to call $parent.editDebt() instead of link
+    $response->assertSee('$parent.editDebt('.$debt->id.')');
 });
 
 test('validation blocks save when minimum payment is below calculated minimum for forbrukslån', function () {
@@ -209,7 +211,7 @@ test('balance field is read-only and cannot be changed', function () {
         ->set('interestRate', '6.0')
         ->set('minimumPayment', '400')
         ->call('update')
-        ->assertRedirect(route('home'));
+        ->assertDispatched('debtUpdated'); // SPA mode dispatches event instead of redirect
 
     $debt->refresh();
 
@@ -259,4 +261,56 @@ test('minimum payment validation displays rounded up value that will actually pa
         ->set('minimumPayment', '696')
         ->call('update')
         ->assertHasNoErrors();
+});
+
+test('edit debt component can be initialized with debt model parameter', function () {
+    $debt = Debt::factory()->create([
+        'name' => 'SPA Mode Test',
+        'type' => 'kredittkort',
+        'balance' => 5000,
+        'interest_rate' => 10.0,
+        'minimum_payment' => 300,
+    ]);
+
+    // Test initialization with debt model (both SPA mode via view and direct URL use this)
+    // The debtId parameter is resolved by Livewire when rendered in the view
+    Livewire::test(EditDebt::class, ['debt' => $debt])
+        ->assertSet('name', 'SPA Mode Test')
+        ->assertSet('type', 'kredittkort')
+        ->assertSet('balance', '5000')
+        ->assertSet('interestRate', '10')
+        ->assertSet('minimumPayment', '300');
+});
+
+test('DebtLayout component editDebt sets correct state', function () {
+    $debt = Debt::factory()->create();
+
+    Livewire::test(DebtLayout::class)
+        ->assertSet('currentView', 'overview')
+        ->assertSet('editingDebtId', null)
+        ->call('editDebt', $debt->id)
+        ->assertSet('currentView', 'edit')
+        ->assertSet('editingDebtId', $debt->id);
+});
+
+test('DebtLayout component cancelEdit returns to overview', function () {
+    $debt = Debt::factory()->create();
+
+    Livewire::test(DebtLayout::class)
+        ->call('editDebt', $debt->id)
+        ->assertSet('currentView', 'edit')
+        ->call('cancelEdit')
+        ->assertSet('currentView', 'overview')
+        ->assertSet('editingDebtId', null);
+});
+
+test('DebtLayout component onDebtUpdated returns to overview', function () {
+    $debt = Debt::factory()->create();
+
+    Livewire::test(DebtLayout::class)
+        ->call('editDebt', $debt->id)
+        ->assertSet('currentView', 'edit')
+        ->call('onDebtUpdated')
+        ->assertSet('currentView', 'overview')
+        ->assertSet('editingDebtId', null);
 });

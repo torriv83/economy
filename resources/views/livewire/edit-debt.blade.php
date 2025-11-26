@@ -1,14 +1,4 @@
 <div>
-    <!-- Header -->
-    <div class="mb-8">
-            <div class="flex items-center justify-between mb-2">
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ __('app.edit_debt') }}</h1>
-                <a href="{{ route('home') }}" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">
-                    {{ __('app.cancel') }}
-                </a>
-            </div>
-        </div>
-
         <!-- Form Card -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-200">
             <form wire:submit="update" class="p-6 sm:p-8">
@@ -49,9 +39,11 @@
                                 <span class="text-gray-500 dark:text-gray-400 text-sm font-medium">NOK</span>
                             </div>
                         </div>
-                        <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                            {{ __('app.added_on') }}: {{ $this->debt->created_at->locale('nb')->translatedFormat('d. F Y') }}
-                        </p>
+                        @if($this->debt?->created_at)
+                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                {{ __('app.added_on') }}: {{ $this->debt->created_at->locale('nb')->translatedFormat('d. F Y') }}
+                            </p>
+                        @endif
                     </div>
 
                     <!-- Balance (Read-only - Calculated) -->
@@ -187,10 +179,31 @@
                         @enderror
 
                         <!-- Calculated Minimum Display -->
-                        <div x-show="calculatedMinimum > 0" class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                            <p class="text-sm font-medium text-blue-900 dark:text-blue-200">
-                                {{ __('app.calculated_minimum') }}: <span x-text="new Intl.NumberFormat('no-NO', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(calculatedMinimum)"></span> kr
-                            </p>
+                        <div x-show="calculatedMinimum > 0"
+                             x-bind:class="parseFloat($wire.minimumPayment || 0) < calculatedMinimum
+                                ? 'bg-red-50 dark:bg-red-900/20 border-red-500 dark:border-red-700'
+                                : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'"
+                             class="mt-3 p-3 border rounded-lg">
+                            <div class="flex items-center gap-2">
+                                <template x-if="parseFloat($wire.minimumPayment || 0) < calculatedMinimum">
+                                    <!-- Warning icon (red) -->
+                                    <svg class="w-5 h-5 text-red-600 dark:text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                                    </svg>
+                                </template>
+                                <template x-if="parseFloat($wire.minimumPayment || 0) >= calculatedMinimum">
+                                    <!-- Info icon (blue) -->
+                                    <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                                    </svg>
+                                </template>
+                                <p x-bind:class="parseFloat($wire.minimumPayment || 0) < calculatedMinimum
+                                    ? 'text-sm font-medium text-red-900 dark:text-red-200'
+                                    : 'text-sm font-medium text-blue-900 dark:text-blue-200'">
+                                    {{ __('app.calculated_minimum') }}:
+                                    <span x-text="new Intl.NumberFormat('no-NO', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(calculatedMinimum)"></span> kr
+                                </p>
+                            </div>
                         </div>
                     </div>
 
@@ -257,12 +270,13 @@
                             {{ __('app.updating') }}
                         </span>
                     </button>
-                    <a
-                        href="{{ route('home') }}"
-                        class="flex-1 sm:flex-initial inline-flex items-center justify-center px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors duration-200"
+                    <button
+                        type="button"
+                        wire:click="$parent.cancelEdit()"
+                        class="flex-1 sm:flex-initial inline-flex items-center justify-center px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors duration-200 cursor-pointer"
                     >
                         {{ __('app.cancel') }}
-                    </a>
+                    </button>
                 </div>
             </form>
         </div>

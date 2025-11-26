@@ -42,6 +42,7 @@ return [
     'debts_overview' => 'Debt Overview',
     'debts_overview_description' => 'Manage all your debts in one place',
     'create_debt_description' => 'Add a new debt to your overview',
+    'edit_debt_description' => 'Update the details for this debt',
     'progress' => 'Progress',
     'debts_count' => '{count} debt|{count} debts',
     'per_month' => '/month',

@@ -242,10 +242,12 @@
                             {{-- Actions --}}
                             @if (!$reorderMode)
                                 <div class="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-                                    <a href="/debts/{{ $debt['id'] }}/edit"
-                                       class="flex-1 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors text-center focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2">
+                                    <button
+                                        type="button"
+                                        wire:click="$parent.editDebt({{ $debt['id'] }})"
+                                        class="flex-1 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors text-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2">
                                         {{ __('app.edit') }}
-                                    </a>
+                                    </button>
                                     <button type="button"
                                             wire:click="confirmDelete({{ $debt['id'] }}, '{{ $debt['name'] }}')"
                                             aria-label="{{ __('app.delete_debt', ['name' => $debt['name']]) }}"

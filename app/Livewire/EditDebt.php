@@ -9,7 +9,9 @@ use Livewire\Component;
 
 class EditDebt extends Component
 {
-    public Debt $debt;
+    public ?Debt $debt = null;
+
+    public ?int $debtId = null;
 
     public string $name = '';
 
@@ -23,15 +25,36 @@ class EditDebt extends Component
 
     public ?string $dueDay = null;
 
-    public function mount(Debt $debt): void
+    public function mount(?int $debtId = null, ?Debt $debt = null): void
     {
-        $this->debt = $debt;
-        $this->name = $debt->name;
-        $this->type = $debt->type;
-        $this->balance = (string) $debt->balance; // Read-only, for display purposes
-        $this->interestRate = (string) $debt->interest_rate;
-        $this->minimumPayment = (string) $debt->minimum_payment;
-        $this->dueDay = $debt->due_day ? (string) $debt->due_day : null;
+        // Support both SPA mode (debtId prop) and direct URL (route model binding)
+        // In Livewire 3, props are set as public properties BEFORE mount() is called.
+        // The mount() parameter may still be null even if the prop was passed.
+        // So we need to check BOTH the parameter AND the public property.
+
+        // Route model binding takes priority (direct URL access)
+        if ($debt !== null) {
+            $this->debt = $debt;
+            $this->debtId = $debt->id;
+        } else {
+            // Merge parameter and property - either could be set by Livewire
+            $resolvedDebtId = $debtId ?? $this->debtId;
+
+            if ($resolvedDebtId === null) {
+                throw new \InvalidArgumentException('Either debtId or debt must be provided');
+            }
+
+            $this->debtId = $resolvedDebtId;
+            $this->debt = Debt::findOrFail($resolvedDebtId);
+        }
+
+        // Populate form fields from loaded debt
+        $this->name = $this->debt->name ?? '';
+        $this->type = $this->debt->type ?? '';
+        $this->balance = (string) ($this->debt->balance ?? 0);
+        $this->interestRate = (string) ($this->debt->interest_rate ?? 0);
+        $this->minimumPayment = (string) ($this->debt->minimum_payment ?? 0);
+        $this->dueDay = $this->debt->due_day !== null ? (string) $this->debt->due_day : null;
     }
 
     /**
@@ -49,7 +72,7 @@ class EditDebt extends Component
                 'min:0.01',
                 function ($attribute, $value, $fail) {
                     // Use debt's current balance for validation (read-only)
-                    $balance = $this->debt->balance;
+                    $balance = $this->debt?->balance ?? 0;
 
                     // For kredittkort: use the existing 3% or 300 kr rule
                     if ($this->type === 'kredittkort') {
@@ -111,7 +134,8 @@ class EditDebt extends Component
 
         session()->flash('message', 'Gjeld oppdatert.');
 
-        $this->redirect(route('home'));
+        // Dispatch event for parent component in SPA mode
+        $this->dispatch('debtUpdated');
     }
 
     #[Title('Edit Debt')]
