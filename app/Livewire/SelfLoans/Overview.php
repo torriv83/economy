@@ -81,7 +81,9 @@ class Overview extends Component
             return 0;
         }
 
-        return SelfLoan::find($this->selectedLoanId)?->current_balance ?? 0;
+        $loan = SelfLoan::find($this->selectedLoanId);
+
+        return $loan !== null ? $loan->current_balance : 0;
     }
 
     public function openRepaymentModal(int $loanId): void

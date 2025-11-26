@@ -72,7 +72,7 @@ class EditDebt extends Component
                 'min:0.01',
                 function ($attribute, $value, $fail) {
                     // Use debt's current balance for validation (read-only)
-                    $balance = $this->debt?->balance ?? 0;
+                    $balance = $this->debt->balance ?? 0;
 
                     // For kredittkort: use the existing 3% or 300 kr rule
                     if ($this->type === 'kredittkort') {
