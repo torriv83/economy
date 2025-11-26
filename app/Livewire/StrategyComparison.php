@@ -455,7 +455,7 @@ class StrategyComparison extends Component
      */
     protected function getChartMonthLabel(int $month, array $schedule1, array $schedule2): string
     {
-        $entry = $schedule1['schedule'][$month - 1] ?? $schedule2['schedule'][$month - 1] ?? null;
+        $entry = $schedule1['schedule'][$month] ?? $schedule2['schedule'][$month] ?? null;
 
         return $entry['monthName'] ?? __('app.month').' '.$month;
     }
