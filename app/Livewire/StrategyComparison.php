@@ -397,24 +397,22 @@ class StrategyComparison extends Component
         // Calculate initial total debt
         $initialTotal = $debts->sum('balance');
 
-        for ($i = 0; $i <= $maxMonths; $i++) {
-            if ($i === 0) {
-                $labels[] = __('app.today');
-                $minimumData[] = $initialTotal;
-                $snowballData[] = $initialTotal;
-                $avalancheData[] = $initialTotal;
-                $customData[] = $initialTotal;
-            } else {
-                // Get month label from first available schedule
-                $monthLabel = $this->getChartMonthLabel($i, $minimumSchedule, $snowballSchedule);
-                $labels[] = $monthLabel;
+        // First point: current month with initial balance
+        $labels[] = now()->locale('nb')->translatedFormat('F Y');
+        $minimumData[] = $initialTotal;
+        $snowballData[] = $initialTotal;
+        $avalancheData[] = $initialTotal;
+        $customData[] = $initialTotal;
 
-                // Get remaining balance for each strategy
-                $minimumData[] = $this->getChartRemainingBalance($minimumSchedule, $i);
-                $snowballData[] = $this->getChartRemainingBalance($snowballSchedule, $i);
-                $avalancheData[] = $this->getChartRemainingBalance($avalancheSchedule, $i);
-                $customData[] = $this->getChartRemainingBalance($customSchedule, $i);
-            }
+        // Remaining points: each month's balance after payment
+        for ($i = 1; $i <= $maxMonths; $i++) {
+            $monthLabel = $this->getChartMonthLabel($i, $minimumSchedule, $snowballSchedule);
+            $labels[] = $monthLabel;
+
+            $minimumData[] = $this->getChartRemainingBalance($minimumSchedule, $i);
+            $snowballData[] = $this->getChartRemainingBalance($snowballSchedule, $i);
+            $avalancheData[] = $this->getChartRemainingBalance($avalancheSchedule, $i);
+            $customData[] = $this->getChartRemainingBalance($customSchedule, $i);
         }
 
         return [
