@@ -75,6 +75,15 @@ class Overview extends Component
         return SelfLoan::where('current_balance', '>', 0)->count();
     }
 
+    public function getSelectedLoanBalanceProperty(): float
+    {
+        if ($this->selectedLoanId === 0) {
+            return 0;
+        }
+
+        return SelfLoan::find($this->selectedLoanId)?->current_balance ?? 0;
+    }
+
     public function openRepaymentModal(int $loanId): void
     {
         $this->selectedLoanId = $loanId;
@@ -105,7 +114,7 @@ class Overview extends Component
         $loan = SelfLoan::findOrFail($this->selectedLoanId);
 
         if ($this->repaymentAmount > $loan->current_balance) {
-            $this->addError('repaymentAmount', 'Repayment amount cannot exceed current balance.');
+            $this->addError('repaymentAmount', __('app.validation_repayment_exceeds_balance'));
 
             return;
         }
@@ -123,7 +132,7 @@ class Overview extends Component
             ]);
         });
 
-        session()->flash('message', 'Repayment added successfully.');
+        session()->flash('message', __('app.repayment_added_successfully'));
 
         $this->closeRepaymentModal();
     }
@@ -173,7 +182,7 @@ class Overview extends Component
             ]);
         });
 
-        session()->flash('message', 'Withdrawal added successfully.');
+        session()->flash('message', __('app.withdrawal_added_successfully'));
 
         $this->closeWithdrawalModal();
     }
@@ -218,7 +227,7 @@ class Overview extends Component
                 'original_amount' => $this->editOriginalAmount,
             ]);
 
-            session()->flash('message', 'Self-loan updated successfully.');
+            session()->flash('message', __('app.self_loan_updated_successfully'));
         }
 
         $this->closeEditModal();
@@ -238,7 +247,7 @@ class Overview extends Component
 
             if ($loan) {
                 $loan->delete();
-                session()->flash('message', 'Self-loan deleted.');
+                session()->flash('message', __('app.self_loan_deleted'));
             }
         }
 

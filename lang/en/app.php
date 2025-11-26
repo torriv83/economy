@@ -312,4 +312,12 @@ return [
     'no_repayments_for_filter' => 'No repayments for this loan',
     'try_different_filter' => 'Try selecting a different loan or clear the filter to see all repayments.',
     'edit_self_loan' => 'Edit Self-Loan',
+
+    // Self-Loan Validation & Messages
+    'up_to_amount' => 'Up to kr :amount',
+    'validation_repayment_exceeds_balance' => 'Repayment amount cannot exceed current balance.',
+    'repayment_added_successfully' => 'Repayment added successfully.',
+    'withdrawal_added_successfully' => 'Withdrawal added successfully.',
+    'self_loan_updated_successfully' => 'Self-loan updated successfully.',
+    'self_loan_deleted' => 'Self-loan deleted.',
 ];

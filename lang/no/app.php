@@ -314,4 +314,12 @@ return [
     'no_repayments_for_filter' => 'Ingen nedbetalinger for dette lånet',
     'try_different_filter' => 'Prøv å velge et annet lån eller fjern filteret for å se alle nedbetalinger.',
     'edit_self_loan' => 'Rediger privat lån',
+
+    // Self-Loan Validation & Messages
+    'up_to_amount' => 'Opp til kr :amount',
+    'validation_repayment_exceeds_balance' => 'Nedbetalingsbeløpet kan ikke overstige gjenstående saldo.',
+    'repayment_added_successfully' => 'Nedbetaling lagt til.',
+    'withdrawal_added_successfully' => 'Uttak lagt til.',
+    'self_loan_updated_successfully' => 'Privat lån oppdatert.',
+    'self_loan_deleted' => 'Privat lån slettet.',
 ];

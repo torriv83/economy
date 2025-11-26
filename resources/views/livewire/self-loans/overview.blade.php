@@ -187,6 +187,7 @@
                             <div>
                                 <label for="repayment-amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     {{ __('app.amount_kr') }} *
+                                    <span class="font-normal text-gray-500 dark:text-gray-400">({{ __('app.up_to_amount', ['amount' => number_format($this->selectedLoanBalance, 2, ',', ' ')]) }})</span>
                                 </label>
                                 <input
                                     type="number"
