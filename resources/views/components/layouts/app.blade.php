@@ -252,6 +252,7 @@
                 (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches);
             document.documentElement.classList.toggle('dark', darkMode);
         });
+
     </script>
 
     @stack('scripts')

@@ -369,4 +369,18 @@ return [
     'memo' => 'Notat',
     'close' => 'Lukk',
     'refresh' => 'Oppdater',
+
+    // Keyboard Shortcuts
+    'keyboard_shortcuts' => 'Tastatursnarveier',
+    'keyboard_shortcuts_description' => 'Hurtigtaster for vanlige handlinger',
+    'shortcut' => 'Snarvei',
+    'action' => 'Handling',
+    'shortcut_home' => 'Gå til gjeldsoversikt',
+    'shortcut_calendar' => 'Gå til kalender',
+    'shortcut_payment_plan' => 'Gå til nedbetalingsplan',
+    'shortcut_strategies' => 'Gå til strategier',
+    'shortcut_self_loans' => 'Gå til privat lån',
+    'shortcut_new_self_loan' => 'Opprett nytt privat lån',
+    'shortcut_new_debt' => 'Opprett ny gjeld',
+    'shortcut_show_shortcuts' => 'Vis tastatursnarveier',
 ];

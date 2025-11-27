@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\SelfLoans;
 
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class SelfLoanLayout extends Component
@@ -16,6 +17,17 @@ class SelfLoanLayout extends Component
         if (in_array($view, ['overview', 'create', 'history'])) {
             $this->currentView = $view;
         }
+    }
+
+    #[On('setView')]
+    public function setView(string $view): void
+    {
+        match ($view) {
+            'overview' => $this->showOverview(),
+            'create' => $this->showCreate(),
+            'history' => $this->showHistory(),
+            default => null,
+        };
     }
 
     public function showOverview(): void

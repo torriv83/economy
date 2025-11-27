@@ -367,4 +367,18 @@ return [
     'memo' => 'Memo',
     'close' => 'Close',
     'refresh' => 'Refresh',
+
+    // Keyboard Shortcuts
+    'keyboard_shortcuts' => 'Keyboard Shortcuts',
+    'keyboard_shortcuts_description' => 'Quick access keys for common actions',
+    'shortcut' => 'Shortcut',
+    'action' => 'Action',
+    'shortcut_home' => 'Go to Debts Overview',
+    'shortcut_calendar' => 'Go to Calendar',
+    'shortcut_payment_plan' => 'Go to Payment Plan',
+    'shortcut_strategies' => 'Go to Strategies',
+    'shortcut_self_loans' => 'Go to Self Loans',
+    'shortcut_new_self_loan' => 'Create new self loan',
+    'shortcut_new_debt' => 'Create new debt',
+    'shortcut_show_shortcuts' => 'Show keyboard shortcuts',
 ];

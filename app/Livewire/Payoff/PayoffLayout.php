@@ -41,6 +41,17 @@ class PayoffLayout extends Component
         $this->strategy = $strategy;
     }
 
+    #[On('setView')]
+    public function setView(string $view): void
+    {
+        match ($view) {
+            'calendar' => $this->showCalendar(),
+            'plan' => $this->showPlan(),
+            'strategies' => $this->showStrategies(),
+            default => null,
+        };
+    }
+
     public function showStrategies(): void
     {
         $this->currentView = 'strategies';

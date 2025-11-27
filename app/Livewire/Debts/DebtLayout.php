@@ -56,6 +56,17 @@ class DebtLayout extends Component
         $this->currentView = 'overview';
     }
 
+    #[On('setView')]
+    public function setView(string $view): void
+    {
+        match ($view) {
+            'overview' => $this->showOverview(),
+            'create' => $this->showCreate(),
+            'progress' => $this->showProgress(),
+            default => null,
+        };
+    }
+
     #[On('debtUpdated')]
     public function onDebtUpdated(): void
     {

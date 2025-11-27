@@ -16,6 +16,16 @@
                         <span class="font-medium">{{ __('app.plan_settings') }}</span>
                     </div>
                 </button>
+                <button
+                    wire:click="showShortcuts"
+                    class="w-full text-left px-3 py-2 rounded-r-lg transition cursor-pointer {{ $currentView === 'shortcuts' ? 'border-l-3 border-blue-600 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:focus-visible:ring-blue-400 focus-visible:ring-offset-2">
+                    <div class="flex items-center gap-2">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                        <span class="font-medium">{{ __('app.keyboard_shortcuts') }}</span>
+                    </div>
+                </button>
             </div>
         </nav>
     </aside>
@@ -34,6 +44,8 @@
     <div>
         @if ($currentView === 'plan')
             <livewire:payoff.payoff-settings lazy />
+        @elseif ($currentView === 'shortcuts')
+            <livewire:settings.keyboard-shortcuts />
         @endif
     </div>
 </div>
