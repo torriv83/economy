@@ -1,10 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(vendor/bin/pint:*)"
+      "Bash(vendor/bin/pint:*)",
+      "Bash(cat:*)"
     ],
-    "ask": [],
-    "deny": []
+    "deny": [],
+    "ask": []
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [

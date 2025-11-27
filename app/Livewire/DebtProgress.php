@@ -61,6 +61,7 @@ class DebtProgress extends Component
         if (config('cache.default') === 'redis') {
             /** @var \Illuminate\Cache\RedisStore $store */
             $store = Cache::getStore();
+            /** @var \Illuminate\Redis\Connections\Connection $redis */
             $redis = $store->getRedis();
             $prefix = config('cache.prefix', 'laravel').':';
             $keys = $redis->keys($prefix.self::CACHE_KEY_PREFIX.':*');

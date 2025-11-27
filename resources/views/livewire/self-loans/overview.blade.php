@@ -161,340 +161,124 @@
 
     {{-- Repayment Modal --}}
     @if ($showRepaymentModal)
-        <div class="fixed inset-0 z-50 overflow-y-auto">
-            <div class="flex items-center justify-center min-h-screen px-4">
-                {{-- Backdrop --}}
-                <div class="fixed inset-0 bg-black/50" wire:click="closeRepaymentModal"></div>
+        <x-modal wire:model="showRepaymentModal" max-width="md">
+            <x-modal.form
+                :title="__('app.add_repayment')"
+                on-close="closeRepaymentModal"
+                on-submit="addRepayment"
+                :submit-text="__('app.add_repayment')"
+                :loading="true"
+                loading-target="addRepayment"
+            >
+                <div class="space-y-4">
+                    @include('components.form.amount-input', [
+                        'id' => 'repayment-amount',
+                        'label' => __('app.amount_kr'),
+                        'hint' => __('app.up_to_amount', ['amount' => number_format($this->selectedLoanBalance, 2, ',', ' ')]),
+                        'model' => 'repaymentAmount',
+                        'required' => true,
+                        'error' => $errors->first('repaymentAmount'),
+                    ])
 
-                {{-- Modal --}}
-                <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full" @click.stop>
-                    {{-- Header --}}
-                    <div class="border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                            {{ __('app.add_repayment') }}
-                        </h3>
-                        <button wire:click="closeRepaymentModal" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-offset-2 rounded">
-                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
+                    @include('components.form.date-picker', [
+                        'id' => 'repayment-date',
+                        'label' => __('app.payment_date'),
+                        'model' => 'repaymentDate',
+                        'value' => $repaymentDate,
+                        'maxDate' => date('Y-m-d'),
+                        'required' => true,
+                        'error' => $errors->first('repaymentDate'),
+                    ])
 
-                    {{-- Content --}}
-                    <form wire:submit.prevent="addRepayment" class="p-6">
-                        <div class="space-y-4">
-                            {{-- Amount --}}
-                            <div>
-                                <label for="repayment-amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    {{ __('app.amount_kr') }} *
-                                    <span class="font-normal text-gray-500 dark:text-gray-400">({{ __('app.up_to_amount', ['amount' => number_format($this->selectedLoanBalance, 2, ',', ' ')]) }})</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    id="repayment-amount"
-                                    wire:model="repaymentAmount"
-                                    step="0.01"
-                                    min="0.01"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                                    required>
-                                @error('repaymentAmount')
-                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            {{-- Date --}}
-                            <div class="relative">
-                                <label for="repayment-date-display" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    {{ __('app.payment_date') }} *
-                                </label>
-                                <div class="relative" x-data="{
-                                    displayDate: '{{ $repaymentDate }}',
-                                    updateFromPicker(value) {
-                                        if (value) {
-                                            const parts = value.split('-');
-                                            this.displayDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
-                                            $wire.set('repaymentDate', this.displayDate);
-                                        }
-                                    }
-                                }">
-                                    <input
-                                        type="text"
-                                        id="repayment-date-display"
-                                        x-model="displayDate"
-                                        readonly
-                                        @click="$refs.datePicker.showPicker()"
-                                        placeholder="dd.mm.åååå"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent dark:bg-gray-700 dark:text-white cursor-pointer"
-                                        required>
-                                    <input
-                                        type="date"
-                                        x-ref="datePicker"
-                                        @change="updateFromPicker($event.target.value)"
-                                        max="{{ date('Y-m-d') }}"
-                                        class="absolute inset-0 opacity-0 cursor-pointer"
-                                        style="z-index: -1;">
-                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                    </div>
-                                </div>
-                                @error('repaymentDate')
-                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            {{-- Notes --}}
-                            <div>
-                                <label for="repayment-notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    {{ __('app.notes_optional') }}
-                                </label>
-                                <textarea
-                                    id="repayment-notes"
-                                    wire:model="repaymentNotes"
-                                    rows="3"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                                ></textarea>
-                                @error('repaymentNotes')
-                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
-                        </div>
-
-                        {{-- Actions --}}
-                        <div class="flex gap-3 mt-6">
-                            <button
-                                type="button"
-                                wire:click="closeRepaymentModal"
-                                class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white text-sm font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:ring-offset-2">
-                                {{ __('app.cancel') }}
-                            </button>
-                            <button
-                                type="submit"
-                                class="flex-1 px-4 py-2 bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-offset-2">
-                                {{ __('app.add_repayment') }}
-                            </button>
-                        </div>
-                    </form>
+                    @include('components.form.textarea', [
+                        'id' => 'repayment-notes',
+                        'label' => __('app.notes_optional'),
+                        'model' => 'repaymentNotes',
+                        'error' => $errors->first('repaymentNotes'),
+                    ])
                 </div>
-            </div>
-        </div>
+            </x-modal.form>
+        </x-modal>
     @endif
 
     {{-- Withdrawal Modal --}}
     @if ($showWithdrawalModal)
-        <div class="fixed inset-0 z-50 overflow-y-auto">
-            <div class="flex items-center justify-center min-h-screen px-4">
-                {{-- Backdrop --}}
-                <div class="fixed inset-0 bg-black/50" wire:click="closeWithdrawalModal"></div>
+        <x-modal wire:model="showWithdrawalModal" max-width="md">
+            <x-modal.form
+                :title="__('app.withdraw_more')"
+                on-close="closeWithdrawalModal"
+                on-submit="addWithdrawal"
+                :submit-text="__('app.add_withdrawal')"
+                :loading="true"
+                loading-target="addWithdrawal"
+            >
+                <div class="space-y-4">
+                    @include('components.form.amount-input', [
+                        'id' => 'withdrawal-amount',
+                        'label' => __('app.amount_kr'),
+                        'model' => 'withdrawalAmount',
+                        'required' => true,
+                        'error' => $errors->first('withdrawalAmount'),
+                    ])
 
-                {{-- Modal --}}
-                <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full" @click.stop>
-                    {{-- Header --}}
-                    <div class="border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                            {{ __('app.withdraw_more') }}
-                        </h3>
-                        <button wire:click="closeWithdrawalModal" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-offset-2 rounded">
-                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
+                    @include('components.form.date-picker', [
+                        'id' => 'withdrawal-date',
+                        'label' => __('app.withdrawal_date'),
+                        'model' => 'withdrawalDate',
+                        'value' => $withdrawalDate,
+                        'maxDate' => date('Y-m-d'),
+                        'required' => true,
+                        'error' => $errors->first('withdrawalDate'),
+                    ])
 
-                    {{-- Content --}}
-                    <form wire:submit.prevent="addWithdrawal" class="p-6">
-                        <div class="space-y-4">
-                            {{-- Amount --}}
-                            <div>
-                                <label for="withdrawal-amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    {{ __('app.amount_kr') }} *
-                                </label>
-                                <input
-                                    type="number"
-                                    id="withdrawal-amount"
-                                    wire:model="withdrawalAmount"
-                                    step="0.01"
-                                    min="0.01"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                                    required>
-                                @error('withdrawalAmount')
-                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            {{-- Date --}}
-                            <div class="relative">
-                                <label for="withdrawal-date-display" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    {{ __('app.withdrawal_date') }} *
-                                </label>
-                                <div class="relative" x-data="{
-                                    displayDate: '{{ $withdrawalDate }}',
-                                    updateFromPicker(value) {
-                                        if (value) {
-                                            const parts = value.split('-');
-                                            this.displayDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
-                                            $wire.set('withdrawalDate', this.displayDate);
-                                        }
-                                    }
-                                }">
-                                    <input
-                                        type="text"
-                                        id="withdrawal-date-display"
-                                        x-model="displayDate"
-                                        readonly
-                                        @click="$refs.datePicker.showPicker()"
-                                        placeholder="dd.mm.åååå"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent dark:bg-gray-700 dark:text-white cursor-pointer"
-                                        required>
-                                    <input
-                                        type="date"
-                                        x-ref="datePicker"
-                                        @change="updateFromPicker($event.target.value)"
-                                        max="{{ date('Y-m-d') }}"
-                                        class="absolute inset-0 opacity-0 cursor-pointer"
-                                        style="z-index: -1;">
-                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                    </div>
-                                </div>
-                                @error('withdrawalDate')
-                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            {{-- Notes --}}
-                            <div>
-                                <label for="withdrawal-notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    {{ __('app.notes_optional') }}
-                                </label>
-                                <textarea
-                                    id="withdrawal-notes"
-                                    wire:model="withdrawalNotes"
-                                    rows="3"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                                ></textarea>
-                                @error('withdrawalNotes')
-                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
-                        </div>
-
-                        {{-- Actions --}}
-                        <div class="flex gap-3 mt-6">
-                            <button
-                                type="button"
-                                wire:click="closeWithdrawalModal"
-                                class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white text-sm font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:ring-offset-2">
-                                {{ __('app.cancel') }}
-                            </button>
-                            <button
-                                type="submit"
-                                class="flex-1 px-4 py-2 bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-offset-2">
-                                {{ __('app.add_withdrawal') }}
-                            </button>
-                        </div>
-                    </form>
+                    @include('components.form.textarea', [
+                        'id' => 'withdrawal-notes',
+                        'label' => __('app.notes_optional'),
+                        'model' => 'withdrawalNotes',
+                        'error' => $errors->first('withdrawalNotes'),
+                    ])
                 </div>
-            </div>
-        </div>
+            </x-modal.form>
+        </x-modal>
     @endif
 
     {{-- Edit Modal --}}
     @if ($showEditModal)
-        <div class="fixed inset-0 z-50 overflow-y-auto">
-            <div class="flex items-center justify-center min-h-screen px-4">
-                {{-- Backdrop --}}
-                <div class="fixed inset-0 bg-black/50" wire:click="closeEditModal"></div>
+        <x-modal wire:model="showEditModal" max-width="md">
+            <x-modal.form
+                :title="__('app.edit_self_loan')"
+                on-close="closeEditModal"
+                on-submit="updateLoan"
+                :submit-text="__('app.update_self_loan')"
+                :loading="true"
+                loading-target="updateLoan"
+            >
+                <div class="space-y-4">
+                    @include('components.form.text-input', [
+                        'id' => 'edit-name',
+                        'label' => __('app.name'),
+                        'model' => 'editName',
+                        'required' => true,
+                        'error' => $errors->first('editName'),
+                    ])
 
-                {{-- Modal --}}
-                <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full" @click.stop>
-                    {{-- Header --}}
-                    <div class="border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                            {{ __('app.edit_self_loan') }}
-                        </h3>
-                        <button wire:click="closeEditModal" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-offset-2 rounded">
-                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
+                    @include('components.form.textarea', [
+                        'id' => 'edit-description',
+                        'label' => __('app.description_optional'),
+                        'model' => 'editDescription',
+                        'error' => $errors->first('editDescription'),
+                    ])
 
-                    {{-- Content --}}
-                    <form wire:submit.prevent="updateLoan" class="p-6">
-                        <div class="space-y-4">
-                            {{-- Name --}}
-                            <div>
-                                <label for="edit-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    {{ __('app.name') }} *
-                                </label>
-                                <input
-                                    type="text"
-                                    id="edit-name"
-                                    wire:model="editName"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                                    required>
-                                @error('editName')
-                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            {{-- Description --}}
-                            <div>
-                                <label for="edit-description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    {{ __('app.description_optional') }}
-                                </label>
-                                <textarea
-                                    id="edit-description"
-                                    wire:model="editDescription"
-                                    rows="3"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                                ></textarea>
-                                @error('editDescription')
-                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            {{-- Original Amount --}}
-                            <div>
-                                <label for="edit-original-amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    {{ __('app.original_amount_kr') }} *
-                                </label>
-                                <input
-                                    type="number"
-                                    id="edit-original-amount"
-                                    wire:model="editOriginalAmount"
-                                    step="0.01"
-                                    min="0.01"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                                    required>
-                                @error('editOriginalAmount')
-                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
-                        </div>
-
-                        {{-- Actions --}}
-                        <div class="flex gap-3 mt-6">
-                            <button
-                                type="button"
-                                wire:click="closeEditModal"
-                                class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition-colors">
-                                {{ __('app.cancel') }}
-                            </button>
-                            <button
-                                type="submit"
-                                class="flex-1 px-4 py-2 bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-offset-2">
-                                {{ __('app.update_self_loan') }}
-                            </button>
-                        </div>
-                    </form>
+                    @include('components.form.amount-input', [
+                        'id' => 'edit-original-amount',
+                        'label' => __('app.original_amount_kr'),
+                        'model' => 'editOriginalAmount',
+                        'required' => true,
+                        'error' => $errors->first('editOriginalAmount'),
+                    ])
                 </div>
-            </div>
-        </div>
+            </x-modal.form>
+        </x-modal>
     @endif
 
     {{-- Delete Confirmation Modal --}}

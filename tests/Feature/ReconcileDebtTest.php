@@ -31,7 +31,7 @@ describe('reconcile debt modal', function () {
 
         Livewire::test(DebtList::class)
             ->call('openReconciliationModal', $debt->id)
-            ->assertSee('Avstem gjeld')
+            ->assertSee(__('app.reconcile_debt'))
             ->assertSee('Test Credit Card')
             ->assertSee('15 000,00'); // Formatted balance
     });

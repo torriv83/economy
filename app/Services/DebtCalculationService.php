@@ -234,7 +234,10 @@ class DebtCalculationService
     {
         // Clear all minimum payments cache keys by pattern
         if (config('cache.default') === 'redis') {
-            $redis = Cache::getStore()->getRedis();
+            /** @var \Illuminate\Cache\RedisStore $store */
+            $store = Cache::getStore();
+            /** @var \Illuminate\Redis\Connections\Connection $redis */
+            $redis = $store->getRedis();
             $prefix = config('cache.prefix', 'laravel').':';
             $keys = $redis->keys($prefix.'minimum_payments:*');
             foreach ($keys as $key) {
@@ -256,7 +259,10 @@ class DebtCalculationService
 
         // For Redis, we can use the Redis facade directly for pattern matching
         if (config('cache.default') === 'redis') {
-            $redis = Cache::getStore()->getRedis();
+            /** @var \Illuminate\Cache\RedisStore $store */
+            $store = Cache::getStore();
+            /** @var \Illuminate\Redis\Connections\Connection $redis */
+            $redis = $store->getRedis();
             $prefix = config('cache.prefix', 'laravel').':';
             $keys = $redis->keys($prefix.'payment_schedule:*');
             foreach ($keys as $key) {
@@ -277,7 +283,10 @@ class DebtCalculationService
 
         // For Redis, we can use the Redis facade directly for pattern matching
         if (config('cache.default') === 'redis') {
-            $redis = Cache::getStore()->getRedis();
+            /** @var \Illuminate\Cache\RedisStore $store */
+            $store = Cache::getStore();
+            /** @var \Illuminate\Redis\Connections\Connection $redis */
+            $redis = $store->getRedis();
             $prefix = config('cache.prefix', 'laravel').':';
             $keys = $redis->keys($prefix.'strategy_comparison:*');
             foreach ($keys as $key) {

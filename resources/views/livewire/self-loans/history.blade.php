@@ -134,100 +134,48 @@
 
     {{-- Edit Repayment Modal --}}
     @if ($showEditModal)
-        <div
-            x-data="{ show: @entangle('showEditModal') }"
-            x-show="show"
-            x-on:keydown.escape.window="show = false"
-            x-cloak
-            class="fixed inset-0 z-50 overflow-y-auto"
-            style="display: none;"
-        >
-            <div
-                x-show="show"
-                x-transition:enter="ease-out duration-300"
-                x-transition:enter-start="opacity-0"
-                x-transition:enter-end="opacity-100"
-                x-transition:leave="ease-in duration-200"
-                x-transition:leave-start="opacity-100"
-                x-transition:leave-end="opacity-0"
-                class="fixed inset-0 bg-black/60 dark:bg-black/80 transition-opacity cursor-pointer"
-                x-on:click="show = false"
-            ></div>
+        <x-modal wire:model="showEditModal" max-width="md">
+            <x-modal.form
+                :title="__('app.edit_repayment')"
+                on-close="closeEditModal"
+                on-submit="updateRepayment"
+                :submit-text="__('app.update_repayment')"
+                :loading="true"
+                loading-target="updateRepayment"
+            >
+                <div class="space-y-4">
+                    @include('components.form.amount-input', [
+                        'id' => 'editAmount',
+                        'label' => __('app.amount_kr'),
+                        'model' => 'editAmount',
+                        'required' => true,
+                        'error' => $errors->first('editAmount'),
+                    ])
 
-            <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
-                <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                    <div
-                        x-show="show"
-                        x-transition:enter="ease-out duration-300"
-                        x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                        x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-                        x-transition:leave="ease-in duration-200"
-                        x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                        x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                        class="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-900 text-left shadow-2xl ring-1 ring-black/10 dark:ring-white/10 transition-all sm:my-8 sm:w-full sm:max-w-lg"
-                    >
-                        <form wire:submit="updateRepayment">
-                            <div class="bg-white dark:bg-gray-900 px-4 pb-4 pt-5 sm:p-6">
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{{ __('app.edit_repayment') }}</h3>
-
-                                <div class="space-y-4">
-                                    <div>
-                                        <label for="editAmount" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('app.amount_kr') }}</label>
-                                        <input
-                                            type="number"
-                                            id="editAmount"
-                                            wire:model="editAmount"
-                                            step="0.01"
-                                            min="0.01"
-                                            class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 py-2.5 px-3"
-                                        >
-                                        @error('editAmount') <span class="text-red-500 text-sm mt-1">{{ $message }}</span> @enderror
-                                    </div>
-
-                                    <div>
-                                        <label for="editPaidAt" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('app.repayment_date') }}</label>
-                                        <input
-                                            type="datetime-local"
-                                            id="editPaidAt"
-                                            wire:model="editPaidAt"
-                                            class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 py-2.5 px-3"
-                                        >
-                                        @error('editPaidAt') <span class="text-red-500 text-sm mt-1">{{ $message }}</span> @enderror
-                                    </div>
-
-                                    <div>
-                                        <label for="editNotes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('app.notes_optional') }}</label>
-                                        <textarea
-                                            id="editNotes"
-                                            wire:model="editNotes"
-                                            rows="3"
-                                            class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 py-2.5 px-3"
-                                        ></textarea>
-                                        @error('editNotes') <span class="text-red-500 text-sm mt-1">{{ $message }}</span> @enderror
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="bg-gray-50 dark:bg-gray-800 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 gap-3">
-                                <button
-                                    type="submit"
-                                    class="inline-flex w-full justify-center rounded-lg bg-blue-600 dark:bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 transition-colors cursor-pointer sm:w-auto"
-                                >
-                                    {{ __('app.update_repayment') }}
-                                </button>
-                                <button
-                                    type="button"
-                                    wire:click="closeEditModal"
-                                    class="mt-3 inline-flex w-full justify-center rounded-lg bg-white dark:bg-gray-600 px-4 py-2.5 text-sm font-semibold text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:ring-offset-2 transition-colors cursor-pointer sm:mt-0 sm:w-auto"
-                                >
-                                    {{ __('app.cancel') }}
-                                </button>
-                            </div>
-                        </form>
+                    <div>
+                        <label for="editPaidAt" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            {{ __('app.repayment_date') }} *
+                        </label>
+                        <input
+                            type="datetime-local"
+                            id="editPaidAt"
+                            wire:model="editPaidAt"
+                            class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white @error('editPaidAt') border-red-500 dark:border-red-400 @enderror"
+                        >
+                        @error('editPaidAt')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
                     </div>
+
+                    @include('components.form.textarea', [
+                        'id' => 'editNotes',
+                        'label' => __('app.notes_optional'),
+                        'model' => 'editNotes',
+                        'error' => $errors->first('editNotes'),
+                    ])
                 </div>
-            </div>
-        </div>
+            </x-modal.form>
+        </x-modal>
     @endif
 
     {{-- Delete Confirmation Modal --}}

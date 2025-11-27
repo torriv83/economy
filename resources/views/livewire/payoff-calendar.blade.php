@@ -512,306 +512,214 @@
 
     {{-- Payment Modal --}}
     @if ($showPaymentModal)
-        <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
-                {{-- Backdrop --}}
-                <div class="fixed inset-0 bg-gray-500/75 dark:bg-gray-900/75 transition-opacity" wire:click="closePaymentModal"></div>
+        <x-modal wire:model="showPaymentModal" max-width="md">
+            <form wire:submit="recordPayment">
+                <x-modal.header :title="__('app.register_payment')" on-close="closePaymentModal" />
 
-                {{-- Modal Content --}}
-                <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-auto transform transition-all" @click.stop>
-                    {{-- Header --}}
-                    <div class="border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
-                        <h3 id="modal-title" class="text-lg font-semibold text-gray-900 dark:text-white">
-                            {{ __('app.register_payment') }}
-                        </h3>
-                        <button wire:click="closePaymentModal" type="button" class="cursor-pointer text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors">
-                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
+                <x-modal.body>
+                    {{-- Debt Info Display --}}
+                    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+                        <p class="text-sm text-blue-800 dark:text-blue-200">
+                            <span class="font-medium">{{ __('app.debt') }}:</span> {{ $selectedDebtName }}
+                        </p>
+                        <p class="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                            <span class="font-medium">{{ __('app.planned_amount') }}:</span> {{ number_format($plannedAmount, 0, ',', ' ') }} kr
+                        </p>
                     </div>
 
-                    {{-- Form --}}
-                    <form wire:submit="recordPayment" class="p-6">
-                        {{-- Debt Info Display --}}
-                        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
-                            <p class="text-sm text-blue-800 dark:text-blue-200">
-                                <span class="font-medium">{{ __('app.debt') }}:</span> {{ $selectedDebtName }}
-                            </p>
-                            <p class="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                                <span class="font-medium">{{ __('app.planned_amount') }}:</span> {{ number_format($plannedAmount, 0, ',', ' ') }} kr
-                            </p>
-                        </div>
+                    <div class="space-y-4">
+                        {{-- Amount Field --}}
+                        @include('components.form.amount-input', [
+                            'id' => 'payment-amount',
+                            'label' => __('app.amount_kr_required'),
+                            'model' => 'paymentAmount',
+                            'required' => true,
+                            'error' => $errors->first('paymentAmount'),
+                        ])
 
-                        <div class="space-y-4">
-                            {{-- Amount Field --}}
-                            <div>
-                                <label for="payment-amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    {{ __('app.amount_kr_required') }}
-                                </label>
-                                <input
-                                    type="number"
-                                    id="payment-amount"
-                                    wire:model="paymentAmount"
-                                    step="0.01"
-                                    min="0.01"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                                    required
-                                >
-                                @error('paymentAmount')
-                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
+                        {{-- Date Field --}}
+                        @include('components.form.date-picker', [
+                            'id' => 'payment-date',
+                            'label' => __('app.payment_date_required'),
+                            'model' => 'paymentDate',
+                            'value' => $paymentDate,
+                            'maxDate' => date('Y-m-d'),
+                            'required' => true,
+                            'error' => $errors->first('paymentDate'),
+                        ])
 
-                            {{-- Date Field --}}
-                            <div>
-                                <label for="payment-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    {{ __('app.payment_date_required') }}
-                                </label>
-                                <div class="relative" x-data="{
-                                    displayDate: @entangle('paymentDate'),
-                                    updateFromPicker(value) {
-                                        if (value) {
-                                            const parts = value.split('-');
-                                            this.displayDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
-                                        }
-                                    }
-                                }">
-                                    <input
-                                        type="text"
-                                        id="payment-date"
-                                        x-model="displayDate"
-                                        readonly
-                                        @click="$refs.datePicker.showPicker()"
-                                        placeholder="dd.mm.åååå"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white cursor-pointer"
-                                        required
-                                    >
-                                    <input
-                                        type="date"
-                                        x-ref="datePicker"
-                                        @change="updateFromPicker($event.target.value)"
-                                        max="{{ date('Y-m-d') }}"
-                                        class="absolute inset-0 opacity-0 cursor-pointer"
-                                    >
-                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                    </div>
-                                </div>
-                                @error('paymentDate')
-                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
+                        {{-- Notes Field --}}
+                        @include('components.form.textarea', [
+                            'id' => 'payment-notes',
+                            'label' => __('app.notes_optional_field'),
+                            'model' => 'paymentNotes',
+                            'placeholder' => __('app.notes_placeholder'),
+                            'error' => $errors->first('paymentNotes'),
+                        ])
+                    </div>
+                </x-modal.body>
 
-                            {{-- Notes Field --}}
-                            <div>
-                                <label for="payment-notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    {{ __('app.notes_optional_field') }}
-                                </label>
-                                <textarea
-                                    id="payment-notes"
-                                    wire:model="paymentNotes"
-                                    rows="3"
-                                    maxlength="500"
-                                    placeholder="{{ __('app.notes_placeholder') }}"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white resize-none"
-                                ></textarea>
-                                @error('paymentNotes')
-                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
-                        </div>
-
-                        {{-- Action Buttons --}}
-                        <div class="flex gap-3 mt-6">
-                            <button
-                                type="button"
-                                wire:click="closePaymentModal"
-                                class="cursor-pointer flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                            >
-                                {{ __('app.cancel') }}
-                            </button>
-                            <button
-                                type="submit"
-                                wire:loading.attr="disabled"
-                                wire:loading.class="opacity-50 cursor-not-allowed"
-                                class="cursor-pointer flex-1 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
-                            >
-                                <span wire:loading.remove wire:target="recordPayment">{{ __('app.register_payment') }}</span>
-                                <span wire:loading wire:target="recordPayment">{{ __('app.registering') }}</span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+                <x-modal.footer>
+                    <x-modal.button-secondary wire:click="closePaymentModal">
+                        {{ __('app.cancel') }}
+                    </x-modal.button-secondary>
+                    <x-modal.button-primary
+                        type="submit"
+                        :loading="true"
+                        loading-target="recordPayment"
+                    >
+                        {{ __('app.register_payment') }}
+                    </x-modal.button-primary>
+                </x-modal.footer>
+            </form>
+        </x-modal>
     @endif
 
     {{-- YNAB Transaction Checker Modal --}}
     @if ($showYnabModal)
-        <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="ynab-modal-title" role="dialog" aria-modal="true">
-            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
-                {{-- Backdrop --}}
-                <div class="fixed inset-0 bg-gray-500/75 dark:bg-gray-900/75 transition-opacity" wire:click="closeYnabModal"></div>
+        <x-modal wire:model="showYnabModal" max-width="2xl">
+            <x-modal.header on-close="closeYnabModal">
+                <x-slot:title>
+                    <span class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        {{ __('app.check_ynab_transactions') }}
+                    </span>
+                </x-slot:title>
+                <x-slot:actions>
+                    <button
+                        wire:click="checkYnabTransactions"
+                        type="button"
+                        class="cursor-pointer p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                        title="{{ __('app.refresh') }}"
+                    >
+                        <svg class="h-5 w-5 {{ $isCheckingYnab ? 'animate-spin' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                    </button>
+                </x-slot:actions>
+            </x-modal.header>
 
-                {{-- Modal Content --}}
-                <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-auto transform transition-all max-h-[80vh] flex flex-col" @click.stop>
-                    {{-- Header --}}
-                    <div class="border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between flex-shrink-0">
-                        <h3 id="ynab-modal-title" class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                            <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            <x-modal.body class="max-h-[60vh] overflow-y-auto">
+                {{-- Success Message --}}
+                @if (session('ynab_import_success'))
+                    <div class="mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 px-4 py-3 rounded-lg flex items-center gap-2">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        {{ session('ynab_import_success') }}
+                    </div>
+                @endif
+
+                {{-- Loading State --}}
+                @if ($isCheckingYnab)
+                    <div class="flex flex-col items-center justify-center py-12">
+                        <svg class="w-12 h-12 text-green-500 animate-spin mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        <p class="text-gray-600 dark:text-gray-400">{{ __('app.checking_ynab') }}</p>
+                    </div>
+                @elseif ($ynabError)
+                    {{-- Error State --}}
+                    <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200 px-4 py-3 rounded-lg">
+                        <div class="flex items-start gap-2">
+                            <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                             </svg>
-                            {{ __('app.check_ynab_transactions') }}
-                        </h3>
-                        <div class="flex items-center gap-2">
-                            <button
-                                wire:click="checkYnabTransactions"
-                                type="button"
-                                class="cursor-pointer p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-                                title="{{ __('app.refresh') }}"
-                            >
-                                <svg class="h-5 w-5 {{ $isCheckingYnab ? 'animate-spin' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                </svg>
-                            </button>
-                            <button wire:click="closeYnabModal" type="button" class="cursor-pointer text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors">
-                                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
+                            <p>{{ $ynabError }}</p>
                         </div>
                     </div>
-
-                    {{-- Content --}}
-                    <div class="p-6 overflow-y-auto flex-1">
-                        {{-- Success Message --}}
-                        @if (session('ynab_import_success'))
-                            <div class="mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 px-4 py-3 rounded-lg flex items-center gap-2">
-                                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                                {{ session('ynab_import_success') }}
-                            </div>
-                        @endif
-
-                        {{-- Loading State --}}
-                        @if ($isCheckingYnab)
-                            <div class="flex flex-col items-center justify-center py-12">
-                                <svg class="w-12 h-12 text-green-500 animate-spin mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                </svg>
-                                <p class="text-gray-600 dark:text-gray-400">{{ __('app.checking_ynab') }}</p>
-                            </div>
-                        @elseif ($ynabError)
-                            {{-- Error State --}}
-                            <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200 px-4 py-3 rounded-lg">
-                                <div class="flex items-start gap-2">
-                                    <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                                    </svg>
-                                    <p>{{ $ynabError }}</p>
+                @elseif (!empty($ynabComparisonResults))
+                    {{-- Results --}}
+                    <div class="space-y-6">
+                        @foreach ($ynabComparisonResults as $result)
+                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                                <div class="bg-gray-50 dark:bg-gray-700/50 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                                    <h4 class="font-medium text-gray-900 dark:text-white">
+                                        {{ $result['debt_name'] }}
+                                    </h4>
+                                </div>
+                                <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                                    @foreach ($result['ynab_transactions'] as $tx)
+                                        <div class="px-4 py-3 {{ $tx['status'] === 'missing' ? 'bg-yellow-50 dark:bg-yellow-900/10' : ($tx['status'] === 'mismatch' ? 'bg-red-50 dark:bg-red-900/10' : 'bg-green-50 dark:bg-green-900/10') }}">
+                                            <div class="flex items-start justify-between gap-4">
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="flex items-center gap-2 mb-1">
+                                                        @if ($tx['status'] === 'matched')
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200">
+                                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                                </svg>
+                                                                {{ __('app.transaction_matched') }}
+                                                            </span>
+                                                        @elseif ($tx['status'] === 'missing')
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200">
+                                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                                                </svg>
+                                                                {{ __('app.transaction_missing') }}
+                                                            </span>
+                                                        @else
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200">
+                                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                                </svg>
+                                                                {{ __('app.transaction_mismatch') }}
+                                                            </span>
+                                                        @endif
+                                                        <span class="text-sm text-gray-500 dark:text-gray-400">
+                                                            {{ \Carbon\Carbon::parse($tx['date'])->format('d.m.Y') }}
+                                                        </span>
+                                                    </div>
+                                                    <div class="text-lg font-semibold text-gray-900 dark:text-white">
+                                                        {{ __('app.ynab_amount') }}: {{ number_format($tx['amount'], 0, ',', ' ') }} kr
+                                                    </div>
+                                                    @if ($tx['status'] === 'mismatch' && $tx['local_amount'])
+                                                        <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                                            {{ __('app.local_amount') }}: {{ number_format($tx['local_amount'], 0, ',', ' ') }} kr
+                                                        </div>
+                                                    @endif
+                                                    @if ($tx['memo'])
+                                                        <div class="text-sm text-gray-500 dark:text-gray-500 mt-1 italic">
+                                                            {{ $tx['memo'] }}
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                <div class="flex-shrink-0">
+                                                    @if ($tx['status'] === 'missing')
+                                                        <button
+                                                            wire:click="importYnabTransaction('{{ $tx['id'] }}', {{ $result['debt_id'] }})"
+                                                            type="button"
+                                                            class="cursor-pointer px-3 py-1.5 text-sm font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors"
+                                                        >
+                                                            {{ __('app.import_transaction') }}
+                                                        </button>
+                                                    @elseif ($tx['status'] === 'mismatch')
+                                                        <button
+                                                            wire:click="updatePaymentFromYnab('{{ $tx['id'] }}', {{ $tx['local_payment_id'] }}, {{ $tx['amount'] }})"
+                                                            type="button"
+                                                            class="cursor-pointer px-3 py-1.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                                                        >
+                                                            {{ __('app.update_amount') }}
+                                                        </button>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
                                 </div>
                             </div>
-                        @elseif (!empty($ynabComparisonResults))
-                            {{-- Results --}}
-                            <div class="space-y-6">
-                                @foreach ($ynabComparisonResults as $result)
-                                    <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                                        <div class="bg-gray-50 dark:bg-gray-700/50 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                                            <h4 class="font-medium text-gray-900 dark:text-white">
-                                                {{ $result['debt_name'] }}
-                                            </h4>
-                                        </div>
-                                        <div class="divide-y divide-gray-200 dark:divide-gray-700">
-                                            @foreach ($result['ynab_transactions'] as $tx)
-                                                <div class="px-4 py-3 {{ $tx['status'] === 'missing' ? 'bg-yellow-50 dark:bg-yellow-900/10' : ($tx['status'] === 'mismatch' ? 'bg-red-50 dark:bg-red-900/10' : 'bg-green-50 dark:bg-green-900/10') }}">
-                                                    <div class="flex items-start justify-between gap-4">
-                                                        <div class="flex-1 min-w-0">
-                                                            <div class="flex items-center gap-2 mb-1">
-                                                                @if ($tx['status'] === 'matched')
-                                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200">
-                                                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                                        </svg>
-                                                                        {{ __('app.transaction_matched') }}
-                                                                    </span>
-                                                                @elseif ($tx['status'] === 'missing')
-                                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200">
-                                                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                                                                        </svg>
-                                                                        {{ __('app.transaction_missing') }}
-                                                                    </span>
-                                                                @else
-                                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200">
-                                                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                                                        </svg>
-                                                                        {{ __('app.transaction_mismatch') }}
-                                                                    </span>
-                                                                @endif
-                                                                <span class="text-sm text-gray-500 dark:text-gray-400">
-                                                                    {{ \Carbon\Carbon::parse($tx['date'])->format('d.m.Y') }}
-                                                                </span>
-                                                            </div>
-                                                            <div class="text-lg font-semibold text-gray-900 dark:text-white">
-                                                                {{ __('app.ynab_amount') }}: {{ number_format($tx['amount'], 0, ',', ' ') }} kr
-                                                            </div>
-                                                            @if ($tx['status'] === 'mismatch' && $tx['local_amount'])
-                                                                <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                                                    {{ __('app.local_amount') }}: {{ number_format($tx['local_amount'], 0, ',', ' ') }} kr
-                                                                </div>
-                                                            @endif
-                                                            @if ($tx['memo'])
-                                                                <div class="text-sm text-gray-500 dark:text-gray-500 mt-1 italic">
-                                                                    {{ $tx['memo'] }}
-                                                                </div>
-                                                            @endif
-                                                        </div>
-                                                        <div class="flex-shrink-0">
-                                                            @if ($tx['status'] === 'missing')
-                                                                <button
-                                                                    wire:click="importYnabTransaction('{{ $tx['id'] }}', {{ $result['debt_id'] }})"
-                                                                    type="button"
-                                                                    class="cursor-pointer px-3 py-1.5 text-sm font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors"
-                                                                >
-                                                                    {{ __('app.import_transaction') }}
-                                                                </button>
-                                                            @elseif ($tx['status'] === 'mismatch')
-                                                                <button
-                                                                    wire:click="updatePaymentFromYnab('{{ $tx['id'] }}', {{ $tx['local_payment_id'] }}, {{ $tx['amount'] }})"
-                                                                    type="button"
-                                                                    class="cursor-pointer px-3 py-1.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-                                                                >
-                                                                    {{ __('app.update_amount') }}
-                                                                </button>
-                                                            @endif
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endif
+                        @endforeach
                     </div>
+                @endif
+            </x-modal.body>
 
-                    {{-- Footer --}}
-                    <div class="border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex-shrink-0">
-                        <button
-                            wire:click="closeYnabModal"
-                            type="button"
-                            class="cursor-pointer w-full px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                        >
-                            {{ __('app.close') }}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+            <x-modal.footer>
+                <x-modal.button-secondary wire:click="closeYnabModal" class="w-full">
+                    {{ __('app.close') }}
+                </x-modal.button-secondary>
+            </x-modal.footer>
+        </x-modal>
     @endif
 </div>
