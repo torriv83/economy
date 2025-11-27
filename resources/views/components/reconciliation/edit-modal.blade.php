@@ -12,7 +12,7 @@
     >
         {{-- Background overlay --}}
         <div
-            class="fixed inset-0 z-40 bg-black/50 transition-opacity"
+            class="fixed inset-0 z-40 bg-black/50 transition-opacity cursor-pointer"
             aria-hidden="true"
             x-show="show"
             x-transition:enter="ease-out duration-300"

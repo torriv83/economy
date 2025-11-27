@@ -306,7 +306,7 @@
 
     {{-- YNAB Sync Modal --}}
     @if ($showYnabSync)
-        <div class="fixed inset-0 bg-black/50 transition-opacity z-50" wire:click="closeSyncModal"></div>
+        <div class="fixed inset-0 bg-black/50 transition-opacity z-50 cursor-pointer" wire:click="closeSyncModal"></div>
         <div class="fixed inset-0 z-50 overflow-y-auto pointer-events-none">
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto pointer-events-auto" @click.stop>
@@ -633,7 +633,7 @@
         >
             <!-- Background overlay -->
             <div
-                class="fixed inset-0 z-40 bg-black/50 transition-opacity"
+                class="fixed inset-0 z-40 bg-black/50 transition-opacity cursor-pointer"
                 aria-hidden="true"
                 x-show="show"
                 x-transition:enter="ease-out duration-300"
@@ -667,7 +667,7 @@
                                 <button
                                     type="button"
                                     @click="show = false"
-                                    class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg p-1 transition-colors"
+                                    class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg p-1 transition-colors cursor-pointer"
                                 >
                                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -786,14 +786,14 @@
                             <button
                                 type="button"
                                 @click="show = false"
-                                class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                                class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
                             >
                                 Avbryt
                             </button>
                             <button
                                 type="submit"
                                 wire:loading.attr="disabled"
-                                class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                             >
                                 <span wire:loading.remove>Avstem</span>
                                 <span wire:loading class="inline-flex items-center gap-2">
@@ -825,7 +825,7 @@
             @keydown.escape.window="$wire.closeReconciliationHistory()"
             class="fixed inset-0 z-50 overflow-y-auto"
         >
-            <div class="fixed inset-0 bg-black/50" wire:click="closeReconciliationHistory"></div>
+            <div class="fixed inset-0 bg-black/50 cursor-pointer" wire:click="closeReconciliationHistory"></div>
             <div class="relative z-50 flex items-center justify-center min-h-screen p-4">
                 <div
                     class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full max-h-[80vh] overflow-hidden"

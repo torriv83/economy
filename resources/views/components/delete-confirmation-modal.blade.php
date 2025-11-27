@@ -20,7 +20,7 @@
         x-transition:leave="ease-in duration-200"
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
-        class="fixed inset-0 bg-black/60 dark:bg-black/80 transition-opacity"
+        class="fixed inset-0 bg-black/60 dark:bg-black/80 transition-opacity cursor-pointer"
         x-on:click="show = false"
         aria-hidden="true"
     ></div>
@@ -62,14 +62,14 @@
                     type="button"
                     wire:click="{{ $onConfirm }}"
                     x-on:click="show = false"
-                    class="inline-flex w-full justify-center rounded-lg bg-red-600 dark:bg-red-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-700 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400 focus:ring-offset-2 transition-colors sm:w-auto"
+                    class="inline-flex w-full justify-center rounded-lg bg-red-600 dark:bg-red-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-700 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400 focus:ring-offset-2 transition-colors cursor-pointer sm:w-auto"
                 >
                     {{ __('app.delete') }}
                 </button>
                 <button
                     type="button"
                     x-on:click="show = false"
-                    class="mt-3 inline-flex w-full justify-center rounded-lg bg-white dark:bg-gray-600 px-4 py-2.5 text-sm font-semibold text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:ring-offset-2 transition-colors sm:mt-0 sm:w-auto"
+                    class="mt-3 inline-flex w-full justify-center rounded-lg bg-white dark:bg-gray-600 px-4 py-2.5 text-sm font-semibold text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:ring-offset-2 transition-colors cursor-pointer sm:mt-0 sm:w-auto"
                 >
                     {{ __('app.cancel') }}
                 </button>
