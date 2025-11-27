@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title ?? __('app.app_name') . ' - Debt Management' }}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
@@ -18,8 +20,13 @@
         <div class="flex items-center h-16">
             <!-- Logo/Brand - Fixed width on left to align with sidebar (responsive) -->
             <div class="flex items-center justify-center {{ request()->routeIs('home', 'debts', 'debts.edit', 'payoff', 'self-loans', 'reconciliations', 'settings') ? 'px-4 md:w-64' : 'px-4 sm:px-6 lg:px-8' }} flex-shrink-0">
-                <a href="{{ route('home') }}" wire:navigate.hover class="text-base sm:text-xl font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded truncate">
-                    {{ __('app.app_name') }}
+                <a href="{{ route('home') }}" wire:navigate.hover class="flex items-center gap-2 text-base sm:text-xl font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded">
+                    <svg class="w-6 h-6 sm:w-7 sm:h-7 shrink-0" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="16" cy="16" r="14" fill="#3B82F6" stroke="#1D4ED8" stroke-width="2"/>
+                        <circle cx="16" cy="16" r="11" fill="none" stroke="#60A5FA" stroke-width="1.5"/>
+                        <path d="M16 7V9M16 23V25M16 9C18.2091 9 20 10.567 20 12.5C20 14.433 18.2091 16 16 16C13.7909 16 12 17.567 12 19.5C12 21.433 13.7909 23 16 23M16 9C13.7909 9 12 10.567 12 12.5M16 23C18.2091 23 20 21.433 20 19.5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <span class="truncate">{{ __('app.app_name') }}</span>
                 </a>
             </div>
 
