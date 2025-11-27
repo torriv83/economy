@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Debt;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class DebtCalculationService
 {
@@ -159,6 +160,52 @@ class DebtCalculationService
     }
 
     /**
+     * Generate a cache key for the payment schedule.
+     *
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $debts
+     */
+    protected function getPaymentScheduleCacheKey(Collection $debts, float $extraPayment, string $strategy): string
+    {
+        $debtData = $debts->map(fn (Debt $debt) => [
+            'id' => $debt->id,
+            'balance' => $debt->balance,
+            'interest_rate' => $debt->interest_rate,
+            'minimum_payment' => $debt->minimum_payment,
+            'custom_priority_order' => $debt->custom_priority_order,
+            'payments_hash' => $debt->payments->count().'_'.$debt->payments->max('updated_at'),
+        ])->toArray();
+
+        return 'payment_schedule:'.md5(json_encode([
+            'debts' => $debtData,
+            'extra_payment' => $extraPayment,
+            'strategy' => $strategy,
+        ]));
+    }
+
+    /**
+     * Clear all payment schedule caches.
+     */
+    public static function clearPaymentScheduleCache(): void
+    {
+        // Clear all payment schedule cache keys by pattern
+        // Since Redis doesn't support pattern deletion easily with Laravel's Cache facade,
+        // we use a cache tag approach or clear specific known keys
+        Cache::forget('payment_schedule_keys');
+
+        // For Redis, we can use the Redis facade directly for pattern matching
+        if (config('cache.default') === 'redis') {
+            $redis = Cache::getStore()->getRedis();
+            $prefix = config('cache.prefix', 'laravel').':';
+            $keys = $redis->keys($prefix.'payment_schedule:*');
+            foreach ($keys as $key) {
+                // Remove the prefix that Redis adds
+                $cacheKey = str_replace($prefix, '', $key);
+                Cache::forget($cacheKey);
+            }
+        }
+    }
+
+    /**
      * Generate a payment schedule based on the selected strategy.
      *
      * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $debts
@@ -175,6 +222,21 @@ class DebtCalculationService
             ];
         }
 
+        $cacheKey = $this->getPaymentScheduleCacheKey($debts, $extraPayment, $strategy);
+
+        return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($debts, $extraPayment, $strategy) {
+            return $this->calculatePaymentSchedule($debts, $extraPayment, $strategy);
+        });
+    }
+
+    /**
+     * Calculate the payment schedule (uncached).
+     *
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $debts
+     * @return array<string, mixed>
+     */
+    protected function calculatePaymentSchedule(Collection $debts, float $extraPayment, string $strategy): array
+    {
         $orderedDebts = match ($strategy) {
             'snowball' => $this->orderBySnowball($debts),
             'custom' => $this->orderByCustom($debts),
