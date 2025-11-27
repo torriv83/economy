@@ -24,6 +24,9 @@ RUN apt-get update && apt-get install -y \
 # Install PHP extensions
 RUN docker-php-ext-install pdo_sqlite mbstring exif pcntl bcmath gd
 
+# Install Redis PHP extension via PECL
+RUN pecl install redis && docker-php-ext-enable redis
+
 # Get Composer from composer stage
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 
