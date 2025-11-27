@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Debt;
+use App\Services\DebtCacheService;
 use App\Services\DebtCalculationService;
 use App\Services\PaymentService;
 use Livewire\Component;
@@ -32,10 +33,16 @@ class PaymentPlan extends Component
 
     protected PaymentService $paymentService;
 
-    public function boot(DebtCalculationService $service, PaymentService $paymentService): void
-    {
+    protected DebtCacheService $debtCacheService;
+
+    public function boot(
+        DebtCalculationService $service,
+        PaymentService $paymentService,
+        DebtCacheService $debtCacheService
+    ): void {
         $this->calculationService = $service;
         $this->paymentService = $paymentService;
+        $this->debtCacheService = $debtCacheService;
     }
 
     public function mount(float $extraPayment = 2000, string $strategy = 'avalanche'): void
@@ -49,7 +56,7 @@ class PaymentPlan extends Component
      */
     public function getPaymentScheduleProperty(): array
     {
-        $debts = Debt::with('payments')->get();
+        $debts = $this->debtCacheService->getAllWithPayments();
 
         if ($debts->isEmpty()) {
             return [];
@@ -69,7 +76,7 @@ class PaymentPlan extends Component
      */
     public function getDetailedScheduleProperty(): array
     {
-        $debts = Debt::with('payments')->get();
+        $debts = $this->debtCacheService->getAllWithPayments();
 
         if ($debts->isEmpty()) {
             return [];
@@ -108,7 +115,7 @@ class PaymentPlan extends Component
 
     public function getTotalMonthsProperty(): int
     {
-        $debts = Debt::with('payments')->get();
+        $debts = $this->debtCacheService->getAllWithPayments();
 
         if ($debts->isEmpty()) {
             return 0;
@@ -133,7 +140,7 @@ class PaymentPlan extends Component
      */
     public function getDebtsProperty(): \Illuminate\Database\Eloquent\Collection
     {
-        return Debt::with('payments')->get()->keyBy('name');
+        return $this->debtCacheService->getAllWithPayments()->keyBy('name');
     }
 
     /**
@@ -141,7 +148,7 @@ class PaymentPlan extends Component
      */
     public function getDebtPayoffScheduleProperty(): array
     {
-        $debts = Debt::with('payments')->get();
+        $debts = $this->debtCacheService->getAllWithPayments();
 
         if ($debts->isEmpty()) {
             return [];
@@ -235,7 +242,7 @@ class PaymentPlan extends Component
             return;
         }
 
-        $debts = Debt::with('payments')->get()->keyBy('name');
+        $debts = $this->debtCacheService->getAllWithPayments()->keyBy('name');
         $debtIds = [];
 
         foreach ($monthData['payments'] as $payment) {
@@ -290,7 +297,7 @@ class PaymentPlan extends Component
             return false;
         }
 
-        $debts = Debt::with('payments')->get()->keyBy('name');
+        $debts = $this->debtCacheService->getAllWithPayments()->keyBy('name');
         $debtIds = [];
 
         foreach ($monthData['payments'] as $payment) {

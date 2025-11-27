@@ -6,21 +6,72 @@ namespace App\Livewire;
 
 use App\Models\Debt;
 use App\Models\Payment;
+use App\Services\DebtCacheService;
 use App\Services\DebtCalculationService;
 use App\Services\PayoffSettingsService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 
 class DebtProgress extends Component
 {
+    /**
+     * Cache key prefix for progress data
+     */
+    private const CACHE_KEY_PREFIX = 'progress_data';
+
+    /**
+     * Cache TTL in hours
+     */
+    private const CACHE_TTL_HOURS = 1;
+
     protected DebtCalculationService $calculationService;
 
     protected PayoffSettingsService $settingsService;
 
-    public function boot(DebtCalculationService $calculationService, PayoffSettingsService $settingsService): void
-    {
+    protected DebtCacheService $debtCacheService;
+
+    public function boot(
+        DebtCalculationService $calculationService,
+        PayoffSettingsService $settingsService,
+        DebtCacheService $debtCacheService
+    ): void {
         $this->calculationService = $calculationService;
         $this->settingsService = $settingsService;
+        $this->debtCacheService = $debtCacheService;
+    }
+
+    /**
+     * Generate a cache key for progress data based on debt and payment state.
+     */
+    public static function getProgressDataCacheKey(): string
+    {
+        $paymentMaxUpdated = Payment::max('updated_at') ?? '';
+        $debtMaxUpdated = Debt::max('updated_at') ?? '';
+
+        return self::CACHE_KEY_PREFIX.':'.md5($paymentMaxUpdated.$debtMaxUpdated);
+    }
+
+    /**
+     * Clear the progress data cache.
+     */
+    public static function clearProgressDataCache(): void
+    {
+        // Clear all progress data cache keys by pattern
+        if (config('cache.default') === 'redis') {
+            /** @var \Illuminate\Cache\RedisStore $store */
+            $store = Cache::getStore();
+            $redis = $store->getRedis();
+            $prefix = config('cache.prefix', 'laravel').':';
+            $keys = $redis->keys($prefix.self::CACHE_KEY_PREFIX.':*');
+            foreach ($keys as $key) {
+                $cacheKey = str_replace($prefix, '', $key);
+                Cache::forget($cacheKey);
+            }
+        } else {
+            // For file/array cache, just clear the current cache key
+            Cache::forget(self::getProgressDataCacheKey());
+        }
     }
 
     /**
@@ -28,8 +79,27 @@ class DebtProgress extends Component
      */
     public function getProgressDataProperty(): array
     {
-        // Get all debts with their payments
-        $debts = Debt::with('payments')->get();
+        // Check for empty data first (no caching needed)
+        if (Debt::count() === 0) {
+            return ['labels' => [], 'datasets' => []];
+        }
+
+        $cacheKey = self::getProgressDataCacheKey();
+
+        return Cache::remember($cacheKey, now()->addHours(self::CACHE_TTL_HOURS), function () {
+            return $this->calculateProgressData();
+        });
+    }
+
+    /**
+     * Calculate progress data (uncached).
+     *
+     * @return array{labels: array<string>, datasets: array<array<string, mixed>>}
+     */
+    protected function calculateProgressData(): array
+    {
+        // Get all debts with their payments (eager loaded to avoid N+1)
+        $debts = $this->debtCacheService->getAllWithPayments();
 
         if ($debts->isEmpty()) {
             return ['labels' => [], 'datasets' => []];
@@ -63,6 +133,14 @@ class DebtProgress extends Component
         $totalData = [];
         $debtData = [];
 
+        // Pre-calculate all payments by debt and month to avoid N+1 queries
+        $paymentsByDebtAndMonth = [];
+        foreach ($debts as $debt) {
+            $paymentsByDebtAndMonth[$debt->id] = $debt->payments
+                ->groupBy(fn ($payment) => Carbon::parse($payment->payment_date)->format('Y-m'))
+                ->map(fn ($monthPayments) => $monthPayments->sum('principal_paid'));
+        }
+
         // Initialize debt data arrays
         foreach ($debts as $index => $debt) {
             $debtData[$debt->name] = [
@@ -83,16 +161,22 @@ class DebtProgress extends Component
             $labels[] = $formattedMonth;
 
             $totalBalance = 0;
+            $currentMonthKey = $currentDate->format('Y-m');
 
             foreach ($debts as $debt) {
-                // Get all payments up to this month
-                $paidAmount = $debt->payments()
-                    ->where('payment_date', '<=', $currentDate->endOfMonth())
-                    ->sum('principal_paid');
+                // Calculate cumulative payments up to and including this month
+                $cumulativePaid = 0;
+                $debtPayments = $paymentsByDebtAndMonth[$debt->id] ?? collect();
+
+                foreach ($debtPayments as $monthKey => $amount) {
+                    if ($monthKey <= $currentMonthKey) {
+                        $cumulativePaid += $amount;
+                    }
+                }
 
                 // Calculate remaining balance for this month
                 $originalBalance = $debt->original_balance ?? $debt->balance;
-                $remainingBalance = max(0, $originalBalance - $paidAmount);
+                $remainingBalance = max(0, $originalBalance - $cumulativePaid);
 
                 $debtData[$debt->name]['data'][] = round($remainingBalance, 2);
                 $totalBalance += $remainingBalance;
@@ -136,7 +220,7 @@ class DebtProgress extends Component
      */
     public function getNetDebtChangeProperty(): float
     {
-        $debts = Debt::all();
+        $debts = $this->debtCacheService->getAll();
         $netChange = 0;
 
         foreach ($debts as $debt) {
@@ -197,7 +281,7 @@ class DebtProgress extends Component
 
     public function getMonthsToDebtFreeProperty(): int
     {
-        $debts = Debt::with('payments')->get();
+        $debts = $this->debtCacheService->getAllWithPayments();
 
         if ($debts->isEmpty()) {
             return 0;
@@ -216,7 +300,7 @@ class DebtProgress extends Component
 
     public function getProjectedPayoffDateProperty(): string
     {
-        $debts = Debt::with('payments')->get();
+        $debts = $this->debtCacheService->getAllWithPayments();
 
         if ($debts->isEmpty()) {
             $carbon = now();
@@ -241,7 +325,7 @@ class DebtProgress extends Component
 
     public function getProjectedTotalInterestProperty(): float
     {
-        $debts = Debt::with('payments')->get();
+        $debts = $this->debtCacheService->getAllWithPayments();
 
         if ($debts->isEmpty()) {
             return 0;

@@ -2,10 +2,15 @@
 
 use App\Livewire\DebtList;
 use App\Models\Debt;
+use App\Services\DebtCacheService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    DebtCacheService::clearCache();
+});
 
 test('debt list component renders successfully', function () {
     $response = $this->get('/');

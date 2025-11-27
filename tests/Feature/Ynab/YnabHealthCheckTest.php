@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 use App\Livewire\DebtList;
 use App\Models\Debt;
+use App\Services\DebtCacheService;
+use App\Services\DebtCalculationService;
+use App\Services\PaymentService;
+use App\Services\PayoffSettingsService;
 use App\Services\YnabService;
-use Illuminate\Support\Facades\Http;
 
 test('shows user friendly message when YNAB is down', function () {
     // Mock the YnabService to simulate it being down
@@ -15,7 +18,13 @@ test('shows user friendly message when YNAB is down', function () {
     Debt::factory()->create(['name' => 'Test Debt']);
 
     $component = new DebtList;
-    $component->boot(app(\App\Services\DebtCalculationService::class), $mockService, app(\App\Services\PaymentService::class), app(\App\Services\PayoffSettingsService::class));
+    $component->boot(
+        app(DebtCalculationService::class),
+        $mockService,
+        app(PaymentService::class),
+        app(PayoffSettingsService::class),
+        app(DebtCacheService::class)
+    );
 
     $component->checkYnab();
 
@@ -32,7 +41,13 @@ test('shows user friendly message when YNAB times out', function () {
     Debt::factory()->create(['name' => 'Test Debt']);
 
     $component = new DebtList;
-    $component->boot(app(\App\Services\DebtCalculationService::class), $mockService, app(\App\Services\PaymentService::class), app(\App\Services\PayoffSettingsService::class));
+    $component->boot(
+        app(DebtCalculationService::class),
+        $mockService,
+        app(PaymentService::class),
+        app(PayoffSettingsService::class),
+        app(DebtCacheService::class)
+    );
 
     $component->checkYnab();
 
@@ -60,7 +75,13 @@ test('proceeds with sync when YNAB is accessible', function () {
     Debt::factory()->create(['name' => 'Local Debt', 'ynab_account_id' => null]);
 
     $component = new DebtList;
-    $component->boot(app(\App\Services\DebtCalculationService::class), $mockService, app(\App\Services\PaymentService::class), app(\App\Services\PayoffSettingsService::class));
+    $component->boot(
+        app(DebtCalculationService::class),
+        $mockService,
+        app(PaymentService::class),
+        app(PayoffSettingsService::class),
+        app(DebtCacheService::class)
+    );
 
     $component->checkYnab();
 

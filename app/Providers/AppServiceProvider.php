@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Models\Debt;
+use App\Models\Payment;
+use App\Observers\DebtObserver;
+use App\Observers\PaymentObserver;
 use App\Services\YnabService;
 use Illuminate\Support\ServiceProvider;
 
@@ -27,6 +31,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Debt::observe(DebtObserver::class);
+        Payment::observe(PaymentObserver::class);
     }
 }

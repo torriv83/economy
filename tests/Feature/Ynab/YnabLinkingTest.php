@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 use App\Livewire\DebtList;
 use App\Models\Debt;
+use App\Services\DebtCacheService;
+use App\Services\DebtCalculationService;
+use App\Services\PaymentService;
+use App\Services\PayoffSettingsService;
+use App\Services\YnabService;
 use Livewire\Livewire;
 
 test('can open link confirmation modal', function () {
@@ -147,7 +152,13 @@ test('linked debts do not appear in potential matches', function () {
     $localDebts = Debt::all();
 
     $component = new DebtList;
-    $component->boot(app(\App\Services\DebtCalculationService::class), app(\App\Services\YnabService::class), app(\App\Services\PaymentService::class), app(\App\Services\PayoffSettingsService::class));
+    $component->boot(
+        app(DebtCalculationService::class),
+        app(YnabService::class),
+        app(PaymentService::class),
+        app(PayoffSettingsService::class),
+        app(DebtCacheService::class)
+    );
 
     $discrepancies = $component->findDiscrepancies($ynabDebts, $localDebts);
 
@@ -222,10 +233,11 @@ test('findDiscrepancies detects balance mismatch for linked debts', function () 
 
     $component = new DebtList;
     $component->boot(
-        app(\App\Services\DebtCalculationService::class),
-        app(\App\Services\YnabService::class),
-        app(\App\Services\PaymentService::class),
-        app(\App\Services\PayoffSettingsService::class)
+        app(DebtCalculationService::class),
+        app(YnabService::class),
+        app(PaymentService::class),
+        app(PayoffSettingsService::class),
+        app(DebtCacheService::class)
     );
 
     $discrepancies = $component->findDiscrepancies($ynabDebts, $localDebts);
@@ -262,10 +274,11 @@ test('findDiscrepancies does not report mismatch when balances match', function 
 
     $component = new DebtList;
     $component->boot(
-        app(\App\Services\DebtCalculationService::class),
-        app(\App\Services\YnabService::class),
-        app(\App\Services\PaymentService::class),
-        app(\App\Services\PayoffSettingsService::class)
+        app(DebtCalculationService::class),
+        app(YnabService::class),
+        app(PaymentService::class),
+        app(PayoffSettingsService::class),
+        app(DebtCacheService::class)
     );
 
     $discrepancies = $component->findDiscrepancies($ynabDebts, $localDebts);
@@ -298,10 +311,11 @@ test('findDiscrepancies ignores balance differences within floating point tolera
 
     $component = new DebtList;
     $component->boot(
-        app(\App\Services\DebtCalculationService::class),
-        app(\App\Services\YnabService::class),
-        app(\App\Services\PaymentService::class),
-        app(\App\Services\PayoffSettingsService::class)
+        app(DebtCalculationService::class),
+        app(YnabService::class),
+        app(PaymentService::class),
+        app(PayoffSettingsService::class),
+        app(DebtCacheService::class)
     );
 
     $discrepancies = $component->findDiscrepancies($ynabDebts, $localDebts);

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Livewire\DebtProgress;
 use App\Models\Debt;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -209,6 +210,41 @@ class DebtCalculationService
     }
 
     /**
+     * Generate a cache key for minimum payment calculations.
+     *
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $debts
+     */
+    protected function getMinimumPaymentsCacheKey(Collection $debts, string $type): string
+    {
+        // For minimum payments, we only need debt financial data (not payments or custom order)
+        $debtData = $debts->map(fn (Debt $debt) => [
+            'id' => $debt->id,
+            'balance' => $debt->balance,
+            'interest_rate' => $debt->interest_rate,
+            'minimum_payment' => $debt->minimum_payment,
+        ])->toArray();
+
+        return 'minimum_payments:'.$type.':'.md5(json_encode($debtData));
+    }
+
+    /**
+     * Clear all minimum payment caches.
+     */
+    public static function clearMinimumPaymentsCache(): void
+    {
+        // Clear all minimum payments cache keys by pattern
+        if (config('cache.default') === 'redis') {
+            $redis = Cache::getStore()->getRedis();
+            $prefix = config('cache.prefix', 'laravel').':';
+            $keys = $redis->keys($prefix.'minimum_payments:*');
+            foreach ($keys as $key) {
+                $cacheKey = str_replace($prefix, '', $key);
+                Cache::forget($cacheKey);
+            }
+        }
+    }
+
+    /**
      * Clear all payment schedule caches.
      */
     public static function clearPaymentScheduleCache(): void
@@ -253,12 +289,14 @@ class DebtCalculationService
     }
 
     /**
-     * Clear all calculation caches (payment schedules and strategy comparisons).
+     * Clear all calculation caches (payment schedules, strategy comparisons, minimum payments, and progress data).
      */
     public static function clearAllCalculationCaches(): void
     {
         self::clearPaymentScheduleCache();
         self::clearStrategyComparisonCache();
+        self::clearMinimumPaymentsCache();
+        DebtProgress::clearProgressDataCache();
     }
 
     /**
@@ -578,6 +616,20 @@ class DebtCalculationService
             return 0;
         }
 
+        $cacheKey = $this->getMinimumPaymentsCacheKey($debts, 'months');
+
+        return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($debts) {
+            return $this->performCalculateMinimumPaymentsOnly($debts);
+        });
+    }
+
+    /**
+     * Perform the actual minimum payments calculation (uncached).
+     *
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $debts
+     */
+    protected function performCalculateMinimumPaymentsOnly(Collection $debts): int
+    {
         $maxMonths = 0;
 
         foreach ($debts as $debt) {
@@ -623,6 +675,20 @@ class DebtCalculationService
             return 0.0;
         }
 
+        $cacheKey = $this->getMinimumPaymentsCacheKey($debts, 'interest');
+
+        return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($debts) {
+            return $this->performCalculateMinimumPaymentsInterest($debts);
+        });
+    }
+
+    /**
+     * Perform the actual minimum payments interest calculation (uncached).
+     *
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $debts
+     */
+    protected function performCalculateMinimumPaymentsInterest(Collection $debts): float
+    {
         $totalInterest = 0.0;
 
         foreach ($debts as $debt) {

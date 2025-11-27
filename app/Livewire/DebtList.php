@@ -6,6 +6,7 @@ namespace App\Livewire;
 
 use App\Models\Debt;
 use App\Models\Payment;
+use App\Services\DebtCacheService;
 use App\Services\DebtCalculationService;
 use App\Services\PaymentService;
 use App\Services\PayoffSettingsService;
@@ -64,16 +65,20 @@ class DebtList extends Component
 
     protected PayoffSettingsService $settingsService;
 
+    protected DebtCacheService $debtCacheService;
+
     public function boot(
         DebtCalculationService $calculationService,
         YnabService $ynabService,
         PaymentService $paymentService,
-        PayoffSettingsService $settingsService
+        PayoffSettingsService $settingsService,
+        DebtCacheService $debtCacheService
     ): void {
         $this->calculationService = $calculationService;
         $this->ynabService = $ynabService;
         $this->paymentService = $paymentService;
         $this->settingsService = $settingsService;
+        $this->debtCacheService = $debtCacheService;
     }
 
     public function mount(): void
@@ -92,7 +97,7 @@ class DebtList extends Component
      */
     public function getDebtsProperty(): array
     {
-        $debts = Debt::all();
+        $debts = $this->debtCacheService->getAll();
 
         // If custom priorities are set, sort by them
         if ($debts->whereNotNull('custom_priority_order')->count() > 0) {
@@ -150,7 +155,7 @@ class DebtList extends Component
      */
     public function getPayoffEstimateProperty(): ?array
     {
-        $debts = Debt::all();
+        $debts = $this->debtCacheService->getAll();
 
         if ($debts->isEmpty()) {
             return null;
@@ -183,7 +188,7 @@ class DebtList extends Component
      */
     public function getStrategyEstimateProperty(): ?array
     {
-        $debts = Debt::all();
+        $debts = $this->debtCacheService->getAll();
 
         if ($debts->isEmpty()) {
             return null;
@@ -269,7 +274,7 @@ class DebtList extends Component
 
         try {
             $ynabDebts = $this->ynabService->fetchDebtAccounts();
-            $localDebts = Debt::all();
+            $localDebts = $this->debtCacheService->getAll();
 
             $this->ynabDiscrepancies = $this->findDiscrepancies($ynabDebts, $localDebts);
             $this->showYnabSync = true;
