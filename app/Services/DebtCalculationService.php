@@ -166,7 +166,39 @@ class DebtCalculationService
      */
     protected function getPaymentScheduleCacheKey(Collection $debts, float $extraPayment, string $strategy): string
     {
-        $debtData = $debts->map(fn (Debt $debt) => [
+        $debtData = $this->getDebtDataForCacheKey($debts);
+
+        return 'payment_schedule:'.md5(json_encode([
+            'debts' => $debtData,
+            'extra_payment' => $extraPayment,
+            'strategy' => $strategy,
+        ]));
+    }
+
+    /**
+     * Generate a cache key for strategy comparison.
+     *
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $debts
+     */
+    protected function getStrategyComparisonCacheKey(Collection $debts, float $extraPayment): string
+    {
+        $debtData = $this->getDebtDataForCacheKey($debts);
+
+        return 'strategy_comparison:'.md5(json_encode([
+            'debts' => $debtData,
+            'extra_payment' => $extraPayment,
+        ]));
+    }
+
+    /**
+     * Get debt data array for cache key generation.
+     *
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $debts
+     * @return array<int, array<string, mixed>>
+     */
+    protected function getDebtDataForCacheKey(Collection $debts): array
+    {
+        return $debts->map(fn (Debt $debt) => [
             'id' => $debt->id,
             'balance' => $debt->balance,
             'interest_rate' => $debt->interest_rate,
@@ -174,12 +206,6 @@ class DebtCalculationService
             'custom_priority_order' => $debt->custom_priority_order,
             'payments_hash' => $debt->payments->count().'_'.$debt->payments->max('updated_at'),
         ])->toArray();
-
-        return 'payment_schedule:'.md5(json_encode([
-            'debts' => $debtData,
-            'extra_payment' => $extraPayment,
-            'strategy' => $strategy,
-        ]));
     }
 
     /**
@@ -203,6 +229,36 @@ class DebtCalculationService
                 Cache::forget($cacheKey);
             }
         }
+    }
+
+    /**
+     * Clear all strategy comparison caches.
+     */
+    public static function clearStrategyComparisonCache(): void
+    {
+        // Clear all strategy comparison cache keys by pattern
+        Cache::forget('strategy_comparison_keys');
+
+        // For Redis, we can use the Redis facade directly for pattern matching
+        if (config('cache.default') === 'redis') {
+            $redis = Cache::getStore()->getRedis();
+            $prefix = config('cache.prefix', 'laravel').':';
+            $keys = $redis->keys($prefix.'strategy_comparison:*');
+            foreach ($keys as $key) {
+                // Remove the prefix that Redis adds
+                $cacheKey = str_replace($prefix, '', $key);
+                Cache::forget($cacheKey);
+            }
+        }
+    }
+
+    /**
+     * Clear all calculation caches (payment schedules and strategy comparisons).
+     */
+    public static function clearAllCalculationCaches(): void
+    {
+        self::clearPaymentScheduleCache();
+        self::clearStrategyComparisonCache();
     }
 
     /**
@@ -446,6 +502,29 @@ class DebtCalculationService
      * @return array<string, array<string, mixed>> Comparison of all strategies with savings vs minimum payments
      */
     public function compareStrategies(Collection $debts, float $extraPayment): array
+    {
+        if ($debts->isEmpty()) {
+            return [
+                'snowball' => ['months' => 0, 'totalInterest' => 0.0, 'order' => [], 'savings' => 0.0],
+                'avalanche' => ['months' => 0, 'totalInterest' => 0.0, 'order' => [], 'savings' => 0.0],
+                'custom' => ['months' => 0, 'totalInterest' => 0.0, 'order' => [], 'savings' => 0.0],
+            ];
+        }
+
+        $cacheKey = $this->getStrategyComparisonCacheKey($debts, $extraPayment);
+
+        return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($debts, $extraPayment) {
+            return $this->calculateStrategyComparison($debts, $extraPayment);
+        });
+    }
+
+    /**
+     * Calculate strategy comparison (uncached).
+     *
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $debts
+     * @return array<string, array<string, mixed>>
+     */
+    protected function calculateStrategyComparison(Collection $debts, float $extraPayment): array
     {
         $snowballSchedule = $this->generatePaymentSchedule($debts, $extraPayment, 'snowball');
         $avalancheSchedule = $this->generatePaymentSchedule($debts, $extraPayment, 'avalanche');
