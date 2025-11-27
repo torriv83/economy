@@ -336,6 +336,13 @@ return [
     'no_repayments_for_filter' => 'No repayments for this loan',
     'try_different_filter' => 'Try selecting a different loan or clear the filter to see all repayments.',
     'edit_self_loan' => 'Edit Self-Loan',
+    'edit_repayment' => 'Edit Repayment',
+    'update_repayment' => 'Update Repayment',
+    'confirm_delete_repayment' => 'Delete this repayment?',
+    'delete_repayment_warning' => 'Are you sure you want to delete this repayment? The loan balance will be updated. This action cannot be undone.',
+    'repayment_updated' => 'Repayment updated.',
+    'repayment_deleted' => 'Repayment deleted.',
+    'repayment_date' => 'Repayment Date',
 
     // Self-Loan Validation & Messages
     'up_to_amount' => 'Up to kr :amount',

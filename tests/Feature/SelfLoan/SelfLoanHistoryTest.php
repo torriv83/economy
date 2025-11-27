@@ -156,3 +156,165 @@ test('displays available loans in filter dropdown', function () {
         ->assertSee('First Loan')
         ->assertSee('Second Loan');
 });
+
+test('can open edit modal for repayment', function () {
+    $loan = SelfLoan::factory()->create([
+        'name' => 'Test Loan',
+        'original_amount' => 5000,
+        'current_balance' => 4000,
+    ]);
+
+    $repayment = SelfLoanRepayment::factory()->create([
+        'self_loan_id' => $loan->id,
+        'amount' => 1000,
+        'notes' => 'Test note',
+        'paid_at' => now(),
+    ]);
+
+    Livewire::test(History::class)
+        ->call('openEditModal', $repayment->id)
+        ->assertSet('showEditModal', true)
+        ->assertSet('editRepaymentId', $repayment->id)
+        ->assertSet('editAmount', '1000')
+        ->assertSet('editNotes', 'Test note');
+});
+
+test('can close edit modal', function () {
+    $loan = SelfLoan::factory()->create();
+    $repayment = SelfLoanRepayment::factory()->create([
+        'self_loan_id' => $loan->id,
+        'amount' => 1000,
+    ]);
+
+    Livewire::test(History::class)
+        ->call('openEditModal', $repayment->id)
+        ->assertSet('showEditModal', true)
+        ->call('closeEditModal')
+        ->assertSet('showEditModal', false)
+        ->assertSet('editRepaymentId', null)
+        ->assertSet('editAmount', '')
+        ->assertSet('editNotes', '');
+});
+
+test('can update repayment amount', function () {
+    $loan = SelfLoan::factory()->create([
+        'name' => 'Test Loan',
+        'original_amount' => 5000,
+        'current_balance' => 4000,
+    ]);
+
+    $repayment = SelfLoanRepayment::factory()->create([
+        'self_loan_id' => $loan->id,
+        'amount' => 1000,
+        'notes' => 'Original note',
+        'paid_at' => now(),
+    ]);
+
+    Livewire::test(History::class)
+        ->call('openEditModal', $repayment->id)
+        ->set('editAmount', '1500')
+        ->set('editNotes', 'Updated note')
+        ->call('updateRepayment')
+        ->assertSet('showEditModal', false);
+
+    $repayment->refresh();
+    expect($repayment->amount)->toBe(1500.0);
+    expect($repayment->notes)->toBe('Updated note');
+
+    $loan->refresh();
+    expect($loan->current_balance)->toBe(3500.0); // 5000 - 1500
+});
+
+test('updating withdrawal keeps amount negative', function () {
+    $loan = SelfLoan::factory()->create([
+        'name' => 'Test Loan',
+        'original_amount' => 5000,
+        'current_balance' => 6000,
+    ]);
+
+    $withdrawal = SelfLoanRepayment::factory()->create([
+        'self_loan_id' => $loan->id,
+        'amount' => -1000, // Withdrawal (negative)
+        'paid_at' => now(),
+    ]);
+
+    Livewire::test(History::class)
+        ->call('openEditModal', $withdrawal->id)
+        ->assertSet('editAmount', '1000') // Shows absolute value
+        ->set('editAmount', '1500')
+        ->call('updateRepayment');
+
+    $withdrawal->refresh();
+    expect($withdrawal->amount)->toBe(-1500.0); // Stays negative
+
+    $loan->refresh();
+    expect($loan->current_balance)->toBe(6500.0); // 5000 - (-1500) = 6500
+});
+
+test('can confirm delete repayment', function () {
+    $loan = SelfLoan::factory()->create(['name' => 'Test Loan']);
+    $repayment = SelfLoanRepayment::factory()->create([
+        'self_loan_id' => $loan->id,
+        'amount' => 1000,
+    ]);
+
+    Livewire::test(History::class)
+        ->call('confirmDelete', $repayment->id, 'Test Loan')
+        ->assertSet('showDeleteModal', true)
+        ->assertSet('repaymentToDelete', $repayment->id)
+        ->assertSet('repaymentLoanName', 'Test Loan');
+});
+
+test('can delete repayment and update loan balance', function () {
+    $loan = SelfLoan::factory()->create([
+        'name' => 'Test Loan',
+        'original_amount' => 5000,
+        'current_balance' => 4000,
+    ]);
+
+    $repayment = SelfLoanRepayment::factory()->create([
+        'self_loan_id' => $loan->id,
+        'amount' => 1000,
+    ]);
+
+    Livewire::test(History::class)
+        ->call('confirmDelete', $repayment->id, 'Test Loan')
+        ->call('deleteRepayment')
+        ->assertSet('showDeleteModal', false);
+
+    expect(SelfLoanRepayment::find($repayment->id))->toBeNull();
+
+    $loan->refresh();
+    expect($loan->current_balance)->toBe(5000.0); // Back to original
+});
+
+test('validates edit repayment form', function () {
+    $loan = SelfLoan::factory()->create();
+    $repayment = SelfLoanRepayment::factory()->create([
+        'self_loan_id' => $loan->id,
+        'amount' => 1000,
+        'paid_at' => now(),
+    ]);
+
+    Livewire::test(History::class)
+        ->call('openEditModal', $repayment->id)
+        ->set('editAmount', '')
+        ->set('editPaidAt', '')
+        ->call('updateRepayment')
+        ->assertHasErrors(['editAmount', 'editPaidAt']);
+});
+
+test('validates minimum amount for edit', function () {
+    $loan = SelfLoan::factory()->create();
+    $repayment = SelfLoanRepayment::factory()->create([
+        'self_loan_id' => $loan->id,
+        'amount' => 1000,
+        'paid_at' => now(),
+    ]);
+
+    Livewire::test(History::class)
+        ->call('openEditModal', $repayment->id)
+        ->set('editAmount', '0')
+        ->call('updateRepayment')
+        ->assertHasErrors(['editAmount']);
+});

@@ -338,6 +338,13 @@ return [
     'no_repayments_for_filter' => 'Ingen nedbetalinger for dette lånet',
     'try_different_filter' => 'Prøv å velge et annet lån eller fjern filteret for å se alle nedbetalinger.',
     'edit_self_loan' => 'Rediger privat lån',
+    'edit_repayment' => 'Rediger nedbetaling',
+    'update_repayment' => 'Oppdater nedbetaling',
+    'confirm_delete_repayment' => 'Slette nedbetalingen?',
+    'delete_repayment_warning' => 'Er du sikker på at du vil slette denne nedbetalingen? Lånesaldoen vil bli oppdatert. Denne handlingen kan ikke angres.',
+    'repayment_updated' => 'Nedbetaling oppdatert.',
+    'repayment_deleted' => 'Nedbetaling slettet.',
+    'repayment_date' => 'Nedbetalingsdato',
 
     // Self-Loan Validation & Messages
     'up_to_amount' => 'Opp til kr :amount',

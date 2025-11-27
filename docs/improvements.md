@@ -33,7 +33,7 @@ Long-term:
 - Auto-import actual payments to debts instead of manual entry
 - View payment history from YNAB directly
 - Verify that recorded payments match YNAB
-- Can fetch transactions for a specific month (added July 2024)
+- Can fetch transactions for a specific month 
 
 #### 2. Category Budgets with Goals (High value, Medium complexity)
 `GET /budgets/{budget_id}/categories`
@@ -41,7 +41,7 @@ Long-term:
 - `goal_target` - target amount for the category
 - `budgeted` - what you've set aside this month
 - `balance` - available in the category
-- `goal_needs_whole_amount` - rollover behavior for NEED-type goals (added June 2024)
+- `goal_needs_whole_amount` - rollover behavior for NEED-type goals 
 - Goal types: TB (Target Balance), TBD (Target Balance by Date), MF (Monthly Funding), NEED (Plan Your Spending)
 - Perfect for: Showing "available for extra debt payment"
 
@@ -50,7 +50,7 @@ Long-term:
 - Fetch upcoming debt payments automatically
 - Display in payment calendar
 - Predict cash flow
-- Can now create/update/delete via API (added June 2024)
+- Can now create/update/delete via API 
 
 #### 4. "Ready to Assign" Balance (Medium value, Low complexity)
 From budget endpoint - shows how much money is available to budget:
@@ -77,3 +77,25 @@ Solution for the wishlist item about dental appointments etc:
 | 2. Category goals → balance savings/debt | High | Medium |
 | 3. Scheduled transactions → calendar | Medium | Low |
 | 4. Ready to Assign → available extra | Medium | Low |
+
+
+Good question. Here are things that make web apps feel more "native":
+Quick Wins
+Feature	Description
+Keyboard shortcuts	Already on your list - Alt+H, Alt+S, Alt+P etc.
+Toast notifications	Slide-in confirmations instead of page refreshes ("Debt saved!")
+Loading states	Subtle spinners/skeleton screens during actions
+Page transitions	Smooth fade/slide between views instead of hard refreshes
+Medium Effort
+Feature	Description
+Command palette	Ctrl+K to search/navigate anywhere (very "app-like")
+Drag & drop	Reorder debts by dragging (pairs well with custom ordering feature)
+Undo support	"Debt deleted" toast with "Undo" button
+Persistent settings	Remember sidebar state, dark/light mode, last viewed page
+Polish
+Feature	Description
+Empty states	Friendly illustrations when no debts exist
+Focus management	Proper tab order, visible focus rings
+Confirmation modals	Native-feeling dialogs instead of browser confirm()
+Favicon badge	Show count or status in the browser tab icon
+The keyboard shortcuts and toast notifications would probably give you the biggest "feels like an app" improvement for the least effort. Livewire makes both pretty easy. Any of these catch your interest?
