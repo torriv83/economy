@@ -16,23 +16,61 @@ class ReconciliationHistory extends Component
 {
     use HasReconciliationModals;
 
-    public int $debtId;
+    public ?int $filterDebtId = null;
 
     /**
-     * Get reconciliations for the debt
+     * Reset computed properties cache when filter changes
+     */
+    public function updatedFilterDebtId(): void
+    {
+        unset($this->reconciliations);
+    }
+
+    /**
+     * Get all reconciliations, optionally filtered by debt
      *
      * @return Collection<int, Payment>
      */
     #[Computed]
     public function reconciliations(): Collection
     {
-        $debt = Debt::find($this->debtId);
+        $query = Payment::with('debt')
+            ->where('is_reconciliation_adjustment', true);
 
-        if (! $debt) {
-            return collect();
+        if ($this->filterDebtId !== null) {
+            $query->where('debt_id', $this->filterDebtId);
         }
 
-        return $this->paymentService->getReconciliationsForDebt($debt);
+        return $query->orderBy('payment_date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    /**
+     * Get all debts for the filter dropdown
+     *
+     * @return Collection<int, Debt>
+     */
+    #[Computed]
+    public function debts(): Collection
+    {
+        return Debt::orderBy('name')->get();
+    }
+
+    /**
+     * Hook called after a reconciliation is saved
+     */
+    protected function afterReconciliationSaved(): void
+    {
+        unset($this->reconciliations);
+    }
+
+    /**
+     * Hook called after a reconciliation is deleted
+     */
+    protected function afterReconciliationDeleted(): void
+    {
+        unset($this->reconciliations);
     }
 
     public function render(): View

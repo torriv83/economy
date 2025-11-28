@@ -3,7 +3,6 @@
 use App\Livewire\Debts\DebtLayout;
 use App\Livewire\EditDebt;
 use App\Livewire\Payoff\PayoffLayout;
-use App\Livewire\ReconciliationHistoryPage;
 use App\Livewire\SelfLoans\SelfLoanLayout;
 use App\Livewire\Settings\SettingsLayout;
 use Illuminate\Support\Facades\Route;
@@ -15,8 +14,6 @@ Route::get('/debts', DebtLayout::class)->name('debts');
 Route::get('/debts/{debt}/edit', EditDebt::class)->name('debts.edit');
 
 Route::get('/payoff', PayoffLayout::class)->name('payoff');
-
-Route::get('/reconciliations', ReconciliationHistoryPage::class)->name('reconciliations');
 
 Route::get('/self-loans', SelfLoanLayout::class)->name('self-loans');
 

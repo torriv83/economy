@@ -4,7 +4,8 @@
       "Bash(vendor/bin/pint:*)",
       "Bash(cat:*)",
       "Bash(taskkill //F //IM chrome.exe //T)",
-      "Skill(superpowers-laravel:brainstorming)"
+      "Skill(superpowers-laravel:brainstorming)",
+      "Skill(superpowers-laravel:writing-plans)"
     ],
     "deny": [],
     "ask": []

@@ -1,19 +1,12 @@
 <?php
 
-use App\Livewire\ReconciliationHistoryPage;
+use App\Livewire\ReconciliationHistory;
 use App\Models\Debt;
 use App\Models\Payment;
 use Livewire\Livewire;
 
-use function Pest\Laravel\get;
-
-it('displays the reconciliation history page', function () {
-    $response = get(route('reconciliations'));
-    $response->assertOk();
-});
-
 it('shows empty state when no reconciliations exist', function () {
-    Livewire::test(ReconciliationHistoryPage::class)
+    Livewire::test(ReconciliationHistory::class)
         ->assertSee(__('app.no_reconciliations'));
 });
 
@@ -27,7 +20,7 @@ it('displays all reconciliations', function () {
         'notes' => 'Test reconciliation note',
     ]);
 
-    Livewire::test(ReconciliationHistoryPage::class)
+    Livewire::test(ReconciliationHistory::class)
         ->assertSee('Test Debt')
         ->assertSee('15.01.2024')
         ->assertSee('Test reconciliation note');
@@ -47,7 +40,7 @@ it('filters reconciliations by debt', function () {
         'notes' => 'Reconciliation for debt two',
     ]);
 
-    Livewire::test(ReconciliationHistoryPage::class)
+    Livewire::test(ReconciliationHistory::class)
         ->assertSee('Reconciliation for debt one')
         ->assertSee('Reconciliation for debt two')
         ->set('filterDebtId', $debt1->id)
@@ -64,7 +57,7 @@ it('opens edit modal with correct data', function () {
         'notes' => 'Original note',
     ]);
 
-    Livewire::test(ReconciliationHistoryPage::class)
+    Livewire::test(ReconciliationHistory::class)
         ->call('openEditModal', $reconciliation->id)
         ->assertSet('showEditModal', true)
         ->assertSet('editingReconciliationId', $reconciliation->id)
@@ -79,7 +72,7 @@ it('closes edit modal and resets state', function () {
         'debt_id' => $debt->id,
     ]);
 
-    Livewire::test(ReconciliationHistoryPage::class)
+    Livewire::test(ReconciliationHistory::class)
         ->call('openEditModal', $reconciliation->id)
         ->assertSet('showEditModal', true)
         ->call('closeEditModal')
@@ -97,7 +90,7 @@ it('validates edit form fields', function () {
         'debt_id' => $debt->id,
     ]);
 
-    Livewire::test(ReconciliationHistoryPage::class)
+    Livewire::test(ReconciliationHistory::class)
         ->call('openEditModal', $reconciliation->id)
         ->set('editBalance', '')
         ->set('editDate', 'invalid-date')
@@ -118,7 +111,7 @@ it('successfully saves edited reconciliation', function () {
         'notes' => 'Original note',
     ]);
 
-    Livewire::test(ReconciliationHistoryPage::class)
+    Livewire::test(ReconciliationHistory::class)
         ->call('openEditModal', $reconciliation->id)
         ->set('editBalance', '9500')
         ->set('editDate', '25.02.2024')
@@ -141,7 +134,7 @@ it('opens delete confirmation modal', function () {
         'debt_id' => $debt->id,
     ]);
 
-    Livewire::test(ReconciliationHistoryPage::class)
+    Livewire::test(ReconciliationHistory::class)
         ->call('confirmDelete', $reconciliation->id)
         ->assertSet('showDeleteConfirm', true)
         ->assertSet('deletingReconciliationId', $reconciliation->id);
@@ -154,7 +147,7 @@ it('cancels delete confirmation', function () {
         'debt_id' => $debt->id,
     ]);
 
-    Livewire::test(ReconciliationHistoryPage::class)
+    Livewire::test(ReconciliationHistory::class)
         ->call('confirmDelete', $reconciliation->id)
         ->assertSet('showDeleteConfirm', true)
         ->call('cancelDelete')
@@ -170,7 +163,7 @@ it('deletes a reconciliation', function () {
         'principal_paid' => 500,
     ]);
 
-    Livewire::test(ReconciliationHistoryPage::class)
+    Livewire::test(ReconciliationHistory::class)
         ->call('confirmDelete', $reconciliation->id)
         ->call('deleteReconciliation')
         ->assertSet('showDeleteConfirm', false)
@@ -183,7 +176,7 @@ it('shows debts in filter dropdown', function () {
     $debt1 = Debt::factory()->create(['name' => 'First Debt']);
     $debt2 = Debt::factory()->create(['name' => 'Second Debt']);
 
-    Livewire::test(ReconciliationHistoryPage::class)
+    Livewire::test(ReconciliationHistory::class)
         ->assertSee('First Debt')
         ->assertSee('Second Debt');
 });
@@ -197,7 +190,7 @@ it('does not open edit modal for non-reconciliation payments', function () {
         'is_reconciliation_adjustment' => false,
     ]);
 
-    Livewire::test(ReconciliationHistoryPage::class)
+    Livewire::test(ReconciliationHistory::class)
         ->call('openEditModal', $payment->id)
         ->assertSet('showEditModal', false)
         ->assertSet('editingReconciliationId', null);
@@ -212,7 +205,7 @@ it('does not delete non-reconciliation payments', function () {
         'is_reconciliation_adjustment' => false,
     ]);
 
-    Livewire::test(ReconciliationHistoryPage::class)
+    Livewire::test(ReconciliationHistory::class)
         ->set('deletingReconciliationId', $payment->id)
         ->set('showDeleteConfirm', true)
         ->call('deleteReconciliation');

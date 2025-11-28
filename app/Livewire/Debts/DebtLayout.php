@@ -21,7 +21,7 @@ class DebtLayout extends Component
         if ($view === 'edit' && $debtId) {
             $this->currentView = 'edit';
             $this->editingDebtId = (int) $debtId;
-        } elseif (in_array($view, ['overview', 'create', 'progress'])) {
+        } elseif (in_array($view, ['overview', 'create', 'progress', 'insights', 'reconciliations'])) {
             $this->currentView = $view;
         }
     }
@@ -44,6 +44,18 @@ class DebtLayout extends Component
         $this->editingDebtId = null;
     }
 
+    public function showInsights(): void
+    {
+        $this->currentView = 'insights';
+        $this->editingDebtId = null;
+    }
+
+    public function showReconciliations(): void
+    {
+        $this->currentView = 'reconciliations';
+        $this->editingDebtId = null;
+    }
+
     public function editDebt(int $debtId): void
     {
         $this->editingDebtId = $debtId;
@@ -63,6 +75,8 @@ class DebtLayout extends Component
             'overview' => $this->showOverview(),
             'create' => $this->showCreate(),
             'progress' => $this->showProgress(),
+            'insights' => $this->showInsights(),
+            'reconciliations' => $this->showReconciliations(),
             default => null,
         };
     }

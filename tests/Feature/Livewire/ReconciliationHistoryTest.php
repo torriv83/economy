@@ -10,35 +10,39 @@ uses(RefreshDatabase::class);
 
 describe('component rendering', function () {
     it('can be rendered', function () {
-        $debt = Debt::factory()->create();
-
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+        Livewire::test(ReconciliationHistory::class)
             ->assertOk();
     });
 
-    it('shows empty state when debt has no reconciliations', function () {
-        $debt = Debt::factory()->create();
-
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+    it('shows empty state when no reconciliations exist', function () {
+        Livewire::test(ReconciliationHistory::class)
             ->assertSee(__('app.no_reconciliations'));
     });
 
-    it('displays reconciliations for the specific debt', function () {
-        $debt = Debt::factory()->create(['name' => 'Test Debt']);
+    it('displays all reconciliations by default', function () {
+        $debt1 = Debt::factory()->create(['name' => 'Debt One']);
+        $debt2 = Debt::factory()->create(['name' => 'Debt Two']);
 
         Payment::factory()->reconciliation()->create([
-            'debt_id' => $debt->id,
+            'debt_id' => $debt1->id,
             'payment_date' => '2024-03-15',
-            'principal_paid' => 500,
-            'notes' => 'Test reconciliation for this debt',
+            'notes' => 'Reconciliation for debt one',
         ]);
 
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
-            ->assertSee('15.03.2024')
-            ->assertSee('Test reconciliation for this debt');
+        Payment::factory()->reconciliation()->create([
+            'debt_id' => $debt2->id,
+            'payment_date' => '2024-03-16',
+            'notes' => 'Reconciliation for debt two',
+        ]);
+
+        Livewire::test(ReconciliationHistory::class)
+            ->assertSee('Debt One')
+            ->assertSee('Debt Two')
+            ->assertSee('Reconciliation for debt one')
+            ->assertSee('Reconciliation for debt two');
     });
 
-    it('does not show reconciliations from other debts', function () {
+    it('filters reconciliations by debt when filter is set', function () {
         $debt1 = Debt::factory()->create(['name' => 'Debt One']);
         $debt2 = Debt::factory()->create(['name' => 'Debt Two']);
 
@@ -52,7 +56,10 @@ describe('component rendering', function () {
             'notes' => 'Reconciliation for debt two',
         ]);
 
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt1->id])
+        Livewire::test(ReconciliationHistory::class)
+            ->assertSee('Reconciliation for debt one')
+            ->assertSee('Reconciliation for debt two')
+            ->set('filterDebtId', $debt1->id)
             ->assertSee('Reconciliation for debt one')
             ->assertDontSee('Reconciliation for debt two');
     });
@@ -65,7 +72,7 @@ describe('component rendering', function () {
             'principal_paid' => 500, // Positive = balance decrease
         ]);
 
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+        Livewire::test(ReconciliationHistory::class)
             ->assertSeeHtml('-500'); // Balance decreased
     });
 
@@ -77,7 +84,7 @@ describe('component rendering', function () {
             'principal_paid' => -500, // Negative = balance increase
         ]);
 
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+        Livewire::test(ReconciliationHistory::class)
             ->assertSeeHtml('+500'); // Balance increased
     });
 });
@@ -92,7 +99,7 @@ describe('edit modal', function () {
             'notes' => 'Original note for edit',
         ]);
 
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+        Livewire::test(ReconciliationHistory::class)
             ->call('openEditModal', $reconciliation->id)
             ->assertSet('showEditModal', true)
             ->assertSet('editingReconciliationId', $reconciliation->id)
@@ -107,7 +114,7 @@ describe('edit modal', function () {
             'debt_id' => $debt->id,
         ]);
 
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+        Livewire::test(ReconciliationHistory::class)
             ->call('openEditModal', $reconciliation->id)
             ->assertSet('editBalance', '8500');
     });
@@ -119,7 +126,7 @@ describe('edit modal', function () {
             'debt_id' => $debt->id,
         ]);
 
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+        Livewire::test(ReconciliationHistory::class)
             ->call('openEditModal', $reconciliation->id)
             ->assertSet('showEditModal', true)
             ->call('closeEditModal')
@@ -138,16 +145,14 @@ describe('edit modal', function () {
             'is_reconciliation_adjustment' => false,
         ]);
 
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+        Livewire::test(ReconciliationHistory::class)
             ->call('openEditModal', $regularPayment->id)
             ->assertSet('showEditModal', false)
             ->assertSet('editingReconciliationId', null);
     });
 
     it('does not open edit modal for non-existent payment', function () {
-        $debt = Debt::factory()->create();
-
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+        Livewire::test(ReconciliationHistory::class)
             ->call('openEditModal', 99999)
             ->assertSet('showEditModal', false)
             ->assertSet('editingReconciliationId', null);
@@ -162,7 +167,7 @@ describe('edit validation', function () {
             'debt_id' => $debt->id,
         ]);
 
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+        Livewire::test(ReconciliationHistory::class)
             ->call('openEditModal', $reconciliation->id)
             ->set('editBalance', '')
             ->call('saveEdit')
@@ -176,7 +181,7 @@ describe('edit validation', function () {
             'debt_id' => $debt->id,
         ]);
 
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+        Livewire::test(ReconciliationHistory::class)
             ->call('openEditModal', $reconciliation->id)
             ->set('editBalance', 'not-a-number')
             ->call('saveEdit')
@@ -190,7 +195,7 @@ describe('edit validation', function () {
             'debt_id' => $debt->id,
         ]);
 
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+        Livewire::test(ReconciliationHistory::class)
             ->call('openEditModal', $reconciliation->id)
             ->set('editBalance', '-100')
             ->call('saveEdit')
@@ -204,7 +209,7 @@ describe('edit validation', function () {
             'debt_id' => $debt->id,
         ]);
 
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+        Livewire::test(ReconciliationHistory::class)
             ->call('openEditModal', $reconciliation->id)
             ->set('editDate', '')
             ->call('saveEdit')
@@ -218,7 +223,7 @@ describe('edit validation', function () {
             'debt_id' => $debt->id,
         ]);
 
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+        Livewire::test(ReconciliationHistory::class)
             ->call('openEditModal', $reconciliation->id)
             ->set('editBalance', '10000')
             ->set('editDate', '2024-01-15') // Wrong format
@@ -233,7 +238,7 @@ describe('edit validation', function () {
             'debt_id' => $debt->id,
         ]);
 
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+        Livewire::test(ReconciliationHistory::class)
             ->call('openEditModal', $reconciliation->id)
             ->set('editBalance', '10000')
             ->set('editDate', '15.01.2024')
@@ -250,7 +255,7 @@ describe('edit validation', function () {
             'principal_paid' => 500,
         ]);
 
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+        Livewire::test(ReconciliationHistory::class)
             ->call('openEditModal', $reconciliation->id)
             ->set('editBalance', '10000')
             ->set('editDate', '15.01.2024')
@@ -271,7 +276,7 @@ describe('saving edits', function () {
             'notes' => 'Original note',
         ]);
 
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+        Livewire::test(ReconciliationHistory::class)
             ->call('openEditModal', $reconciliation->id)
             ->set('editBalance', '9500')
             ->set('editDate', '20.01.2024')
@@ -286,9 +291,7 @@ describe('saving edits', function () {
     });
 
     it('does not save when editing non-existent reconciliation', function () {
-        $debt = Debt::factory()->create();
-
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+        Livewire::test(ReconciliationHistory::class)
             ->set('editingReconciliationId', 99999)
             ->set('editBalance', '10000')
             ->set('editDate', '15.01.2024')
@@ -299,9 +302,7 @@ describe('saving edits', function () {
     });
 
     it('does not save when editingReconciliationId is null', function () {
-        $debt = Debt::factory()->create();
-
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+        Livewire::test(ReconciliationHistory::class)
             ->set('editingReconciliationId', null)
             ->set('editBalance', '10000')
             ->set('editDate', '15.01.2024')
@@ -320,7 +321,7 @@ describe('delete functionality', function () {
             'debt_id' => $debt->id,
         ]);
 
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+        Livewire::test(ReconciliationHistory::class)
             ->call('confirmDelete', $reconciliation->id)
             ->assertSet('showDeleteConfirm', true)
             ->assertSet('deletingReconciliationId', $reconciliation->id);
@@ -333,7 +334,7 @@ describe('delete functionality', function () {
             'debt_id' => $debt->id,
         ]);
 
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+        Livewire::test(ReconciliationHistory::class)
             ->call('confirmDelete', $reconciliation->id)
             ->assertSet('showDeleteConfirm', true)
             ->call('cancelDelete')
@@ -351,7 +352,7 @@ describe('delete functionality', function () {
 
         $reconciliationId = $reconciliation->id;
 
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+        Livewire::test(ReconciliationHistory::class)
             ->call('confirmDelete', $reconciliation->id)
             ->call('deleteReconciliation')
             ->assertSet('showDeleteConfirm', false)
@@ -369,7 +370,7 @@ describe('delete functionality', function () {
             'is_reconciliation_adjustment' => false,
         ]);
 
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+        Livewire::test(ReconciliationHistory::class)
             ->set('deletingReconciliationId', $regularPayment->id)
             ->set('showDeleteConfirm', true)
             ->call('deleteReconciliation');
@@ -378,9 +379,7 @@ describe('delete functionality', function () {
     });
 
     it('does not delete when deletingReconciliationId is null', function () {
-        $debt = Debt::factory()->create();
-
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+        Livewire::test(ReconciliationHistory::class)
             ->set('deletingReconciliationId', null)
             ->set('showDeleteConfirm', true)
             ->call('deleteReconciliation')
@@ -396,7 +395,7 @@ describe('delete functionality', function () {
             'principal_paid' => 500, // Balance went from 10000 to 9500
         ]);
 
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+        Livewire::test(ReconciliationHistory::class)
             ->call('confirmDelete', $reconciliation->id)
             ->call('deleteReconciliation');
 
@@ -407,7 +406,7 @@ describe('delete functionality', function () {
 });
 
 describe('edge cases', function () {
-    it('handles debt with no reconciliations', function () {
+    it('handles no reconciliations gracefully', function () {
         $debt = Debt::factory()->create();
 
         // Create regular payments, no reconciliations
@@ -416,12 +415,7 @@ describe('edge cases', function () {
             'is_reconciliation_adjustment' => false,
         ]);
 
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
-            ->assertSee(__('app.no_reconciliations'));
-    });
-
-    it('handles non-existent debt gracefully', function () {
-        Livewire::test(ReconciliationHistory::class, ['debtId' => 99999])
+        Livewire::test(ReconciliationHistory::class)
             ->assertSee(__('app.no_reconciliations'));
     });
 
@@ -446,9 +440,18 @@ describe('edge cases', function () {
             'notes' => 'Third reconciliation',
         ]);
 
-        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+        Livewire::test(ReconciliationHistory::class)
             ->assertSee('First reconciliation')
             ->assertSee('Second reconciliation')
             ->assertSee('Third reconciliation');
+    });
+
+    it('shows all debts in filter dropdown', function () {
+        $debt1 = Debt::factory()->create(['name' => 'First Debt']);
+        $debt2 = Debt::factory()->create(['name' => 'Second Debt']);
+
+        Livewire::test(ReconciliationHistory::class)
+            ->assertSee('First Debt')
+            ->assertSee('Second Debt');
     });
 });

@@ -19,7 +19,7 @@
     <nav class="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
         <div class="flex items-center h-16">
             <!-- Logo/Brand - Fixed width on left to align with sidebar (responsive) -->
-            <div class="flex items-center justify-center {{ request()->routeIs('home', 'debts', 'debts.edit', 'payoff', 'self-loans', 'reconciliations', 'settings') ? 'px-4 md:w-64' : 'px-4 sm:px-6 lg:px-8' }} flex-shrink-0">
+            <div class="flex items-center justify-center {{ request()->routeIs('home', 'debts', 'debts.edit', 'payoff', 'self-loans', 'settings') ? 'px-4 md:w-64' : 'px-4 sm:px-6 lg:px-8' }} flex-shrink-0">
                 <a href="{{ route('home') }}" wire:navigate.hover class="flex items-center gap-2 text-base sm:text-xl font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded">
                     <x-app-logo class="w-6 h-6 sm:w-7 sm:h-7 shrink-0" />
                     <span class="truncate">{{ __('app.app_name') }}</span>
@@ -29,7 +29,7 @@
             <!-- Navigation Links -->
             <div class="flex-1 flex justify-between items-center px-4 sm:px-6 lg:px-8">
                 <div class="hidden md:flex items-center gap-6">
-                    <a href="{{ route('debts') }}" wire:navigate.hover class="{{ request()->routeIs('home', 'debts', 'debts.edit', 'reconciliations') ? 'border-b-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }} font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded px-3 py-2">
+                    <a href="{{ route('debts') }}" wire:navigate.hover class="{{ request()->routeIs('home', 'debts', 'debts.edit') ? 'border-b-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }} font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded px-3 py-2">
                         {{ __('app.debts') }}
                     </a>
                     <a href="{{ route('payoff') }}" wire:navigate.hover class="{{ request()->routeIs('payoff') ? 'border-b-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' }} font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 rounded px-3 py-2">
@@ -115,13 +115,12 @@
             class="md:hidden border-t border-gray-200 dark:border-gray-700"
             x-cloak
             x-data="{
-                debtsOpen: {{ request()->routeIs('home', 'debts', 'debts.edit', 'reconciliations') ? 'true' : 'false' }},
+                debtsOpen: {{ request()->routeIs('home', 'debts', 'debts.edit') ? 'true' : 'false' }},
                 payoffOpen: {{ request()->routeIs('payoff') ? 'true' : 'false' }},
                 selfLoansOpen: {{ request()->routeIs('self-loans') ? 'true' : 'false' }}
             }"
         >
             @php
-                $debtsView = request()->query('view', 'overview');
                 $payoffView = request()->query('view', 'calendar');
                 $selfLoansView = request()->query('view', 'overview');
             @endphp
@@ -131,7 +130,7 @@
                     <button
                         type="button"
                         @click="debtsOpen = !debtsOpen"
-                        class="w-full flex items-center justify-between px-3 py-2 rounded-r-lg text-base font-medium {{ request()->routeIs('home', 'debts', 'debts.edit', 'reconciliations') ? 'border-l-3 border-blue-600 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700' }} transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:focus-visible:ring-blue-400 focus-visible:ring-offset-2"
+                        class="w-full flex items-center justify-between px-3 py-2 rounded-r-lg text-base font-medium {{ request()->routeIs('home', 'debts', 'debts.edit') ? 'border-l-3 border-blue-600 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700' }} transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:focus-visible:ring-blue-400 focus-visible:ring-offset-2"
                     >
                         <span>{{ __('app.debts') }}</span>
                         <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': debtsOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -139,16 +138,19 @@
                         </svg>
                     </button>
                     <div x-show="debtsOpen" x-collapse class="pl-4 space-y-1 mt-1">
-                        <a href="{{ route('debts', ['view' => 'overview']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('home', 'debts', 'debts.edit') && $debtsView === 'overview' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <a href="{{ route('debts') }}" wire:navigate.hover @click="mobileMenuOpen = false; Livewire.dispatch('setView', { view: 'overview' })" class="block px-3 py-1.5 text-sm rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700">
                             {{ __('app.overview') }}
                         </a>
-                        <a href="{{ route('debts', ['view' => 'create']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('home', 'debts', 'debts.edit') && $debtsView === 'create' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <a href="{{ route('debts') }}" wire:navigate.hover @click="mobileMenuOpen = false; Livewire.dispatch('setView', { view: 'create' })" class="block px-3 py-1.5 text-sm rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700">
                             {{ __('app.add_debt') }}
                         </a>
-                        <a href="{{ route('debts', ['view' => 'progress']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('home', 'debts', 'debts.edit') && $debtsView === 'progress' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <a href="{{ route('debts') }}" wire:navigate.hover @click="mobileMenuOpen = false; Livewire.dispatch('setView', { view: 'progress' })" class="block px-3 py-1.5 text-sm rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700">
                             {{ __('app.progress') }}
                         </a>
-                        <a href="{{ route('reconciliations') }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-3 py-1.5 text-sm rounded-lg {{ request()->routeIs('reconciliations') ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <a href="{{ route('debts') }}" wire:navigate.hover @click="mobileMenuOpen = false; Livewire.dispatch('setView', { view: 'insights' })" class="block px-3 py-1.5 text-sm rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            {{ __('app.insights') }}
+                        </a>
+                        <a href="{{ route('debts') }}" wire:navigate.hover @click="mobileMenuOpen = false; Livewire.dispatch('setView', { view: 'reconciliations' })" class="block px-3 py-1.5 text-sm rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700">
                             {{ __('app.reconciliation_history') }}
                         </a>
                     </div>
@@ -242,7 +244,7 @@
     </nav>
 
     <!-- Main Content with Sidebar Space -->
-    <main id="main-content" class="{{ request()->routeIs('home', 'debts', 'debts.edit', 'payoff', 'reconciliations', 'self-loans', 'settings') ? 'md:ml-64' : '' }} pt-24 px-4 sm:px-6 lg:px-8 pb-8">
+    <main id="main-content" class="{{ request()->routeIs('home', 'debts', 'debts.edit', 'payoff', 'self-loans', 'settings') ? 'md:ml-64' : '' }} pt-24 px-4 sm:px-6 lg:px-8 pb-8">
         {{ $slot }}
     </main>
 
