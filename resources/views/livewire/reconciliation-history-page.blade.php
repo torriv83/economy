@@ -57,14 +57,10 @@
     </aside>
 
     {{-- Page Header --}}
-    <div class="mb-6">
-        <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2 break-words">
-            {{ __('app.reconciliation_history') }}
-        </h1>
-        <p class="text-gray-600 dark:text-gray-400">
-            {{ __('app.reconciliation_history_description') }}
-        </p>
-    </div>
+    <x-page-header
+        :title="__('app.reconciliation_history')"
+        :subtitle="__('app.reconciliation_history_description')"
+    />
 
     {{-- Main Content --}}
     <div class="space-y-6">

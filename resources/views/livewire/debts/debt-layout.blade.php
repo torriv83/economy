@@ -53,31 +53,23 @@
         </nav>
     </aside>
 
-    {{-- Header --}}
-    <div class="mb-6">
-        <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2 break-words">
-            @if ($currentView === 'overview')
-                {{ __('app.debts_overview') }}
-            @elseif ($currentView === 'create')
-                {{ __('app.create_debt') }}
-            @elseif ($currentView === 'progress')
-                {{ __('app.debt_progress') }}
-            @elseif ($currentView === 'edit')
-                {{ __('app.edit_debt') }}
-            @endif
-        </h1>
-        <p class="text-gray-600 dark:text-gray-400">
-            @if ($currentView === 'overview')
-                {{ __('app.debts_overview_description') }}
-            @elseif ($currentView === 'create')
-                {{ __('app.create_debt_description') }}
-            @elseif ($currentView === 'progress')
-                {{ __('app.debt_progress_description') }}
-            @elseif ($currentView === 'edit')
-                {{ __('app.edit_debt_description') }}
-            @endif
-        </p>
-    </div>
+    {{-- Header (not for overview - debt-list renders its own with actions) --}}
+    @if ($currentView !== 'overview')
+        <x-page-header
+            :title="match($currentView) {
+                'create' => __('app.create_debt'),
+                'progress' => __('app.debt_progress'),
+                'edit' => __('app.edit_debt'),
+                default => ''
+            }"
+            :subtitle="match($currentView) {
+                'create' => __('app.create_debt_description'),
+                'progress' => __('app.debt_progress_description'),
+                'edit' => __('app.edit_debt_description'),
+                default => ''
+            }"
+        />
+    @endif
 
     {{-- Main Content --}}
     <div>

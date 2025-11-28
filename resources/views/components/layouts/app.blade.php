@@ -242,7 +242,7 @@
     </nav>
 
     <!-- Main Content with Sidebar Space -->
-    <main id="main-content" class="{{ request()->routeIs('home', 'debts', 'debts.edit', 'payoff', 'reconciliations', 'self-loans', 'settings') ? 'md:ml-64' : '' }} pt-20 px-4 sm:px-6 lg:px-8 py-8">
+    <main id="main-content" class="{{ request()->routeIs('home', 'debts', 'debts.edit', 'payoff', 'reconciliations', 'self-loans', 'settings') ? 'md:ml-64' : '' }} pt-24 px-4 sm:px-6 lg:px-8 pb-8">
         {{ $slot }}
     </main>
 

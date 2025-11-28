@@ -31,14 +31,10 @@
     </aside>
 
     {{-- Header --}}
-    <div class="mb-6">
-        <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2 break-words">
-            {{ __('app.settings') }}
-        </h1>
-        <p class="text-gray-600 dark:text-gray-400">
-            {{ __('app.settings_description') }}
-        </p>
-    </div>
+    <x-page-header
+        :title="__('app.settings')"
+        :subtitle="__('app.settings_description')"
+    />
 
     {{-- Main Content --}}
     <div>

@@ -42,26 +42,20 @@
     </aside>
 
     {{-- Header --}}
-    <div class="mb-6">
-        <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2 break-words">
-            @if ($currentView === 'overview')
-                {{ __('app.self_loans_overview') }}
-            @elseif ($currentView === 'create')
-                {{ __('app.new_loan') }}
-            @elseif ($currentView === 'history')
-                {{ __('app.repayment_history') }}
-            @endif
-        </h1>
-        <p class="text-gray-600 dark:text-gray-400">
-            @if ($currentView === 'overview')
-                {{ __('app.track_self_loans') }}
-            @elseif ($currentView === 'create')
-                {{ __('app.create_new_self_loan_description') }}
-            @elseif ($currentView === 'history')
-                {{ __('app.view_repayment_history_description') }}
-            @endif
-        </p>
-    </div>
+    <x-page-header
+        :title="match($currentView) {
+            'overview' => __('app.self_loans_overview'),
+            'create' => __('app.new_loan'),
+            'history' => __('app.repayment_history'),
+            default => ''
+        }"
+        :subtitle="match($currentView) {
+            'overview' => __('app.track_self_loans'),
+            'create' => __('app.create_new_self_loan_description'),
+            'history' => __('app.view_repayment_history_description'),
+            default => ''
+        }"
+    />
 
     {{-- Main Content --}}
     <div>

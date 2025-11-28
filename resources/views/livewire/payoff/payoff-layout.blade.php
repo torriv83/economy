@@ -42,26 +42,20 @@
     </aside>
 
     {{-- Header --}}
-    <div class="mb-6">
-        <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2 break-words">
-            @if ($currentView === 'strategies')
-                {{ __('app.payoff_strategies') }}
-            @elseif ($currentView === 'plan')
-                {{ __('app.payment_plan') }}
-            @elseif ($currentView === 'calendar')
-                {{ __('app.payoff_calendar') }}
-            @endif
-        </h1>
-        <p class="text-gray-600 dark:text-gray-400">
-            @if ($currentView === 'strategies')
-                {{ __('app.strategies_description') }}
-            @elseif ($currentView === 'plan')
-                {{ __('app.payment_plan_description') }}
-            @elseif ($currentView === 'calendar')
-                {{ __('app.calendar_description') }}
-            @endif
-        </p>
-    </div>
+    <x-page-header
+        :title="match($currentView) {
+            'strategies' => __('app.payoff_strategies'),
+            'plan' => __('app.payment_plan'),
+            'calendar' => __('app.payoff_calendar'),
+            default => ''
+        }"
+        :subtitle="match($currentView) {
+            'strategies' => __('app.strategies_description'),
+            'plan' => __('app.payment_plan_description'),
+            'calendar' => __('app.calendar_description'),
+            default => ''
+        }"
+    />
 
     {{-- Main Content --}}
     <div>
