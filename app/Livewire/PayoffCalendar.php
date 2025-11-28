@@ -7,6 +7,7 @@ use App\Models\Payment;
 use App\Services\DebtCalculationService;
 use App\Services\PaymentService;
 use App\Services\YnabService;
+use App\Services\YnabTransactionService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -29,6 +30,8 @@ class PayoffCalendar extends Component
     public int $currentYear;
 
     protected DebtCalculationService $calculationService;
+
+    protected YnabTransactionService $ynabTransactionService;
 
     // Modal state
     public bool $showPaymentModal = false;
@@ -59,9 +62,10 @@ class PayoffCalendar extends Component
 
     public string $ynabError = '';
 
-    public function boot(DebtCalculationService $service): void
+    public function boot(DebtCalculationService $service, YnabTransactionService $ynabTransactionService): void
     {
         $this->calculationService = $service;
+        $this->ynabTransactionService = $ynabTransactionService;
     }
 
     public function mount(float $extraPayment = 2000, string $strategy = 'avalanche'): void
@@ -229,7 +233,6 @@ class PayoffCalendar extends Component
         try {
             foreach ($debtsWithYnab as $debt) {
                 // Get the latest payment date for this debt to use as "since" date
-                // If no payments exist, use the debt's created_at date
                 $latestPayment = Payment::where('debt_id', $debt->id)
                     ->where('is_reconciliation_adjustment', false)
                     ->orderBy('payment_date', 'desc')
@@ -247,86 +250,8 @@ class PayoffCalendar extends Component
                     continue;
                 }
 
-                // Get local payments for comparison
-                $localPayments = Payment::where('debt_id', $debt->id)
-                    ->where('is_reconciliation_adjustment', false)
-                    ->get()
-                    ->keyBy('ynab_transaction_id');
-
-                // Also group local payments by month for fuzzy matching
-                $localPaymentsByMonth = Payment::where('debt_id', $debt->id)
-                    ->where('is_reconciliation_adjustment', false)
-                    ->whereNull('ynab_transaction_id')
-                    ->get()
-                    ->groupBy(fn ($p) => $p->payment_date->format('Y-m'));
-
-                $comparedTransactions = [];
-
-                foreach ($ynabTransactions as $ynabTx) {
-                    $transactionMonth = Carbon::parse($ynabTx['date'])->format('Y-m');
-
-                    // Check if already linked by ynab_transaction_id
-                    if ($localPayments->has($ynabTx['id'])) {
-                        $localPayment = $localPayments->get($ynabTx['id']);
-                        $status = abs($localPayment->actual_amount - $ynabTx['amount']) < 0.01
-                            ? 'matched'
-                            : 'mismatch';
-
-                        $comparedTransactions[] = [
-                            'id' => $ynabTx['id'],
-                            'date' => $ynabTx['date'],
-                            'amount' => $ynabTx['amount'],
-                            'payee_name' => $ynabTx['payee_name'],
-                            'memo' => $ynabTx['memo'],
-                            'status' => $status,
-                            'local_payment_id' => $localPayment->id,
-                            'local_amount' => $localPayment->actual_amount,
-                        ];
-                    } else {
-                        // Try fuzzy matching by month and similar amount
-                        $potentialMatch = null;
-                        if (isset($localPaymentsByMonth[$transactionMonth])) {
-                            foreach ($localPaymentsByMonth[$transactionMonth] as $localP) {
-                                // Match if amount is within 5%
-                                $diff = abs($localP->actual_amount - $ynabTx['amount']);
-                                $threshold = $ynabTx['amount'] * 0.05;
-                                if ($diff <= $threshold) {
-                                    $potentialMatch = $localP;
-                                    break;
-                                }
-                            }
-                        }
-
-                        if ($potentialMatch) {
-                            $status = abs($potentialMatch->actual_amount - $ynabTx['amount']) < 0.01
-                                ? 'matched'
-                                : 'mismatch';
-
-                            $comparedTransactions[] = [
-                                'id' => $ynabTx['id'],
-                                'date' => $ynabTx['date'],
-                                'amount' => $ynabTx['amount'],
-                                'payee_name' => $ynabTx['payee_name'],
-                                'memo' => $ynabTx['memo'],
-                                'status' => $status,
-                                'local_payment_id' => $potentialMatch->id,
-                                'local_amount' => $potentialMatch->actual_amount,
-                            ];
-                        } else {
-                            // No match found - this is a new transaction
-                            $comparedTransactions[] = [
-                                'id' => $ynabTx['id'],
-                                'date' => $ynabTx['date'],
-                                'amount' => $ynabTx['amount'],
-                                'payee_name' => $ynabTx['payee_name'],
-                                'memo' => $ynabTx['memo'],
-                                'status' => 'missing',
-                                'local_payment_id' => null,
-                                'local_amount' => null,
-                            ];
-                        }
-                    }
-                }
+                // Use service to compare transactions
+                $comparedTransactions = $this->ynabTransactionService->compareTransactionsForDebt($debt, $ynabTransactions);
 
                 if (! empty($comparedTransactions)) {
                     $this->ynabComparisonResults[] = [
@@ -367,27 +292,7 @@ class PayoffCalendar extends Component
         }
 
         $debt = Debt::findOrFail($debtId);
-        $paymentDate = Carbon::parse($transaction['date']);
-        $paymentMonth = $paymentDate->format('Y-m');
-
-        // Calculate month number based on payment date relative to debt creation
-        $monthNumber = $debt->created_at->diffInMonths($paymentDate) + 1;
-
-        DB::transaction(function () use ($debt, $transaction, $paymentDate, $paymentMonth, $monthNumber, $paymentService) {
-            $payment = Payment::create([
-                'debt_id' => $debt->id,
-                'planned_amount' => $transaction['amount'],
-                'actual_amount' => $transaction['amount'],
-                'payment_date' => $paymentDate->format('Y-m-d'),
-                'month_number' => $monthNumber,
-                'payment_month' => $paymentMonth,
-                'notes' => $transaction['memo'] ?? __('app.imported_from_ynab'),
-                'ynab_transaction_id' => $transaction['id'],
-                'is_reconciliation_adjustment' => false,
-            ]);
-
-            $paymentService->updateDebtBalances();
-        });
+        $this->ynabTransactionService->importTransaction($debt, $transaction, $paymentService);
 
         // Refresh the comparison results
         $this->checkYnabTransactions();
@@ -397,10 +302,7 @@ class PayoffCalendar extends Component
     public function updatePaymentFromYnab(string $ynabTransactionId, int $localPaymentId, float $ynabAmount): void
     {
         $payment = Payment::findOrFail($localPaymentId);
-        $payment->update([
-            'actual_amount' => $ynabAmount,
-            'ynab_transaction_id' => $ynabTransactionId,
-        ]);
+        $this->ynabTransactionService->updatePaymentFromTransaction($payment, $ynabTransactionId, $ynabAmount);
 
         // Refresh the comparison results
         $this->checkYnabTransactions();

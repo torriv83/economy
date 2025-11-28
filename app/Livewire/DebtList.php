@@ -13,6 +13,7 @@ use App\Services\PaymentService;
 use App\Services\PayoffSettingsService;
 use App\Services\YnabDiscrepancyService;
 use App\Services\YnabService;
+use App\Services\YnabSyncService;
 use App\Support\DateFormatter;
 use Carbon\Carbon;
 use Livewire\Attributes\On;
@@ -58,13 +59,16 @@ class DebtList extends Component
 
     protected DebtCacheService $debtCacheService;
 
+    protected YnabSyncService $ynabSyncService;
+
     public function boot(
         DebtCalculationService $calculationService,
         YnabService $ynabService,
         YnabDiscrepancyService $discrepancyService,
         PaymentService $paymentService,
         PayoffSettingsService $settingsService,
-        DebtCacheService $debtCacheService
+        DebtCacheService $debtCacheService,
+        YnabSyncService $ynabSyncService
     ): void {
         $this->calculationService = $calculationService;
         $this->ynabService = $ynabService;
@@ -72,6 +76,7 @@ class DebtList extends Component
         $this->paymentService = $paymentService;
         $this->settingsService = $settingsService;
         $this->debtCacheService = $debtCacheService;
+        $this->ynabSyncService = $ynabSyncService;
     }
 
     public function mount(): void
@@ -261,14 +266,7 @@ class DebtList extends Component
      */
     public function importYnabDebt(array $ynabDebt): void
     {
-        Debt::create([
-            'name' => $ynabDebt['name'],
-            'balance' => $ynabDebt['balance'],
-            'original_balance' => $ynabDebt['balance'],
-            'interest_rate' => $ynabDebt['interest_rate'],
-            'minimum_payment' => $ynabDebt['minimum_payment'] ?? 0,
-            'ynab_account_id' => $ynabDebt['ynab_id'],
-        ]);
+        $this->ynabSyncService->importDebt($ynabDebt);
 
         // Remove from discrepancies
         if (isset($this->ynabDiscrepancies['new'])) {
@@ -287,18 +285,7 @@ class DebtList extends Component
             return;
         }
 
-        $count = count($this->ynabDiscrepancies['new']);
-
-        foreach ($this->ynabDiscrepancies['new'] as $debt) {
-            Debt::create([
-                'name' => $debt['name'],
-                'balance' => $debt['balance'],
-                'original_balance' => $debt['balance'],
-                'interest_rate' => $debt['interest_rate'],
-                'minimum_payment' => $debt['minimum_payment'] ?? 0,
-                'ynab_account_id' => $debt['ynab_id'],
-            ]);
-        }
+        $count = $this->ynabSyncService->importAllDebts($this->ynabDiscrepancies['new']);
 
         // Clear the new debts array
         $this->ynabDiscrepancies['new'] = [];
@@ -376,24 +363,7 @@ class DebtList extends Component
             return;
         }
 
-        // Update the YNAB account ID to link them
-        $updateData = ['ynab_account_id' => $this->linkingYnabDebt['ynab_id']];
-
-        // Update selected fields
-        if (in_array('name', $this->selectedFieldsToUpdate)) {
-            $updateData['name'] = $this->linkingYnabDebt['name'];
-        }
-        if (in_array('balance', $this->selectedFieldsToUpdate)) {
-            $updateData['balance'] = $this->linkingYnabDebt['balance'];
-        }
-        if (in_array('interest_rate', $this->selectedFieldsToUpdate)) {
-            $updateData['interest_rate'] = $this->linkingYnabDebt['interest_rate'];
-        }
-        if (in_array('minimum_payment', $this->selectedFieldsToUpdate)) {
-            $updateData['minimum_payment'] = $this->linkingYnabDebt['minimum_payment'];
-        }
-
-        $debt->update($updateData);
+        $this->ynabSyncService->linkDebtToYnab($debt, $this->linkingYnabDebt, $this->selectedFieldsToUpdate);
 
         // Remove from potential matches if they exist
         if (isset($this->ynabDiscrepancies['potential_matches'])) {
@@ -403,6 +373,7 @@ class DebtList extends Component
             );
         }
 
+        $debt->refresh();
         session()->flash('message', "'{$debt->name}' koblet til YNAB-konto.");
 
         $this->closeLinkConfirmation();

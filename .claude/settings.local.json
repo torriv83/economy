@@ -3,7 +3,8 @@
     "allow": [
       "Bash(vendor/bin/pint:*)",
       "Bash(cat:*)",
-      "Bash(taskkill //F //IM chrome.exe //T)"
+      "Bash(taskkill //F //IM chrome.exe //T)",
+      "Skill(superpowers-laravel:brainstorming)"
     ],
     "deny": [],
     "ask": []
