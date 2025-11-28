@@ -28,10 +28,21 @@ class YnabTransactionService
         $payment = null;
 
         DB::transaction(function () use ($debt, $transaction, $paymentDate, $paymentMonth, $monthNumber, $paymentService, &$payment) {
+            // Calculate interest/principal breakdown based on current balance
+            $currentBalance = $debt->balance;
+            $monthlyInterest = round($currentBalance * ($debt->interest_rate / 100) / 12, 2);
+            $actualAmount = $transaction['amount'];
+
+            // Payment goes to interest first, then principal
+            $interestPaid = min($actualAmount, $monthlyInterest);
+            $principalPaid = max(0, $actualAmount - $monthlyInterest);
+
             $payment = Payment::create([
                 'debt_id' => $debt->id,
                 'planned_amount' => $transaction['amount'],
-                'actual_amount' => $transaction['amount'],
+                'actual_amount' => $actualAmount,
+                'interest_paid' => $interestPaid,
+                'principal_paid' => $principalPaid,
                 'payment_date' => $paymentDate->format('Y-m-d'),
                 'month_number' => $monthNumber,
                 'payment_month' => $paymentMonth,
