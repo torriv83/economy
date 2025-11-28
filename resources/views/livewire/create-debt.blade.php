@@ -58,7 +58,6 @@
                                 type="number"
                                 id="balance"
                                 wire:model.blur="balance"
-                                x-on:input="updateCalculatedMinimum"
                                 step="0.01"
                                 min="0"
                                 placeholder="{{ __('app.balance_placeholder') }}"
@@ -84,7 +83,6 @@
                                 type="number"
                                 id="interestRate"
                                 wire:model.blur="interestRate"
-                                x-on:input="updateCalculatedMinimum"
                                 step="0.01"
                                 min="0"
                                 max="100"
@@ -101,30 +99,11 @@
                     </div>
 
                     <!-- Debt Type -->
-                    <div x-data="{
+                    <div x-data="debtTypeCalculator({
                         type: @entangle('type'),
                         balance: @entangle('balance'),
-                        interestRate: @entangle('interestRate'),
-                        calculatedMinimum: 0,
-                        updateCalculatedMinimum() {
-                            const balance = parseFloat(this.balance) || 0;
-                            const interestRate = parseFloat(this.interestRate) || 0;
-
-                            if (balance <= 0) {
-                                this.calculatedMinimum = 0;
-                                return;
-                            }
-
-                            if (this.type === 'kredittkort') {
-                                // Round up to match backend validation
-                                this.calculatedMinimum = Math.ceil(Math.max(balance * 0.03, 300));
-                            } else {
-                                // For forbrukslån: show monthly interest + small buffer
-                                const monthlyInterest = (balance * (interestRate / 100)) / 12;
-                                this.calculatedMinimum = Math.ceil(monthlyInterest * 1.1); // 10% buffer above interest
-                            }
-                        }
-                    }" x-init="updateCalculatedMinimum(); $watch('type', () => updateCalculatedMinimum()); $watch('balance', () => updateCalculatedMinimum()); $watch('interestRate', () => updateCalculatedMinimum())">
+                        interestRate: @entangle('interestRate')
+                    })">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             {{ __('app.debt_type') }}
                             <span class="text-red-500">*</span>
@@ -170,13 +149,13 @@
                         <p class="mt-2 text-sm text-gray-500 dark:text-gray-400" x-show="type === 'kredittkort'">
                             {{ __('app.minimum_payment_help_kredittkort') }}
                             <span x-show="calculatedMinimum > 0" class="font-medium text-gray-700 dark:text-gray-300">
-                                <br>{{ __('app.calculated_minimum_required') }}: <span x-text="new Intl.NumberFormat('no-NO', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(calculatedMinimum)"></span> kr
+                                <br>{{ __('app.calculated_minimum_required') }}: <span x-text="formatCurrency(calculatedMinimum)"></span> kr
                             </span>
                         </p>
                         <p class="mt-2 text-sm text-gray-500 dark:text-gray-400" x-show="type === 'forbrukslån'">
                             {{ __('app.minimum_payment_help_forbrukslån') }}
                             <span x-show="calculatedMinimum > 0" class="font-medium text-gray-700 dark:text-gray-300">
-                                <br>{{ __('app.calculated_minimum_required') }}: <span x-text="new Intl.NumberFormat('no-NO', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(calculatedMinimum)"></span> kr/mnd
+                                <br>{{ __('app.calculated_minimum_required') }}: <span x-text="formatCurrency(calculatedMinimum)"></span> kr/mnd
                             </span>
                         </p>
                         @error('type')
@@ -186,7 +165,7 @@
                         <!-- Calculated Minimum Display -->
                         <div x-show="calculatedMinimum > 0" class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                             <p class="text-sm font-medium text-blue-900 dark:text-blue-200">
-                                {{ __('app.calculated_minimum') }}: <span x-text="new Intl.NumberFormat('no-NO', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(calculatedMinimum)"></span> kr
+                                {{ __('app.calculated_minimum') }}: <span x-text="formatCurrency(calculatedMinimum)"></span> kr
                             </p>
                         </div>
                     </div>

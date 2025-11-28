@@ -1,6 +1,9 @@
 import { Livewire, Alpine } from '../../vendor/livewire/livewire/dist/livewire.esm';
 import sort from '@alpinejs/sort';
 
+// Import Alpine components
+import './alpine/debt-type-calculator';
+
 Alpine.plugin(sort);
 
 Livewire.hook('request', ({ fail }) => {

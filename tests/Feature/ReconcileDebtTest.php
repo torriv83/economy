@@ -17,9 +17,9 @@ describe('reconcile debt modal', function () {
 
         Livewire::test(DebtList::class)
             ->call('openReconciliationModal', $debt->id)
-            ->assertSet('reconciliationModals.'.$debt->id, true)
+            ->assertSet('reconciliations.'.$debt->id.'.show', true)
             ->call('closeReconciliationModal', $debt->id)
-            ->assertCount('reconciliationModals', 0);
+            ->assertSet('reconciliations.'.$debt->id, null);
     });
 
     it('displays debt information correctly', function () {
@@ -41,7 +41,7 @@ describe('reconcile debt modal', function () {
 
         Livewire::test(DebtList::class)
             ->call('openReconciliationModal', $debt->id)
-            ->assertSet('reconciliationDates.'.$debt->id, now()->format('d.m.Y'));
+            ->assertSet('reconciliations.'.$debt->id.'.date', now()->format('d.m.Y'));
     });
 });
 
@@ -53,7 +53,7 @@ describe('difference calculation', function () {
 
         Livewire::test(DebtList::class)
             ->call('openReconciliationModal', $debt->id)
-            ->set('reconciliationBalances.'.$debt->id, '10500')
+            ->set('reconciliations.'.$debt->id.'.balance', '10500')
             ->assertSee('+500,00 kr');
     });
 
@@ -64,7 +64,7 @@ describe('difference calculation', function () {
 
         Livewire::test(DebtList::class)
             ->call('openReconciliationModal', $debt->id)
-            ->set('reconciliationBalances.'.$debt->id, '9500')
+            ->set('reconciliations.'.$debt->id.'.balance', '9500')
             ->assertSee('-500,00 kr');
     });
 
@@ -75,7 +75,7 @@ describe('difference calculation', function () {
 
         Livewire::test(DebtList::class)
             ->call('openReconciliationModal', $debt->id)
-            ->set('reconciliationBalances.'.$debt->id, '10000')
+            ->set('reconciliations.'.$debt->id.'.balance', '10000')
             ->assertSee('+0,00 kr');
     });
 
@@ -86,7 +86,7 @@ describe('difference calculation', function () {
 
         Livewire::test(DebtList::class)
             ->call('openReconciliationModal', $debt->id)
-            ->set('reconciliationBalances.'.$debt->id, '10200.75')
+            ->set('reconciliations.'.$debt->id.'.balance', '10200.75')
             ->assertSee('+200,25 kr');
     });
 });
@@ -96,50 +96,50 @@ describe('reconciliation validation', function () {
         $debt = Debt::factory()->create();
 
         Livewire::test(DebtList::class)
-            ->set('reconciliationBalances.'.$debt->id, '')
-            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
+            ->set('reconciliations.'.$debt->id.'.balance', '')
+            ->set('reconciliations.'.$debt->id.'.date', now()->format('d.m.Y'))
             ->call('reconcileDebt', $debt->id)
-            ->assertHasErrors(['reconciliationBalances.'.$debt->id => 'required']);
+            ->assertHasErrors(['reconciliations.'.$debt->id.'.balance' => 'required']);
     });
 
     it('requires actual balance to be numeric', function () {
         $debt = Debt::factory()->create();
 
         Livewire::test(DebtList::class)
-            ->set('reconciliationBalances.'.$debt->id, 'invalid')
-            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
+            ->set('reconciliations.'.$debt->id.'.balance', 'invalid')
+            ->set('reconciliations.'.$debt->id.'.date', now()->format('d.m.Y'))
             ->call('reconcileDebt', $debt->id)
-            ->assertHasErrors(['reconciliationBalances.'.$debt->id => 'numeric']);
+            ->assertHasErrors(['reconciliations.'.$debt->id.'.balance' => 'numeric']);
     });
 
     it('requires actual balance to be at least 0', function () {
         $debt = Debt::factory()->create();
 
         Livewire::test(DebtList::class)
-            ->set('reconciliationBalances.'.$debt->id, '-100')
-            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
+            ->set('reconciliations.'.$debt->id.'.balance', '-100')
+            ->set('reconciliations.'.$debt->id.'.date', now()->format('d.m.Y'))
             ->call('reconcileDebt', $debt->id)
-            ->assertHasErrors(['reconciliationBalances.'.$debt->id => 'min']);
+            ->assertHasErrors(['reconciliations.'.$debt->id.'.balance' => 'min']);
     });
 
     it('requires reconciliation date', function () {
         $debt = Debt::factory()->create();
 
         Livewire::test(DebtList::class)
-            ->set('reconciliationBalances.'.$debt->id, '10000')
-            ->set('reconciliationDates.'.$debt->id, '')
+            ->set('reconciliations.'.$debt->id.'.balance', '10000')
+            ->set('reconciliations.'.$debt->id.'.date', '')
             ->call('reconcileDebt', $debt->id)
-            ->assertHasErrors(['reconciliationDates.'.$debt->id => 'required']);
+            ->assertHasErrors(['reconciliations.'.$debt->id.'.date' => 'required']);
     });
 
     it('requires reconciliation date to be valid date', function () {
         $debt = Debt::factory()->create();
 
         Livewire::test(DebtList::class)
-            ->set('reconciliationBalances.'.$debt->id, '10000')
-            ->set('reconciliationDates.'.$debt->id, 'invalid-date')
+            ->set('reconciliations.'.$debt->id.'.balance', '10000')
+            ->set('reconciliations.'.$debt->id.'.date', 'invalid-date')
             ->call('reconcileDebt', $debt->id)
-            ->assertHasErrors(['reconciliationDates.'.$debt->id => 'date_format']);
+            ->assertHasErrors(['reconciliations.'.$debt->id.'.date' => 'date_format']);
     });
 
     it('allows notes to be optional', function () {
@@ -149,11 +149,11 @@ describe('reconciliation validation', function () {
         ]);
 
         Livewire::test(DebtList::class)
-            ->set('reconciliationBalances.'.$debt->id, '10500')
-            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
-            ->set('reconciliationNotes.'.$debt->id, '')
+            ->set('reconciliations.'.$debt->id.'.balance', '10500')
+            ->set('reconciliations.'.$debt->id.'.date', now()->format('d.m.Y'))
+            ->set('reconciliations.'.$debt->id.'.notes', '')
             ->call('reconcileDebt', $debt->id)
-            ->assertHasNoErrors(['reconciliationNotes.'.$debt->id]);
+            ->assertHasNoErrors(['reconciliations.'.$debt->id.'.notes']);
     });
 });
 
@@ -167,9 +167,9 @@ describe('creating reconciliation adjustments', function () {
         ]);
 
         Livewire::test(DebtList::class)
-            ->set('reconciliationBalances.'.$debt->id, '10500')
-            ->set('reconciliationDates.'.$debt->id, '15.01.2025')
-            ->set('reconciliationNotes.'.$debt->id, 'Late fee not recorded')
+            ->set('reconciliations.'.$debt->id.'.balance', '10500')
+            ->set('reconciliations.'.$debt->id.'.date', '15.01.2025')
+            ->set('reconciliations.'.$debt->id.'.notes', 'Late fee not recorded')
             ->call('reconcileDebt', $debt->id);
 
         expect(Payment::count())->toBe(1);
@@ -192,9 +192,9 @@ describe('creating reconciliation adjustments', function () {
         ]);
 
         Livewire::test(DebtList::class)
-            ->set('reconciliationBalances.'.$debt->id, '9500')
-            ->set('reconciliationDates.'.$debt->id, '15.01.2025')
-            ->set('reconciliationNotes.'.$debt->id, 'Extra payment made')
+            ->set('reconciliations.'.$debt->id.'.balance', '9500')
+            ->set('reconciliations.'.$debt->id.'.date', '15.01.2025')
+            ->set('reconciliations.'.$debt->id.'.notes', 'Extra payment made')
             ->call('reconcileDebt', $debt->id);
 
         expect(Payment::count())->toBe(1);
@@ -213,8 +213,8 @@ describe('creating reconciliation adjustments', function () {
         ]);
 
         Livewire::test(DebtList::class)
-            ->set('reconciliationBalances.'.$debt->id, '10000.00')
-            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
+            ->set('reconciliations.'.$debt->id.'.balance', '10000.00')
+            ->set('reconciliations.'.$debt->id.'.date', now()->format('d.m.Y'))
             ->call('reconcileDebt', $debt->id);
 
         expect(Payment::count())->toBe(0);
@@ -228,8 +228,8 @@ describe('creating reconciliation adjustments', function () {
         ]);
 
         Livewire::test(DebtList::class)
-            ->set('reconciliationBalances.'.$debt->id, '9500')
-            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
+            ->set('reconciliations.'.$debt->id.'.balance', '9500')
+            ->set('reconciliations.'.$debt->id.'.date', now()->format('d.m.Y'))
             ->call('reconcileDebt', $debt->id);
 
         // Payment should have been created with principal_paid
@@ -250,10 +250,10 @@ describe('creating reconciliation adjustments', function () {
 
         Livewire::test(DebtList::class)
             ->call('openReconciliationModal', $debt->id)
-            ->set('reconciliationBalances.'.$debt->id, '9500')
-            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
+            ->set('reconciliations.'.$debt->id.'.balance', '9500')
+            ->set('reconciliations.'.$debt->id.'.date', now()->format('d.m.Y'))
             ->call('reconcileDebt', $debt->id)
-            ->assertCount('reconciliationModals', 0);
+            ->assertSet('reconciliations.'.$debt->id, null);
     });
 });
 
@@ -267,8 +267,8 @@ describe('interest and principal calculations', function () {
 
         // Add 500 kr adjustment (like a late fee)
         Livewire::test(DebtList::class)
-            ->set('reconciliationBalances.'.$debt->id, '10500')
-            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
+            ->set('reconciliations.'.$debt->id.'.balance', '10500')
+            ->set('reconciliations.'.$debt->id.'.date', now()->format('d.m.Y'))
             ->call('reconcileDebt', $debt->id);
 
         $payment = Payment::first();
@@ -292,8 +292,8 @@ describe('interest and principal calculations', function () {
 
         // 500 kr overpayment
         Livewire::test(DebtList::class)
-            ->set('reconciliationBalances.'.$debt->id, '9500')
-            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
+            ->set('reconciliations.'.$debt->id.'.balance', '9500')
+            ->set('reconciliations.'.$debt->id.'.date', now()->format('d.m.Y'))
             ->call('reconcileDebt', $debt->id);
 
         $payment = Payment::first();
@@ -312,8 +312,8 @@ describe('edge cases', function () {
         ]);
 
         Livewire::test(DebtList::class)
-            ->set('reconciliationBalances.'.$debt->id, '10000.005')
-            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
+            ->set('reconciliations.'.$debt->id.'.balance', '10000.005')
+            ->set('reconciliations.'.$debt->id.'.date', now()->format('d.m.Y'))
             ->call('reconcileDebt', $debt->id);
 
         // Difference rounds to 0.00, should not create payment
@@ -327,8 +327,8 @@ describe('edge cases', function () {
         ]);
 
         Livewire::test(DebtList::class)
-            ->set('reconciliationBalances.'.$debt->id, '15000')
-            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
+            ->set('reconciliations.'.$debt->id.'.balance', '15000')
+            ->set('reconciliations.'.$debt->id.'.date', now()->format('d.m.Y'))
             ->call('reconcileDebt', $debt->id);
 
         $payment = Payment::first();
@@ -343,8 +343,8 @@ describe('edge cases', function () {
         ]);
 
         Livewire::test(DebtList::class)
-            ->set('reconciliationBalances.'.$debt->id, '10500')
-            ->set('reconciliationDates.'.$debt->id, now()->format('d.m.Y'))
+            ->set('reconciliations.'.$debt->id.'.balance', '10500')
+            ->set('reconciliations.'.$debt->id.'.date', now()->format('d.m.Y'))
             ->call('reconcileDebt', $debt->id);
 
         $payment = Payment::first();

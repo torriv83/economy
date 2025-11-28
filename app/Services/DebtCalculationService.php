@@ -2,51 +2,127 @@
 
 namespace App\Services;
 
-use App\Livewire\DebtProgress;
+use App\Contracts\DebtOrderingStrategy;
 use App\Models\Debt;
+use App\Services\DebtOrdering\AvalancheStrategy;
+use App\Services\DebtOrdering\CustomStrategy;
+use App\Services\DebtOrdering\SnowballStrategy;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
 class DebtCalculationService
 {
+    /**
+     * Registered debt ordering strategies.
+     *
+     * @var array<string, DebtOrderingStrategy>
+     */
+    protected array $strategies = [];
+
     public function __construct(
         protected PaymentService $paymentService
-    ) {}
+    ) {
+        $this->registerDefaultStrategies();
+    }
+
+    /**
+     * Register the default debt ordering strategies.
+     */
+    protected function registerDefaultStrategies(): void
+    {
+        $this->registerStrategy(new SnowballStrategy);
+        $this->registerStrategy(new AvalancheStrategy);
+        $this->registerStrategy(new CustomStrategy);
+    }
+
+    /**
+     * Register a debt ordering strategy.
+     */
+    public function registerStrategy(DebtOrderingStrategy $strategy): self
+    {
+        $this->strategies[$strategy->getKey()] = $strategy;
+
+        return $this;
+    }
+
+    /**
+     * Get a registered strategy by key.
+     *
+     * @throws \InvalidArgumentException If strategy is not found
+     */
+    public function getStrategy(string $key): DebtOrderingStrategy
+    {
+        if (! isset($this->strategies[$key])) {
+            throw new \InvalidArgumentException("Unknown debt ordering strategy: {$key}");
+        }
+
+        return $this->strategies[$key];
+    }
+
+    /**
+     * Get all registered strategies.
+     *
+     * @return array<string, DebtOrderingStrategy>
+     */
+    public function getStrategies(): array
+    {
+        return $this->strategies;
+    }
+
+    /**
+     * Order debts using the specified strategy.
+     *
+     * @param  string  $strategy  Strategy key (e.g., 'snowball', 'avalanche', 'custom')
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $debts  Collection of Debt models
+     * @return \Illuminate\Support\Collection<int, \App\Models\Debt> Ordered collection
+     *
+     * @throws \InvalidArgumentException If strategy is not found
+     */
+    public function order(string $strategy, Collection $debts): Collection
+    {
+        return $this->getStrategy($strategy)->order($debts);
+    }
 
     /**
      * Order debts by lowest balance first (Snowball method).
      * This method provides psychological wins by paying off smaller debts first.
+     *
+     * @deprecated Use order('snowball', $debts) instead
      *
      * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $debts  Collection of Debt models
      * @return \Illuminate\Support\Collection<int, \App\Models\Debt> Ordered collection with lowest balance first
      */
     public function orderBySnowball(Collection $debts): Collection
     {
-        return $debts->sortBy('balance')->values();
+        return $this->order('snowball', $debts);
     }
 
     /**
      * Order debts by highest interest rate first (Avalanche method).
      * This method minimizes total interest paid over time.
      *
+     * @deprecated Use order('avalanche', $debts) instead
+     *
      * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $debts  Collection of Debt models
      * @return \Illuminate\Support\Collection<int, \App\Models\Debt> Ordered collection with highest interest rate first
      */
     public function orderByAvalanche(Collection $debts): Collection
     {
-        return $debts->sortByDesc('interest_rate')->values();
+        return $this->order('avalanche', $debts);
     }
 
     /**
      * Order debts by custom priority order set by the user.
      * This method allows users to choose their own repayment priority.
      *
+     * @deprecated Use order('custom', $debts) instead
+     *
      * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $debts  Collection of Debt models
      * @return \Illuminate\Support\Collection<int, \App\Models\Debt> Ordered collection by custom_priority_order (ascending)
      */
     public function orderByCustom(Collection $debts): Collection
     {
-        return $debts->sortBy('custom_priority_order')->values();
+        return $this->order('custom', $debts);
     }
 
     /**
@@ -305,7 +381,7 @@ class DebtCalculationService
         self::clearPaymentScheduleCache();
         self::clearStrategyComparisonCache();
         self::clearMinimumPaymentsCache();
-        DebtProgress::clearProgressDataCache();
+        ProgressCacheService::clearCache();
     }
 
     /**

@@ -11,10 +11,10 @@ use App\Services\DebtCacheService;
 use App\Services\DebtCalculationService;
 use App\Services\PaymentService;
 use App\Services\PayoffSettingsService;
+use App\Services\YnabDiscrepancyService;
 use App\Services\YnabService;
 use App\Support\DateFormatter;
 use Carbon\Carbon;
-use Illuminate\Support\Collection;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -39,17 +39,8 @@ class DebtList extends Component
     /** @var array<int, string> */
     public array $selectedFieldsToUpdate = [];
 
-    /** @var array<int, bool> */
-    public array $reconciliationModals = [];
-
-    /** @var array<int, string> */
-    public array $reconciliationBalances = [];
-
-    /** @var array<int, string> */
-    public array $reconciliationDates = [];
-
-    /** @var array<int, string|null> */
-    public array $reconciliationNotes = [];
+    /** @var array<int, array{show: bool, balance: string, date: string, notes: string|null}> */
+    public array $reconciliations = [];
 
     public bool $showReconciliationHistory = false;
 
@@ -58,6 +49,8 @@ class DebtList extends Component
     protected DebtCalculationService $calculationService;
 
     protected YnabService $ynabService;
+
+    protected YnabDiscrepancyService $discrepancyService;
 
     protected PaymentService $paymentService;
 
@@ -68,12 +61,14 @@ class DebtList extends Component
     public function boot(
         DebtCalculationService $calculationService,
         YnabService $ynabService,
+        YnabDiscrepancyService $discrepancyService,
         PaymentService $paymentService,
         PayoffSettingsService $settingsService,
         DebtCacheService $debtCacheService
     ): void {
         $this->calculationService = $calculationService;
         $this->ynabService = $ynabService;
+        $this->discrepancyService = $discrepancyService;
         $this->paymentService = $paymentService;
         $this->settingsService = $settingsService;
         $this->debtCacheService = $debtCacheService;
@@ -81,13 +76,7 @@ class DebtList extends Component
 
     public function mount(): void
     {
-        // Initialize reconciliation arrays with all debt IDs
-        foreach (Debt::pluck('id') as $debtId) {
-            $this->reconciliationModals[$debtId] = false;
-            $this->reconciliationBalances[$debtId] = '';
-            $this->reconciliationDates[$debtId] = DateFormatter::todayNorwegian();
-            $this->reconciliationNotes[$debtId] = '';
-        }
+        // Reconciliations array is initialized on-demand when modals are opened
     }
 
     /**
@@ -260,111 +249,11 @@ class DebtList extends Component
             $ynabDebts = $this->ynabService->fetchDebtAccounts();
             $localDebts = $this->debtCacheService->getAll();
 
-            $this->ynabDiscrepancies = $this->findDiscrepancies($ynabDebts, $localDebts);
+            $this->ynabDiscrepancies = $this->discrepancyService->findDiscrepancies($ynabDebts, $localDebts);
             $this->showYnabSync = true;
         } catch (\Exception $e) {
             session()->flash('error', 'Kunne ikke hente data fra YNAB: '.$e->getMessage());
         }
-    }
-
-    /**
-     * @param  \Illuminate\Support\Collection<int, array<string, mixed>>  $ynabDebts
-     * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $localDebts
-     * @return array<string, array<int, array<string, mixed>>>
-     */
-    public function findDiscrepancies(Collection $ynabDebts, Collection $localDebts): array
-    {
-        $discrepancies = [
-            'new' => [],
-            'closed' => [],
-            'potential_matches' => [],
-            'balance_mismatch' => [],
-        ];
-
-        // Find new debts in YNAB that don't exist locally
-        foreach ($ynabDebts as $ynabDebt) {
-            // First check if already linked by YNAB account ID
-            $linkedByAccountId = $localDebts->first(function ($localDebt) use ($ynabDebt) {
-                return $localDebt->ynab_account_id === $ynabDebt['ynab_id'];
-            });
-
-            if ($linkedByAccountId) {
-                // Check if balances are different (use 0.001 tolerance for floating point)
-                if (abs($ynabDebt['balance'] - $linkedByAccountId->balance) > 0.001) {
-                    $discrepancies['balance_mismatch'][] = [
-                        'local_debt' => $linkedByAccountId,
-                        'ynab_debt' => $ynabDebt,
-                        'local_balance' => $linkedByAccountId->balance,
-                        'ynab_balance' => $ynabDebt['balance'],
-                        'difference' => round($ynabDebt['balance'] - $linkedByAccountId->balance, 2),
-                    ];
-                }
-
-                // Already linked, skip further processing for this YNAB debt
-                continue;
-            }
-
-            if (! $ynabDebt['closed']) {
-                // Look for potential matches (similar names or exact matches)
-                $potentialMatch = $this->findPotentialMatch($ynabDebt['name'], $localDebts);
-
-                if ($potentialMatch) {
-                    $discrepancies['potential_matches'][] = [
-                        'ynab' => $ynabDebt,
-                        'local' => [
-                            'id' => $potentialMatch->id,
-                            'name' => $potentialMatch->name,
-                            'balance' => $potentialMatch->balance,
-                            'interest_rate' => $potentialMatch->interest_rate,
-                        ],
-                    ];
-                } else {
-                    $discrepancies['new'][] = $ynabDebt;
-                }
-            }
-        }
-
-        // Find debts that are closed in YNAB but still exist locally
-        foreach ($localDebts as $localDebt) {
-            // Check both by account ID and by name
-            $ynabDebt = $ynabDebts->first(function ($ynabDebt) use ($localDebt) {
-                return ($localDebt->ynab_account_id && $localDebt->ynab_account_id === $ynabDebt['ynab_id'])
-                    || strtolower($ynabDebt['name']) === strtolower($localDebt->name);
-            });
-
-            if ($ynabDebt && $ynabDebt['closed']) {
-                $discrepancies['closed'][] = [
-                    'id' => $localDebt->id,
-                    'name' => $localDebt->name,
-                    'balance' => $localDebt->balance,
-                ];
-            }
-        }
-
-        return $discrepancies;
-    }
-
-    /**
-     * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $localDebts
-     */
-    protected function findPotentialMatch(string $ynabName, Collection $localDebts): ?Debt
-    {
-        // Normalize names for comparison
-        $normalizedYnabName = strtolower(trim($ynabName));
-
-        return $localDebts->first(function ($localDebt) use ($normalizedYnabName) {
-            // Skip debts that are already linked to a YNAB account
-            if ($localDebt->ynab_account_id) {
-                return false;
-            }
-
-            $normalizedLocalName = strtolower(trim($localDebt->name));
-
-            // Check if one name contains the other
-            return str_contains($normalizedYnabName, $normalizedLocalName)
-                || str_contains($normalizedLocalName, $normalizedYnabName)
-                || similar_text($normalizedYnabName, $normalizedLocalName) > 5;
-        });
     }
 
     /**
@@ -527,36 +416,31 @@ class DebtList extends Component
 
     public function openReconciliationModal(int $debtId): void
     {
-        $this->reconciliationModals[$debtId] = true;
-
         $debt = Debt::find($debtId);
         if ($debt) {
-            $this->reconciliationBalances[$debtId] = (string) $debt->balance;
-            $this->reconciliationDates[$debtId] = DateFormatter::todayNorwegian();
-            $this->reconciliationNotes[$debtId] = null;
+            $this->reconciliations[$debtId] = [
+                'show' => true,
+                'balance' => (string) $debt->balance,
+                'date' => DateFormatter::todayNorwegian(),
+                'notes' => null,
+            ];
         }
     }
 
     public function openReconciliationFromYnab(int $debtId, float $ynabBalance): void
     {
-        $this->reconciliationModals[$debtId] = true;
-        $this->reconciliationBalances[$debtId] = (string) $ynabBalance;
-        $this->reconciliationDates[$debtId] = DateFormatter::todayNorwegian();
-        $this->reconciliationNotes[$debtId] = 'Avstemt mot YNAB';
+        $this->reconciliations[$debtId] = [
+            'show' => true,
+            'balance' => (string) $ynabBalance,
+            'date' => DateFormatter::todayNorwegian(),
+            'notes' => 'Avstemt mot YNAB',
+        ];
         $this->showYnabSync = false;
     }
 
     public function closeReconciliationModal(int $debtId): void
     {
-        unset($this->reconciliationModals[$debtId]);
-        unset($this->reconciliationBalances[$debtId]);
-        unset($this->reconciliationNotes[$debtId]);
-
-        $debt = Debt::find($debtId);
-        if ($debt) {
-            $this->reconciliationBalances[$debtId] = (string) $debt->balance;
-            $this->reconciliationDates[$debtId] = DateFormatter::todayNorwegian();
-        }
+        unset($this->reconciliations[$debtId]);
     }
 
     public function getReconciliationDifference(int $debtId): float
@@ -566,8 +450,8 @@ class DebtList extends Component
             return 0;
         }
 
-        $actualBalance = isset($this->reconciliationBalances[$debtId])
-            ? (float) $this->reconciliationBalances[$debtId]
+        $actualBalance = isset($this->reconciliations[$debtId]['balance'])
+            ? (float) $this->reconciliations[$debtId]['balance']
             : $debt->balance;
 
         return round($actualBalance - $debt->balance, 2);
@@ -581,16 +465,16 @@ class DebtList extends Component
         }
 
         $this->validate([
-            "reconciliationBalances.{$debtId}" => ['required', 'numeric', 'min:0'],
-            "reconciliationDates.{$debtId}" => ['required', 'date_format:d.m.Y'],
-            "reconciliationNotes.{$debtId}" => ['nullable', 'string', 'max:500'],
+            "reconciliations.{$debtId}.balance" => ['required', 'numeric', 'min:0'],
+            "reconciliations.{$debtId}.date" => ['required', 'date_format:d.m.Y'],
+            "reconciliations.{$debtId}.notes" => ['nullable', 'string', 'max:500'],
         ], [
-            "reconciliationBalances.{$debtId}.required" => 'Faktisk saldo er påkrevd.',
-            "reconciliationBalances.{$debtId}.numeric" => 'Faktisk saldo må være et tall.',
-            "reconciliationBalances.{$debtId}.min" => 'Faktisk saldo kan ikke være negativ.',
-            "reconciliationDates.{$debtId}.required" => 'Avstemmingsdato er påkrevd.',
-            "reconciliationDates.{$debtId}.date_format" => 'Avstemmingsdato må være i formatet DD.MM.ÅÅÅÅ.',
-            "reconciliationNotes.{$debtId}.max" => 'Notater kan ikke være lengre enn 500 tegn.',
+            "reconciliations.{$debtId}.balance.required" => 'Faktisk saldo er påkrevd.',
+            "reconciliations.{$debtId}.balance.numeric" => 'Faktisk saldo må være et tall.',
+            "reconciliations.{$debtId}.balance.min" => 'Faktisk saldo kan ikke være negativ.',
+            "reconciliations.{$debtId}.date.required" => 'Avstemmingsdato er påkrevd.',
+            "reconciliations.{$debtId}.date.date_format" => 'Avstemmingsdato må være i formatet DD.MM.ÅÅÅÅ.',
+            "reconciliations.{$debtId}.notes.max" => 'Notater kan ikke være lengre enn 500 tegn.',
         ]);
 
         $difference = $this->getReconciliationDifference($debtId);
@@ -602,13 +486,13 @@ class DebtList extends Component
             return;
         }
 
-        $databaseDate = DateFormatter::norwegianToDatabase($this->reconciliationDates[$debtId]);
+        $databaseDate = DateFormatter::norwegianToDatabase($this->reconciliations[$debtId]['date']);
 
         $this->paymentService->reconcileDebt(
             $debt,
-            (float) $this->reconciliationBalances[$debtId],
+            (float) $this->reconciliations[$debtId]['balance'],
             $databaseDate,
-            $this->reconciliationNotes[$debtId] ?? null
+            $this->reconciliations[$debtId]['notes'] ?? null
         );
 
         session()->flash('message', 'Gjeld avstemt.');

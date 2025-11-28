@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 use App\Livewire\DebtList;
 use App\Models\Debt;
-use App\Services\DebtCacheService;
-use App\Services\DebtCalculationService;
-use App\Services\PaymentService;
-use App\Services\PayoffSettingsService;
-use App\Services\YnabService;
+use App\Services\YnabDiscrepancyService;
 use Livewire\Livewire;
 
 test('can open link confirmation modal', function () {
@@ -117,14 +113,14 @@ test('can link debt to YNAB without updating any fields', function () {
 
 test('linked debts do not appear in potential matches', function () {
     // Create a local debt already linked to YNAB
-    $linkedDebt = Debt::factory()->create([
+    Debt::factory()->create([
         'name' => 'Linked Debt',
         'balance' => 5000,
         'ynab_account_id' => 'ynab-123',
     ]);
 
     // Create an unlinked local debt
-    $unlinkedDebt = Debt::factory()->create([
+    Debt::factory()->create([
         'name' => 'Unlinked Debt',
         'balance' => 3000,
         'ynab_account_id' => null,
@@ -150,19 +146,11 @@ test('linked debts do not appear in potential matches', function () {
     ]);
 
     $localDebts = Debt::all();
+    $service = new YnabDiscrepancyService;
 
-    $component = new DebtList;
-    $component->boot(
-        app(DebtCalculationService::class),
-        app(YnabService::class),
-        app(PaymentService::class),
-        app(PayoffSettingsService::class),
-        app(DebtCacheService::class)
-    );
+    $discrepancies = $service->findDiscrepancies($ynabDebts, $localDebts);
 
-    $discrepancies = $component->findDiscrepancies($ynabDebts, $localDebts);
-
-    // The linked debt should not appear in any discrepancy list
+    // The linked debt should not appear in potential matches
     expect($discrepancies['potential_matches'])->toHaveCount(1)
         ->and($discrepancies['potential_matches'][0]['ynab']['ynab_id'])->toBe('ynab-456')
         ->and($discrepancies['new'])->toBeEmpty();
@@ -198,6 +186,7 @@ test('linking removes debt from potential matches', function () {
                     ],
                 ],
             ],
+            'balance_mismatch' => [],
         ])
         ->set('linkingLocalDebtId', $debt->id)
         ->set('linkingYnabDebt', $ynabDebt)
@@ -208,7 +197,7 @@ test('linking removes debt from potential matches', function () {
     $component->assertSet('ynabDiscrepancies.potential_matches', []);
 });
 
-test('findDiscrepancies detects balance mismatch for linked debts', function () {
+test('YnabDiscrepancyService detects balance mismatch for linked debts', function () {
     // Create a local debt linked to YNAB
     $linkedDebt = Debt::factory()->create([
         'name' => 'Linked Debt',
@@ -230,17 +219,9 @@ test('findDiscrepancies detects balance mismatch for linked debts', function () 
     ]);
 
     $localDebts = Debt::all();
+    $service = new YnabDiscrepancyService;
 
-    $component = new DebtList;
-    $component->boot(
-        app(DebtCalculationService::class),
-        app(YnabService::class),
-        app(PaymentService::class),
-        app(PayoffSettingsService::class),
-        app(DebtCacheService::class)
-    );
-
-    $discrepancies = $component->findDiscrepancies($ynabDebts, $localDebts);
+    $discrepancies = $service->findDiscrepancies($ynabDebts, $localDebts);
 
     expect($discrepancies['balance_mismatch'])->toHaveCount(1)
         ->and($discrepancies['balance_mismatch'][0]['local_debt']->id)->toBe($linkedDebt->id)
@@ -249,7 +230,7 @@ test('findDiscrepancies detects balance mismatch for linked debts', function () 
         ->and($discrepancies['balance_mismatch'][0]['difference'])->toEqual(500);
 });
 
-test('findDiscrepancies does not report mismatch when balances match', function () {
+test('YnabDiscrepancyService does not report mismatch when balances match', function () {
     // Create a local debt linked to YNAB
     Debt::factory()->create([
         'name' => 'Linked Debt',
@@ -271,22 +252,14 @@ test('findDiscrepancies does not report mismatch when balances match', function 
     ]);
 
     $localDebts = Debt::all();
+    $service = new YnabDiscrepancyService;
 
-    $component = new DebtList;
-    $component->boot(
-        app(DebtCalculationService::class),
-        app(YnabService::class),
-        app(PaymentService::class),
-        app(PayoffSettingsService::class),
-        app(DebtCacheService::class)
-    );
-
-    $discrepancies = $component->findDiscrepancies($ynabDebts, $localDebts);
+    $discrepancies = $service->findDiscrepancies($ynabDebts, $localDebts);
 
     expect($discrepancies['balance_mismatch'])->toBeEmpty();
 });
 
-test('findDiscrepancies ignores balance differences within floating point tolerance', function () {
+test('YnabDiscrepancyService ignores balance differences within floating point tolerance', function () {
     // Create a local debt linked to YNAB
     Debt::factory()->create([
         'name' => 'Linked Debt',
@@ -308,17 +281,9 @@ test('findDiscrepancies ignores balance differences within floating point tolera
     ]);
 
     $localDebts = Debt::all();
+    $service = new YnabDiscrepancyService;
 
-    $component = new DebtList;
-    $component->boot(
-        app(DebtCalculationService::class),
-        app(YnabService::class),
-        app(PaymentService::class),
-        app(PayoffSettingsService::class),
-        app(DebtCacheService::class)
-    );
-
-    $discrepancies = $component->findDiscrepancies($ynabDebts, $localDebts);
+    $discrepancies = $service->findDiscrepancies($ynabDebts, $localDebts);
 
     expect($discrepancies['balance_mismatch'])->toBeEmpty();
 });
@@ -332,23 +297,18 @@ test('openReconciliationFromYnab sets up reconciliation modal with YNAB balance'
 
     $ynabBalance = 5500.0;
 
-    // Initialize the component with proper YNAB sync state
-    $component = Livewire::test(DebtList::class);
-
-    // Set initial state directly on component instance
-    $component->instance()->showYnabSync = true;
-    $component->instance()->ynabDiscrepancies = [
+    // Set up the initial state before rendering begins
+    $component = Livewire::test(DebtList::class, ['ynabDiscrepancies' => [
         'new' => [],
         'closed' => [],
         'potential_matches' => [],
         'balance_mismatch' => [],
-    ];
-
-    $component
+    ]])
+        ->set('showYnabSync', true)
         ->call('openReconciliationFromYnab', $debt->id, $ynabBalance)
-        ->assertSet('reconciliationModals.'.$debt->id, true)
-        ->assertSet('reconciliationBalances.'.$debt->id, '5500')
-        ->assertSet('reconciliationNotes.'.$debt->id, 'Avstemt mot YNAB')
+        ->assertSet('reconciliations.'.$debt->id.'.show', true)
+        ->assertSet('reconciliations.'.$debt->id.'.balance', '5500')
+        ->assertSet('reconciliations.'.$debt->id.'.notes', 'Avstemt mot YNAB')
         ->assertSet('showYnabSync', false);
 });
 
@@ -360,6 +320,12 @@ test('openReconciliationFromYnab sets correct date format', function () {
     ]);
 
     Livewire::test(DebtList::class)
+        ->set('ynabDiscrepancies', [
+            'new' => [],
+            'closed' => [],
+            'potential_matches' => [],
+            'balance_mismatch' => [],
+        ])
         ->call('openReconciliationFromYnab', $debt->id, 5500.0)
-        ->assertSet('reconciliationDates.'.$debt->id, now()->format('d.m.Y'));
+        ->assertSet('reconciliations.'.$debt->id.'.date', now()->format('d.m.Y'));
 });

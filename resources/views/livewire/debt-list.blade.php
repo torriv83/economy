@@ -584,7 +584,8 @@
 
     {{-- Reconciliation Modals --}}
     @foreach (\App\Models\Debt::all() as $debtModel)
-        <x-modal wire:model="reconciliationModals.{{ $debtModel->id }}" max-width="lg">
+        @if (isset($this->reconciliations[$debtModel->id]['show']) && $this->reconciliations[$debtModel->id]['show'])
+        <x-modal wire:model="reconciliations.{{ $debtModel->id }}.show" max-width="lg">
             <form wire:submit.prevent="reconcileDebt({{ $debtModel->id }})">
                 <x-modal.header :title="__('app.reconcile_debt')">
                     <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{{ $debtModel->name }}</p>
@@ -614,23 +615,23 @@
                                 <input
                                     type="number"
                                     id="actualBalance-{{ $debtModel->id }}"
-                                    wire:model.live="reconciliationBalances.{{ $debtModel->id }}"
+                                    wire:model.live="reconciliations.{{ $debtModel->id }}.balance"
                                     step="0.01"
                                     min="0"
                                     placeholder="{{ __('app.actual_balance_placeholder') }}"
-                                    class="w-full px-4 py-2.5 pr-14 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none @error('reconciliationBalances.' . $debtModel->id) border-red-500 dark:border-red-400 @enderror"
+                                    class="w-full px-4 py-2.5 pr-14 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none @error('reconciliations.' . $debtModel->id . '.balance') border-red-500 dark:border-red-400 @enderror"
                                 >
                                 <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
                                     <span class="text-gray-500 dark:text-gray-400 text-sm font-medium">NOK</span>
                                 </div>
                             </div>
-                            @error('reconciliationBalances.' . $debtModel->id)
+                            @error('reconciliations.' . $debtModel->id . '.balance')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
                         </div>
 
                         {{-- Difference Display --}}
-                        @if (isset($this->reconciliationBalances[$debtModel->id]) && $this->reconciliationBalances[$debtModel->id] !== '')
+                        @if (isset($this->reconciliations[$debtModel->id]['balance']) && $this->reconciliations[$debtModel->id]['balance'] !== '')
                             @php
                                 $difference = $this->getReconciliationDifference($debtModel->id);
                             @endphp
@@ -663,11 +664,11 @@
                             <input
                                 type="text"
                                 id="reconciliationDate-{{ $debtModel->id }}"
-                                wire:model="reconciliationDates.{{ $debtModel->id }}"
+                                wire:model="reconciliations.{{ $debtModel->id }}.date"
                                 placeholder="DD.MM.YYYY"
-                                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent @error('reconciliationDates.' . $debtModel->id) border-red-500 dark:border-red-400 @enderror"
+                                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent @error('reconciliations.' . $debtModel->id . '.date') border-red-500 dark:border-red-400 @enderror"
                             >
-                            @error('reconciliationDates.' . $debtModel->id)
+                            @error('reconciliations.' . $debtModel->id . '.date')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
                         </div>
@@ -679,12 +680,12 @@
                             </label>
                             <textarea
                                 id="notes-{{ $debtModel->id }}"
-                                wire:model="reconciliationNotes.{{ $debtModel->id }}"
+                                wire:model="reconciliations.{{ $debtModel->id }}.notes"
                                 rows="3"
                                 placeholder="{{ __('app.reconciliation_notes_placeholder') }}"
-                                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent @error('reconciliationNotes.' . $debtModel->id) border-red-500 dark:border-red-400 @enderror"
+                                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent @error('reconciliations.' . $debtModel->id . '.notes') border-red-500 dark:border-red-400 @enderror"
                             ></textarea>
-                            @error('reconciliationNotes.' . $debtModel->id)
+                            @error('reconciliations.' . $debtModel->id . '.notes')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
                         </div>
@@ -705,6 +706,7 @@
                 </x-modal.footer>
             </form>
         </x-modal>
+        @endif
     @endforeach
 
     {{-- Reconciliation History Modal --}}

@@ -263,7 +263,7 @@ $databaseDate = DateFormatter::norwegianToDatabase($this->reconciliationDates[$d
 
 ---
 
-### 1.5 Duplicated Minimum Payment Calculation Logic - High
+### 1.5 Duplicated Minimum Payment Calculation Logic - High ✅ FIXED
 
 **Files Affected:**
 - `resources/views/livewire/create-debt.blade.php` (Lines 116-131)
@@ -434,7 +434,7 @@ $inputClasses = 'w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 
 
 ## 2. KISS (Keep It Simple, Stupid) Violations
 
-### 2.1 Over-Complex Reconciliation State Management - High
+### 2.1 Over-Complex Reconciliation State Management - High ✅ FIXED
 
 **File:** `app/Livewire/DebtList.php` (Lines 27-44)
 
@@ -479,7 +479,7 @@ public function closeReconciliationModal(int $debtId): void
 
 ---
 
-### 2.2 Complex Debt Discrepancy Logic - High
+### 2.2 Complex Debt Discrepancy Logic - High ✅ FIXED
 
 **File:** `app/Livewire/DebtList.php` (Lines 361-407)
 
@@ -517,7 +517,7 @@ class YnabDiscrepancyService
 
 ---
 
-### 2.3 Over-Complex Conditional Form Rendering - Medium
+### 2.3 Over-Complex Conditional Form Rendering - Medium ✅ FIXED
 
 **File:** `resources/views/livewire/create-debt.blade.php` (Lines 95-194)
 
@@ -531,9 +531,17 @@ class YnabDiscrepancyService
 
 ### 3.1 Single Responsibility Principle (SRP) Violations
 
-#### 3.1.1 DebtList Component Doing Too Much - Critical
+#### 3.1.1 DebtList Component Doing Too Much - Critical ⏸️ DEFERRED
 
-**File:** `app/Livewire/DebtList.php` (711 lines total)
+**File:** `app/Livewire/DebtList.php` (562 lines after refactoring)
+
+**Status:** Partially addressed. The component has been reduced from 711 to 562 lines through:
+- Extracted `HasDeleteConfirmation` trait
+- Uses `YnabDiscrepancyService` for discrepancy logic
+- Uses `DateFormatter` utility for date parsing
+- Simplified reconciliation state to single nested array
+
+**Decision:** Further component splitting deferred. The current structure is maintainable at 562 lines with clear separation of concerns via traits and services.
 
 **Current Responsibilities:**
 1. Debt display and filtering
@@ -568,107 +576,106 @@ class DebtListPage extends Component
 
 ---
 
-#### 3.1.2 DebtProgress Mixed Concerns - High
+#### 3.1.2 DebtProgress Mixed Concerns - High ✅ FIXED
 
 **File:** `app/Livewire/DebtProgress.php`
 
-**Current Responsibilities:**
-1. Cache management (static methods for cache keys)
-2. Complex calculation logic (progress data generation)
-3. Multiple business logic properties
-4. View rendering
+**Previous Responsibilities (now separated):**
+1. Cache management → Extracted to `ProgressCacheService`
+2. Complex calculation logic → Extracted to `ProgressChartService`
+3. Multiple business logic properties → Remain in component (appropriate)
+4. View rendering → Remains in component (appropriate)
 
-**Suggested Fix:** Separate into focused services
+**Fix Applied:** Created two focused services:
 
 ```php
-// app/Services/ProgressChartService.php
-class ProgressChartService
-{
-    public function calculateProgressData(Collection $debts): array
-    {
-        // All calculation logic here
-    }
-}
-
 // app/Services/ProgressCacheService.php
 class ProgressCacheService
 {
-    public static function getProgressDataCacheKey(): string { }
-    public static function clearProgressDataCache(): void { }
+    public function getCacheKey(): string { }
+    public function remember(callable $callback): array { }
+    public function has(): bool { }
+    public function clear(): void { }
+    public static function clearCache(): void { }  // Backward compatible
+    public static function getProgressDataCacheKey(): string { }  // Backward compatible
+}
+
+// app/Services/ProgressChartService.php
+class ProgressChartService
+{
+    public function calculateProgressData(): array { }
+    protected function getColorPalette(): array { }
 }
 ```
+
+**Tests Added:**
+- `tests/Unit/Services/ProgressCacheServiceTest.php` (13 tests)
+- `tests/Unit/Services/ProgressChartServiceTest.php` (13 tests)
 
 ---
 
 ### 3.2 Open/Closed Principle (OCP) Violations
 
-#### 3.2.1 Hard-Coded Debt Ordering Strategies - High
+#### 3.2.1 Hard-Coded Debt Ordering Strategies - High ✅ FIXED
 
-**File:** `app/Services/DebtCalculationService.php` (Lines 12-47)
+**File:** `app/Services/DebtCalculationService.php`
 
-**Issue:** Three similar ordering methods with hard-coded logic. Adding a new strategy requires modifying the service.
+**Previous Issue:** Three similar ordering methods with hard-coded logic. Adding a new strategy required modifying the service.
 
-**Code Snippet:**
-```php
-public function orderBySnowball(Collection $debts): Collection
-{
-    return $debts->sortBy('balance')->values();
-}
+**Fix Applied:** Implemented Strategy Pattern with the following files:
 
-public function orderByAvalanche(Collection $debts): Collection
-{
-    return $debts->sortByDesc('interest_rate')->values();
-}
-
-public function orderByCustom(Collection $debts): Collection
-{
-    return $debts->sortBy('custom_priority_order')->values();
-}
-```
-
-**Suggested Fix:** Use strategy pattern
-
+**Interface Created:**
 ```php
 // app/Contracts/DebtOrderingStrategy.php
 interface DebtOrderingStrategy
 {
     public function order(Collection $debts): Collection;
+    public function getKey(): string;
+    public function getName(): string;
+    public function getDescription(): string;
 }
+```
 
-// app/Services/DebtOrdering/SnowballStrategy.php
-class SnowballStrategy implements DebtOrderingStrategy
-{
-    public function order(Collection $debts): Collection
-    {
-        return $debts->sortBy('balance')->values();
-    }
-}
+**Strategy Classes Created:**
+- `app/Services/DebtOrdering/SnowballStrategy.php` - Orders by lowest balance first
+- `app/Services/DebtOrdering/AvalancheStrategy.php` - Orders by highest interest rate first
+- `app/Services/DebtOrdering/CustomStrategy.php` - Orders by user-defined priority
 
-// app/Services/DebtOrdering/AvalancheStrategy.php
-class AvalancheStrategy implements DebtOrderingStrategy
-{
-    public function order(Collection $debts): Collection
-    {
-        return $debts->sortByDesc('interest_rate')->values();
-    }
-}
-
+**Service Updated:**
+```php
 // app/Services/DebtCalculationService.php
 class DebtCalculationService
 {
-    private array $strategies = [
-        'snowball' => SnowballStrategy::class,
-        'avalanche' => AvalancheStrategy::class,
-        'custom' => CustomStrategy::class,
-    ];
+    /** @var array<string, DebtOrderingStrategy> */
+    protected array $strategies = [];
 
-    public function order(string $strategy, Collection $debts): Collection
-    {
-        $strategyClass = $this->strategies[$strategy] ?? SnowballStrategy::class;
-        return app($strategyClass)->order($debts);
-    }
+    public function registerStrategy(DebtOrderingStrategy $strategy): void { }
+    public function getStrategy(string $key): ?DebtOrderingStrategy { }
+    public function getStrategies(): array { }
+    public function order(string $strategy, Collection $debts): Collection { }
+
+    // Legacy methods marked @deprecated but still work:
+    public function orderBySnowball(Collection $debts): Collection { }
+    public function orderByAvalanche(Collection $debts): Collection { }
+    public function orderByCustom(Collection $debts): Collection { }
 }
 ```
+
+**Translations Added:**
+- `lang/en/strategies.php`
+- `lang/no/strategies.php`
+
+**Tests Added:**
+- `tests/Unit/Services/DebtOrdering/SnowballStrategyTest.php` (14 tests)
+- `tests/Unit/Services/DebtOrdering/AvalancheStrategyTest.php` (16 tests)
+- `tests/Unit/Services/DebtOrdering/CustomStrategyTest.php` (20 tests)
+- `tests/Unit/Contracts/DebtOrderingStrategyTest.php` (17 tests)
+
+**Benefits:**
+- New strategies can be added by implementing `DebtOrderingStrategy` interface
+- No modification to existing code required (Open/Closed Principle)
+- Full backward compatibility maintained
+- Strategy names and descriptions are translatable
 
 ---
 
@@ -787,19 +794,20 @@ class DebtTestData
 | Violation | Severity | Files | Fix Complexity | Status |
 |-----------|----------|-------|----------------|--------|
 | Validation rules duplication | Critical | CreateDebt, EditDebt | Medium | ✅ Fixed |
-| DebtList overly complex (711 lines) | Critical | DebtList | High | Pending |
+| DebtList overly complex (711→562 lines) | Critical | DebtList | High | ⏸️ Deferred |
 | Modal management duplication | High | SelfLoans/* | Medium | Pending |
 | Form card HTML duplication | High | Multiple views | Low | Pending |
-| Minimum calculation duplication | High | Views | Low | Pending |
+| Minimum calculation duplication | High | Views | Low | ✅ Fixed |
 | Delete confirmation duplication | High | Multiple components | Medium | ✅ Fixed |
-| DebtProgress mixed concerns | High | DebtProgress | High | Pending |
-| Hard-coded debt strategies | High | DebtCalculationService | Medium | Pending |
-| Reconciliation state complexity | High | DebtList | Medium | Pending |
+| DebtProgress mixed concerns | High | DebtProgress | High | ✅ Fixed |
+| Hard-coded debt strategies | High | DebtCalculationService | Medium | ✅ Fixed |
+| Reconciliation state complexity | High | DebtList | Medium | ✅ Fixed |
+| Complex discrepancy logic | High | DebtList | Medium | ✅ Fixed |
 | Date parsing duplication | Medium | Multiple files | Low | ✅ Fixed |
 | Input classes duplication | Medium | Form components | Low | ⏸️ Intentional |
 | Missing constants/magic numbers | Medium | Multiple | Low | Pending |
 | Inconsistent error handling | Medium | Multiple | Low | Pending |
-| Form rendering complexity | Medium | Views | Medium | Pending |
+| Form rendering complexity | Medium | Views | Medium | ✅ Fixed |
 | Inconsistent naming | Low | Multiple | Low | Pending |
 | Test duplication | Low | Tests | Low | Pending |
 
@@ -808,27 +816,30 @@ class DebtTestData
 ## Recommended Fix Priority
 
 ### Phase 1: Critical (Do First)
-1. Break up DebtList component (711 lines) into focused components
-2. Extract validation rules to shared trait (`HasDebtValidation`)
+1. ⏸️ Break up DebtList component (711→562 lines) - **Deferred** (now manageable)
+2. ✅ Extract validation rules to shared trait (`HasDebtValidation`)
 3. Create modal management trait (`HasModalManagement`)
 
 ### Phase 2: High Priority (Do Soon)
-4. Create date parsing utility (`DateFormatter`)
+4. ✅ Create date parsing utility (`DateFormatter`)
 5. Create form card Blade component
-6. Extract Alpine.js debt calculator
-7. Implement strategy pattern for debt ordering
-8. Create delete confirmation trait
+6. ✅ Extract Alpine.js debt calculator
+7. ✅ Implement strategy pattern for debt ordering (`DebtOrderingStrategy` interface)
+8. ✅ Create delete confirmation trait
+9. ✅ Extract YNAB discrepancy logic to service (`YnabDiscrepancyService`)
+10. ✅ Simplify reconciliation state management (single nested array)
+11. ✅ Extract DebtProgress cache logic to `ProgressCacheService`
+12. ✅ Extract DebtProgress chart logic to `ProgressChartService`
 
 ### Phase 3: Medium Priority (Do Eventually)
-9. Consolidate magic numbers to `config/debt.php`
-10. Standardize error handling
-11. Extract calculations to dedicated services
-12. Centralize input classes configuration
+13. Consolidate magic numbers to `config/debt.php`
+14. Standardize error handling
+15. ⏸️ Centralize input classes configuration - **Intentionally not fixed** (Blade components ARE the abstraction)
 
 ### Phase 4: Low Priority (Nice to Have)
-13. Standardize naming conventions
-14. Create test utilities for shared data
-15. Minor code cleanup and polish
+16. Standardize naming conventions
+17. Create test utilities for shared data
+18. Minor code cleanup and polish
 
 ---
 
@@ -837,42 +848,59 @@ class DebtTestData
 ```
 app/
 ├── Contracts/
-│   └── DebtOrderingStrategy.php
+│   └── DebtOrderingStrategy.php            ✅ Created
 ├── Livewire/
 │   ├── Concerns/
-│   │   ├── HasDebtValidation.php
-│   │   ├── HasDeleteConfirmation.php
+│   │   ├── HasDebtValidation.php           ✅ Created
+│   │   ├── HasDeleteConfirmation.php       ✅ Created
 │   │   └── HasModalManagement.php
-│   └── DebtList/
+│   └── DebtList/                           ⏸️ Deferred (DebtList now 562 lines)
 │       ├── DebtListDisplay.php
 │       ├── DebtReorder.php
 │       ├── ReconciliationManager.php
 │       └── YnabSync.php
 ├── Services/
 │   ├── DebtOrdering/
-│   │   ├── AvalancheStrategy.php
-│   │   ├── CustomStrategy.php
-│   │   └── SnowballStrategy.php
-│   ├── ProgressCacheService.php
-│   ├── ProgressChartService.php
-│   └── YnabDiscrepancyService.php
+│   │   ├── AvalancheStrategy.php           ✅ Created
+│   │   ├── CustomStrategy.php              ✅ Created
+│   │   └── SnowballStrategy.php            ✅ Created
+│   ├── ProgressCacheService.php            ✅ Created
+│   ├── ProgressChartService.php            ✅ Created
+│   └── YnabDiscrepancyService.php          ✅ Created
 └── Support/
-    └── DateFormatter.php
+    └── DateFormatter.php                   ✅ Created
 
 config/
 ├── debt.php
 └── ui.php
 
+lang/
+├── en/
+│   └── strategies.php                      ✅ Created
+└── no/
+    └── strategies.php                      ✅ Created
+
 resources/
 ├── js/
 │   └── alpine/
-│       └── debt-calculator.js
+│       └── debt-type-calculator.js         ✅ Created
 └── views/
     └── components/
         └── form/
             └── card.blade.php
 
 tests/
-└── Support/
-    └── DebtTestData.php
+├── Support/
+│   └── DebtTestData.php
+└── Unit/
+    ├── Contracts/
+    │   └── DebtOrderingStrategyTest.php    ✅ Created (17 tests)
+    └── Services/
+        ├── DebtOrdering/
+        │   ├── AvalancheStrategyTest.php   ✅ Created (16 tests)
+        │   ├── CustomStrategyTest.php      ✅ Created (20 tests)
+        │   └── SnowballStrategyTest.php    ✅ Created (14 tests)
+        ├── ProgressCacheServiceTest.php    ✅ Created (13 tests)
+        ├── ProgressChartServiceTest.php    ✅ Created (13 tests)
+        └── YnabDiscrepancyServiceTest.php  ✅ Created
 ```

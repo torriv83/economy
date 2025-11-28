@@ -9,70 +9,55 @@ use App\Models\Payment;
 use App\Services\DebtCacheService;
 use App\Services\DebtCalculationService;
 use App\Services\PayoffSettingsService;
+use App\Services\ProgressCacheService;
+use App\Services\ProgressChartService;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 
 class DebtProgress extends Component
 {
-    /**
-     * Cache key prefix for progress data
-     */
-    private const CACHE_KEY_PREFIX = 'progress_data';
-
-    /**
-     * Cache TTL in hours
-     */
-    private const CACHE_TTL_HOURS = 1;
-
     protected DebtCalculationService $calculationService;
 
     protected PayoffSettingsService $settingsService;
 
     protected DebtCacheService $debtCacheService;
 
+    protected ProgressCacheService $progressCacheService;
+
+    protected ProgressChartService $progressChartService;
+
     public function boot(
         DebtCalculationService $calculationService,
         PayoffSettingsService $settingsService,
-        DebtCacheService $debtCacheService
+        DebtCacheService $debtCacheService,
+        ProgressCacheService $progressCacheService,
+        ProgressChartService $progressChartService
     ): void {
         $this->calculationService = $calculationService;
         $this->settingsService = $settingsService;
         $this->debtCacheService = $debtCacheService;
+        $this->progressCacheService = $progressCacheService;
+        $this->progressChartService = $progressChartService;
     }
 
     /**
      * Generate a cache key for progress data based on debt and payment state.
+     *
+     * @deprecated Use ProgressCacheService::getProgressDataCacheKey() instead
      */
     public static function getProgressDataCacheKey(): string
     {
-        $paymentMaxUpdated = Payment::max('updated_at') ?? '';
-        $debtMaxUpdated = Debt::max('updated_at') ?? '';
-
-        return self::CACHE_KEY_PREFIX.':'.md5($paymentMaxUpdated.$debtMaxUpdated);
+        return ProgressCacheService::getProgressDataCacheKey();
     }
 
     /**
      * Clear the progress data cache.
+     *
+     * @deprecated Use ProgressCacheService::clearCache() instead
      */
     public static function clearProgressDataCache(): void
     {
-        // Clear all progress data cache keys by pattern
-        if (config('cache.default') === 'redis') {
-            /** @var \Illuminate\Cache\RedisStore $store */
-            $store = Cache::getStore();
-            /** @var \Illuminate\Redis\Connections\Connection $redis */
-            $redis = $store->getRedis();
-            $prefix = config('cache.prefix', 'laravel').':';
-            $keys = $redis->keys($prefix.self::CACHE_KEY_PREFIX.':*');
-            foreach ($keys as $key) {
-                $cacheKey = str_replace($prefix, '', $key);
-                Cache::forget($cacheKey);
-            }
-        } else {
-            // For file/array cache, just clear the current cache key
-            Cache::forget(self::getProgressDataCacheKey());
-        }
+        ProgressCacheService::clearCache();
     }
 
     /**
@@ -85,126 +70,9 @@ class DebtProgress extends Component
             return ['labels' => [], 'datasets' => []];
         }
 
-        $cacheKey = self::getProgressDataCacheKey();
-
-        return Cache::remember($cacheKey, now()->addHours(self::CACHE_TTL_HOURS), function () {
-            return $this->calculateProgressData();
-        });
-    }
-
-    /**
-     * Calculate progress data (uncached).
-     *
-     * @return array{labels: array<string>, datasets: array<array<string, mixed>>}
-     */
-    protected function calculateProgressData(): array
-    {
-        // Get all debts with their payments (eager loaded to avoid N+1)
-        $debts = $this->debtCacheService->getAllWithPayments();
-
-        if ($debts->isEmpty()) {
-            return ['labels' => [], 'datasets' => []];
-        }
-
-        // Get the earliest payment or debt creation date
-        $earliestPayment = Payment::orderBy('payment_date')->first();
-        $earliestDebt = Debt::orderBy('created_at')->first();
-
-        if (! $earliestDebt) {
-            return ['labels' => [], 'datasets' => []];
-        }
-
-        $startDate = $earliestPayment
-            ? min($earliestPayment->payment_date, $earliestDebt->created_at)
-            : $earliestDebt->created_at;
-
-        // Color palette for individual debt lines
-        $colors = [
-            '#10B981', // green
-            '#F59E0B', // amber
-            '#EF4444', // red
-            '#8B5CF6', // purple
-            '#EC4899', // pink
-            '#06B6D4', // cyan
-            '#84CC16', // lime
-        ];
-
-        // Initialize data structures
-        $labels = [];
-        $totalData = [];
-        $debtData = [];
-
-        // Pre-calculate all payments by debt and month to avoid N+1 queries
-        $paymentsByDebtAndMonth = [];
-        foreach ($debts as $debt) {
-            $paymentsByDebtAndMonth[$debt->id] = $debt->payments
-                ->groupBy(fn ($payment) => Carbon::parse($payment->payment_date)->format('Y-m'))
-                ->map(fn ($monthPayments) => $monthPayments->sum('principal_paid'));
-        }
-
-        // Initialize debt data arrays
-        foreach ($debts as $index => $debt) {
-            $debtData[$debt->name] = [
-                'label' => $debt->name,
-                'data' => [],
-                'borderColor' => $colors[$index % count($colors)],
-            ];
-        }
-
-        // Generate monthly data points from start date to now
-        $currentDate = Carbon::parse($startDate)->startOfMonth();
-        $now = Carbon::now();
-
-        while ($currentDate->lte($now)) {
-            $clonedDate = clone $currentDate;
-            $clonedDate->locale(app()->getLocale());
-            $formattedMonth = $clonedDate->isoFormat('MMM YYYY');
-            $labels[] = $formattedMonth;
-
-            $totalBalance = 0;
-            $currentMonthKey = $currentDate->format('Y-m');
-
-            foreach ($debts as $debt) {
-                // Calculate cumulative payments up to and including this month
-                $cumulativePaid = 0;
-                $debtPayments = $paymentsByDebtAndMonth[$debt->id] ?? collect();
-
-                foreach ($debtPayments as $monthKey => $amount) {
-                    if ($monthKey <= $currentMonthKey) {
-                        $cumulativePaid += $amount;
-                    }
-                }
-
-                // Calculate remaining balance for this month
-                $originalBalance = $debt->original_balance ?? $debt->balance;
-                $remainingBalance = max(0, $originalBalance - $cumulativePaid);
-
-                $debtData[$debt->name]['data'][] = round($remainingBalance, 2);
-                $totalBalance += $remainingBalance;
-            }
-
-            $totalData[] = round($totalBalance, 2);
-            $currentDate->addMonth();
-        }
-
-        // Build datasets array - total first, then individual debts
-        $datasets = [
-            [
-                'label' => __('app.total_debt_balance'),
-                'data' => $totalData,
-                'borderColor' => '#3B82F6',
-                'isTotal' => true,
-            ],
-        ];
-
-        foreach ($debtData as $data) {
-            $datasets[] = $data;
-        }
-
-        return [
-            'labels' => $labels,
-            'datasets' => $datasets,
-        ];
+        return $this->progressCacheService->remember(
+            fn () => $this->progressChartService->calculateProgressData()
+        );
     }
 
     public function getTotalPaidProperty(): float
