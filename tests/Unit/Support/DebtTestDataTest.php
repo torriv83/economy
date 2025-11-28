@@ -87,14 +87,18 @@ describe('DebtTestData utility class', function () {
         $interestRate = 12;
         $minimum = DebtTestData::calculateConsumerLoanMinimum($balance, $interestRate);
 
-        // Monthly interest = 100000 * (12 / 100) / 12 = 1000
-        // Minimum = 1000 * 1.1 = 1100
-        expect($minimum)->toBe(1100.0);
+        // Using amortization formula: P = (r * PV) / (1 - (1 + r)^-n)
+        // where r = 0.01 (monthly), PV = 100000, n = 60
+        $monthlyRate = ($interestRate / 100) / 12;
+        $expected = ($monthlyRate * $balance) / (1 - pow(1 + $monthlyRate, -60));
+
+        expect($minimum)->toBe($expected);
     });
 
     it('calculates consumer loan minimum correctly with zero interest', function () {
         $minimum = DebtTestData::calculateConsumerLoanMinimum(60000, 0);
 
-        expect($minimum)->toBe(0.0); // Monthly interest is 0, so minimum is 0
+        // With 0% interest, minimum is balance / 60 months = 1000
+        expect($minimum)->toBe(1000.0);
     });
 });

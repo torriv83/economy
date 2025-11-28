@@ -105,7 +105,7 @@
                         interestRate: @entangle('interestRate'),
                         kredittkortPercentage: {{ config('debt.minimum_payment.kredittkort.percentage') }},
                         kredittkortMinimum: {{ config('debt.minimum_payment.kredittkort.minimum_amount') }},
-                        forbrukslånBuffer: {{ config('debt.minimum_payment.forbrukslån.buffer_percentage') }}
+                        forbrukslånPayoffMonths: {{ config('debt.minimum_payment.forbrukslån.payoff_months') }}
                     })">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             {{ __('app.debt_type') }}

@@ -119,14 +119,21 @@ class DebtTestData
     /**
      * Calculate the minimum payment for a consumer loan.
      *
+     * Uses amortization formula to ensure payoff within 5 years (60 months).
+     *
      * @param  float  $balance  The balance amount
      * @param  float  $interestRate  The annual interest rate as a percentage
      * @return float The calculated minimum payment
      */
     public static function calculateConsumerLoanMinimum(float $balance, float $interestRate): float
     {
-        $monthlyInterest = ($balance * ($interestRate / 100)) / 12;
+        $monthlyRate = ($interestRate / 100) / 12;
+        $numberOfMonths = config('debt.minimum_payment.forbrukslån.payoff_months', 60);
 
-        return $monthlyInterest * config('debt.minimum_payment.forbrukslån.buffer_percentage', 1.1);
+        if ($monthlyRate == 0) {
+            return $balance / $numberOfMonths;
+        }
+
+        return ($monthlyRate * $balance) / (1 - pow(1 + $monthlyRate, -$numberOfMonths));
     }
 }

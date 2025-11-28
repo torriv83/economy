@@ -251,8 +251,8 @@ describe('debt model compliance methods', function () {
             'interest_rate' => 0,
         ]);
 
-        // With 0% interest, monthly interest is 0, so minimum is 0
-        expect($debt->calculateMinimumPaymentForType())->toBe(0.0);
+        // With 0% interest, minimum is balance / 60 months = 1000
+        expect($debt->calculateMinimumPaymentForType())->toBe(1000.0);
     });
 
     it('correctly calculates minimum for forbrukslån with interest', function () {
@@ -262,10 +262,10 @@ describe('debt model compliance methods', function () {
             'interest_rate' => 12,
         ]);
 
-        // Monthly interest = 100000 * (12 / 100) / 12 = 1000
-        // Minimum = monthly interest * 1.1 = 1100
-        $monthlyInterest = (100000 * (12 / 100)) / 12;
-        $expected = round($monthlyInterest * 1.1, 2);
+        // Using amortization formula: P = (r * PV) / (1 - (1 + r)^-n)
+        // where r = 0.01 (monthly), PV = 100000, n = 60
+        $monthlyRate = (12 / 100) / 12;
+        $expected = round(($monthlyRate * 100000) / (1 - pow(1 + $monthlyRate, -60)), 2);
 
         expect($debt->calculateMinimumPaymentForType())->toBe($expected);
     });

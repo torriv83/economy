@@ -18,7 +18,7 @@ return [
             'minimum_amount' => 300,  // 300 NOK minimum
         ],
         'forbrukslån' => [
-            'buffer_percentage' => 1.1,  // 10% above monthly interest
+            'payoff_months' => 60,  // Nedbetales innen 5 år (Utlånsforskriften)
         ],
     ],
 ];

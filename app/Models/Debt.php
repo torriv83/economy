@@ -52,6 +52,9 @@ class Debt extends Model
 
     /**
      * Calculate the regulatory minimum payment for the debt based on its type.
+     *
+     * For forbrukslån, the payment must be high enough to pay off the debt
+     * within 5 years (60 months) according to Utlånsforskriften.
      */
     public function calculateMinimumPaymentForType(): float
     {
@@ -63,12 +66,19 @@ class Debt extends Model
             return max($this->balance * $percentage, $minimumAmount);
         }
 
-        // Forbrukslån: Monthly interest + buffer
-        // Payment must be greater than monthly interest to prevent debt growth
-        $bufferPercentage = config('debt.minimum_payment.forbrukslån.buffer_percentage');
-        $monthlyInterest = ($this->balance * ($this->interest_rate / 100)) / 12;
+        // Forbrukslån: Calculate payment that pays off debt in 60 months with interest
+        // Using amortization formula: P = (r * PV) / (1 - (1 + r)^-n)
+        $monthlyRate = ($this->interest_rate / 100) / 12;
+        $numberOfMonths = config('debt.minimum_payment.forbrukslån.payoff_months', 60);
 
-        return round($monthlyInterest * $bufferPercentage, 2);
+        if ($monthlyRate == 0) {
+            // If no interest, simply divide balance by number of months
+            return round($this->balance / $numberOfMonths, 2);
+        }
+
+        $payment = ($monthlyRate * $this->balance) / (1 - pow(1 + $monthlyRate, -$numberOfMonths));
+
+        return round($payment, 2);
     }
 
     /**

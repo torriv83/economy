@@ -13,7 +13,7 @@ const DEFAULT_CONFIG = {
         minimumAmount: 300,    // 300 NOK minimum
     },
     forbrukslån: {
-        bufferPercentage: 1.1, // 10% buffer above monthly interest
+        payoffMonths: 60,      // Must be paid off within 5 years (Utlånsforskriften)
     },
 };
 
@@ -26,7 +26,7 @@ Alpine.data('debtTypeCalculator', (config = {}) => ({
     // Config values (can be overridden from Blade templates)
     kredittkortPercentage: config.kredittkortPercentage ?? DEFAULT_CONFIG.kredittkort.percentage,
     kredittkortMinimum: config.kredittkortMinimum ?? DEFAULT_CONFIG.kredittkort.minimumAmount,
-    forbrukslånBuffer: config.forbrukslånBuffer ?? DEFAULT_CONFIG.forbrukslån.bufferPercentage,
+    forbrukslånPayoffMonths: config.forbrukslånPayoffMonths ?? DEFAULT_CONFIG.forbrukslån.payoffMonths,
 
     init() {
         this.updateCalculatedMinimum();
@@ -50,9 +50,18 @@ Alpine.data('debtTypeCalculator', (config = {}) => ({
                 Math.max(balance * this.kredittkortPercentage, this.kredittkortMinimum)
             );
         } else {
-            // Consumer loan: monthly interest + buffer
-            const monthlyInterest = (balance * (interestRate / 100)) / 12;
-            this.calculatedMinimum = Math.ceil(monthlyInterest * this.forbrukslånBuffer);
+            // Consumer loan: Calculate payment that pays off debt in 60 months
+            // Using amortization formula: P = (r * PV) / (1 - (1 + r)^-n)
+            const monthlyRate = (interestRate / 100) / 12;
+            const numberOfMonths = this.forbrukslånPayoffMonths;
+
+            if (monthlyRate === 0) {
+                // If no interest, simply divide balance by number of months
+                this.calculatedMinimum = Math.ceil(balance / numberOfMonths);
+            } else {
+                const payment = (monthlyRate * balance) / (1 - Math.pow(1 + monthlyRate, -numberOfMonths));
+                this.calculatedMinimum = Math.ceil(payment);
+            }
         }
     },
 
