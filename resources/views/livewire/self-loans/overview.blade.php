@@ -284,8 +284,8 @@
     {{-- Delete Confirmation Modal --}}
     <x-delete-confirmation-modal
         wire:model="showDeleteModal"
-        :title="__('app.delete_self_loan_confirm', ['name' => $loanNameToDelete])"
+        :title="__('app.delete_self_loan_confirm', ['name' => $recordNameToDelete])"
         :message="__('app.delete_self_loan_warning')"
-        on-confirm="deleteLoan"
+        on-confirm="executeDelete"
     />
 </div>

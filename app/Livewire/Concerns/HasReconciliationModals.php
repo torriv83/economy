@@ -7,6 +7,7 @@ namespace App\Livewire\Concerns;
 use App\Models\Debt;
 use App\Models\Payment;
 use App\Services\PaymentService;
+use App\Support\DateFormatter;
 
 trait HasReconciliationModals
 {
@@ -38,7 +39,7 @@ trait HasReconciliationModals
     {
         return [
             'editBalance' => ['required', 'numeric', 'min:0'],
-            'editDate' => ['required', 'date_format:d.m.Y'],
+            'editDate' => ['required', 'date_format:'.DateFormatter::NORWEGIAN_FORMAT],
             'editNotes' => ['nullable', 'string', 'max:500'],
         ];
     }
@@ -67,7 +68,7 @@ trait HasReconciliationModals
         }
 
         $this->editingReconciliationId = $paymentId;
-        $this->editDate = $payment->payment_date->format('d.m.Y');
+        $this->editDate = $payment->payment_date->format(DateFormatter::NORWEGIAN_FORMAT);
         $this->editNotes = $payment->notes;
 
         /** @var Debt $debt */
@@ -101,9 +102,7 @@ trait HasReconciliationModals
             return;
         }
 
-        // Convert Norwegian date format (DD.MM.YYYY) to database format (YYYY-MM-DD)
-        $dateObject = \DateTime::createFromFormat('d.m.Y', $this->editDate);
-        $databaseDate = $dateObject ? $dateObject->format('Y-m-d') : now()->format('Y-m-d');
+        $databaseDate = DateFormatter::norwegianToDatabase($this->editDate);
 
         $this->paymentService->updateReconciliation(
             $payment,

@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace App\Livewire\SelfLoans;
 
+use App\Livewire\Concerns\HasDeleteConfirmation;
 use App\Models\SelfLoan\SelfLoan;
 use App\Models\SelfLoan\SelfLoanRepayment;
+use App\Support\DateFormatter;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 class Overview extends Component
 {
+    use HasDeleteConfirmation;
+
     public int $selectedLoanId = 0;
 
     public float $repaymentAmount = 0;
@@ -37,12 +41,6 @@ class Overview extends Component
     public string $editOriginalAmount = '';
 
     public bool $showEditModal = false;
-
-    public bool $showDeleteModal = false;
-
-    public ?int $loanToDelete = null;
-
-    public string $loanNameToDelete = '';
 
     /**
      * @return array<int, array{id: int, name: string, description: string|null, original_amount: float, current_balance: float, total_repaid: float, progress_percentage: float, created_at: string}>
@@ -91,7 +89,7 @@ class Overview extends Component
         $this->selectedLoanId = $loanId;
         $this->repaymentAmount = 0;
         $this->repaymentNotes = '';
-        $this->repaymentDate = now()->format('d.m.Y');
+        $this->repaymentDate = DateFormatter::todayNorwegian();
         $this->showRepaymentModal = true;
     }
 
@@ -126,7 +124,7 @@ class Overview extends Component
                 'self_loan_id' => $loan->id,
                 'amount' => $this->repaymentAmount,
                 'notes' => $this->repaymentNotes,
-                'paid_at' => Carbon::createFromFormat('d.m.Y', $this->repaymentDate),
+                'paid_at' => Carbon::createFromFormat(DateFormatter::NORWEGIAN_FORMAT, $this->repaymentDate),
             ]);
 
             $loan->update([
@@ -144,7 +142,7 @@ class Overview extends Component
         $this->selectedLoanId = $loanId;
         $this->withdrawalAmount = 0;
         $this->withdrawalNotes = '';
-        $this->withdrawalDate = now()->format('d.m.Y');
+        $this->withdrawalDate = DateFormatter::todayNorwegian();
         $this->showWithdrawalModal = true;
     }
 
@@ -174,7 +172,7 @@ class Overview extends Component
                 'self_loan_id' => $loan->id,
                 'amount' => -$this->withdrawalAmount,
                 'notes' => $this->withdrawalNotes,
-                'paid_at' => Carbon::createFromFormat('d.m.Y', $this->withdrawalDate),
+                'paid_at' => Carbon::createFromFormat(DateFormatter::NORWEGIAN_FORMAT, $this->withdrawalDate),
             ]);
 
             // Increase the balance and original amount
@@ -235,27 +233,13 @@ class Overview extends Component
         $this->closeEditModal();
     }
 
-    public function confirmDelete(int $id, string $name): void
+    protected function performDelete(int $id): void
     {
-        $this->loanToDelete = $id;
-        $this->loanNameToDelete = $name;
-        $this->showDeleteModal = true;
-    }
-
-    public function deleteLoan(): void
-    {
-        if ($this->loanToDelete) {
-            $loan = SelfLoan::find($this->loanToDelete);
-
-            if ($loan) {
-                $loan->delete();
-                session()->flash('message', __('app.self_loan_deleted'));
-            }
+        $loan = SelfLoan::find($id);
+        if ($loan) {
+            $loan->delete();
+            session()->flash('message', __('app.self_loan_deleted'));
         }
-
-        $this->showDeleteModal = false;
-        $this->loanToDelete = null;
-        $this->loanNameToDelete = '';
     }
 
     public function render(): \Illuminate\Contracts\View\View

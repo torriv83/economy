@@ -10,8 +10,6 @@
 ])
 
 @php
-$inputClasses = 'w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer';
-$errorClasses = $error ? 'border-red-500 dark:border-red-400' : '';
 $pickerId = $id . '-picker';
 @endphp
 
@@ -36,7 +34,7 @@ $pickerId = $id . '-picker';
             readonly
             @click="$refs.{{ $pickerId }}.showPicker()"
             placeholder="dd.mm.åååå"
-            class="{{ $inputClasses }} {{ $errorClasses }}"
+            class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer {{ $error ? 'border-red-500 dark:border-red-400' : '' }}"
             @if($required ?? false) required @endif
         >
         <input

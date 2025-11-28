@@ -577,9 +577,9 @@
     {{-- Delete Confirmation Modal --}}
     <x-delete-confirmation-modal
         wire:model="showDeleteModal"
-        :title="__('app.confirm_delete_debt', ['name' => $debtNameToDelete])"
+        :title="__('app.confirm_delete_debt', ['name' => $recordNameToDelete])"
         :message="__('app.delete_debt_warning')"
-        on-confirm="deleteDebt"
+        on-confirm="executeDelete"
     />
 
     {{-- Reconciliation Modals --}}

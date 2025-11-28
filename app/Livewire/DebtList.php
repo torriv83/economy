@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire;
 
+use App\Livewire\Concerns\HasDeleteConfirmation;
 use App\Models\Debt;
 use App\Models\Payment;
 use App\Services\DebtCacheService;
@@ -11,6 +12,7 @@ use App\Services\DebtCalculationService;
 use App\Services\PaymentService;
 use App\Services\PayoffSettingsService;
 use App\Services\YnabService;
+use App\Support\DateFormatter;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\On;
@@ -18,6 +20,8 @@ use Livewire\Component;
 
 class DebtList extends Component
 {
+    use HasDeleteConfirmation;
+
     public bool $reorderMode = false;
 
     public bool $showYnabSync = false;
@@ -34,12 +38,6 @@ class DebtList extends Component
 
     /** @var array<int, string> */
     public array $selectedFieldsToUpdate = [];
-
-    public bool $showDeleteModal = false;
-
-    public ?int $debtToDelete = null;
-
-    public string $debtNameToDelete = '';
 
     /** @var array<int, bool> */
     public array $reconciliationModals = [];
@@ -87,7 +85,7 @@ class DebtList extends Component
         foreach (Debt::pluck('id') as $debtId) {
             $this->reconciliationModals[$debtId] = false;
             $this->reconciliationBalances[$debtId] = '';
-            $this->reconciliationDates[$debtId] = now()->format('d.m.Y');
+            $this->reconciliationDates[$debtId] = DateFormatter::todayNorwegian();
             $this->reconciliationNotes[$debtId] = '';
         }
     }
@@ -215,27 +213,13 @@ class DebtList extends Component
         ];
     }
 
-    public function confirmDelete(int $id, string $name): void
+    protected function performDelete(int $id): void
     {
-        $this->debtToDelete = $id;
-        $this->debtNameToDelete = $name;
-        $this->showDeleteModal = true;
-    }
-
-    public function deleteDebt(): void
-    {
-        if ($this->debtToDelete) {
-            $debt = Debt::find($this->debtToDelete);
-
-            if ($debt) {
-                $debt->delete();
-                session()->flash('message', 'Gjeld slettet.');
-            }
+        $debt = Debt::find($id);
+        if ($debt) {
+            $debt->delete();
+            session()->flash('message', __('app.debt_deleted'));
         }
-
-        $this->showDeleteModal = false;
-        $this->debtToDelete = null;
-        $this->debtNameToDelete = '';
     }
 
     public function enableReorderMode(): void
@@ -548,7 +532,7 @@ class DebtList extends Component
         $debt = Debt::find($debtId);
         if ($debt) {
             $this->reconciliationBalances[$debtId] = (string) $debt->balance;
-            $this->reconciliationDates[$debtId] = now()->format('d.m.Y');
+            $this->reconciliationDates[$debtId] = DateFormatter::todayNorwegian();
             $this->reconciliationNotes[$debtId] = null;
         }
     }
@@ -557,7 +541,7 @@ class DebtList extends Component
     {
         $this->reconciliationModals[$debtId] = true;
         $this->reconciliationBalances[$debtId] = (string) $ynabBalance;
-        $this->reconciliationDates[$debtId] = now()->format('d.m.Y');
+        $this->reconciliationDates[$debtId] = DateFormatter::todayNorwegian();
         $this->reconciliationNotes[$debtId] = 'Avstemt mot YNAB';
         $this->showYnabSync = false;
     }
@@ -571,7 +555,7 @@ class DebtList extends Component
         $debt = Debt::find($debtId);
         if ($debt) {
             $this->reconciliationBalances[$debtId] = (string) $debt->balance;
-            $this->reconciliationDates[$debtId] = now()->format('d.m.Y');
+            $this->reconciliationDates[$debtId] = DateFormatter::todayNorwegian();
         }
     }
 
@@ -618,9 +602,7 @@ class DebtList extends Component
             return;
         }
 
-        // Convert Norwegian date format (DD.MM.YYYY) to database format (YYYY-MM-DD)
-        $dateObject = \DateTime::createFromFormat('d.m.Y', $this->reconciliationDates[$debtId]);
-        $databaseDate = $dateObject ? $dateObject->format('Y-m-d') : now()->format('Y-m-d');
+        $databaseDate = DateFormatter::norwegianToDatabase($this->reconciliationDates[$debtId]);
 
         $this->paymentService->reconcileDebt(
             $debt,

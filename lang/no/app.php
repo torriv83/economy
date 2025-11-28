@@ -71,6 +71,7 @@ return [
     'edit' => 'Rediger',
     'delete' => 'Slett',
     'delete_debt' => 'Slett :name',
+    'debt_deleted' => 'Gjeld slettet.',
     'deleting' => 'Sletter',
 
     // Debt Progress

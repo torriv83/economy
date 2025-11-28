@@ -71,6 +71,7 @@ return [
     'edit' => 'Edit',
     'delete' => 'Delete',
     'delete_debt' => 'Delete :name',
+    'debt_deleted' => 'Debt deleted.',
     'deleting' => 'Deleting',
 
     // Debt Progress
