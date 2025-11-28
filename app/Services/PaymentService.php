@@ -362,6 +362,9 @@ class PaymentService
         // Update debt balances after reconciliation
         $this->updateDebtBalances();
 
+        // Update last verified timestamp
+        $debt->update(['last_verified_at' => $reconciliationDate]);
+
         return $payment;
     }
 

@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int|null $custom_priority_order
  * @property int|null $due_day
  * @property string|null $ynab_account_id
+ * @property \Carbon\Carbon|null $last_verified_at
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
  */
@@ -35,6 +36,7 @@ class Debt extends Model
         'custom_priority_order',
         'due_day',
         'ynab_account_id',
+        'last_verified_at',
     ];
 
     protected function casts(): array
@@ -47,6 +49,7 @@ class Debt extends Model
             'minimum_payment' => 'float',
             'custom_priority_order' => 'integer',
             'due_day' => 'integer',
+            'last_verified_at' => 'datetime',
         ];
     }
 

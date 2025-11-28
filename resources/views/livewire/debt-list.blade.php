@@ -239,6 +239,12 @@
                                         {{ $debt['createdAt'] }}
                                     </span>
                                 </div>
+                                <div class="flex justify-between items-baseline">
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">{{ __('app.last_verified') }}</span>
+                                    <span class="text-xs {{ $debt['lastVerifiedAt'] ? 'text-gray-600 dark:text-gray-300' : 'text-amber-600 dark:text-amber-400' }}">
+                                        {{ $debt['lastVerifiedAt'] ?? __('app.never_verified') }}
+                                    </span>
+                                </div>
                             </div>
 
                             {{-- Actions --}}

@@ -114,6 +114,7 @@ class DebtList extends Component
                 'isCompliant' => $debt->isMinimumPaymentCompliant(),
                 'warning' => $debt->getMinimumPaymentWarning(),
                 'createdAt' => $debt->created_at->locale('nb')->translatedFormat('d. F Y'),
+                'lastVerifiedAt' => $debt->last_verified_at?->locale('nb')->translatedFormat('d. F Y'),
                 'customPriority' => $debt->custom_priority_order,
                 'progressPercentage' => $progressPercentage,
                 'amountPaid' => $paidOff,
@@ -449,15 +450,16 @@ class DebtList extends Component
         ]);
 
         $difference = $this->getReconciliationDifference($debtId);
+        $databaseDate = DateFormatter::norwegianToDatabase($this->reconciliations[$debtId]['date']);
 
         if (abs($difference) < 0.01) {
-            session()->flash('message', 'Ingen justering nødvendig - saldo er allerede korrekt.');
+            // No adjustment needed, but still update the verification timestamp
+            $debt->update(['last_verified_at' => $databaseDate]);
+            session()->flash('message', __('app.debt_verified_balance_correct'));
             $this->closeReconciliationModal($debtId);
 
             return;
         }
-
-        $databaseDate = DateFormatter::norwegianToDatabase($this->reconciliations[$debtId]['date']);
 
         $this->paymentService->reconcileDebt(
             $debt,

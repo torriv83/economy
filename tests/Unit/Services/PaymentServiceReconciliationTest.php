@@ -555,6 +555,60 @@ describe('deleteReconciliation', function () {
     });
 });
 
+describe('last_verified_at', function () {
+    it('sets last_verified_at on debt when reconciliation is created', function () {
+        $debt = Debt::factory()->create([
+            'balance' => 10000,
+            'original_balance' => 10000,
+            'last_verified_at' => null,
+        ]);
+
+        $this->service->reconcileDebt(
+            $debt,
+            actualBalance: 9500,
+            reconciliationDate: '2024-03-15'
+        );
+
+        $debt->refresh();
+        expect($debt->last_verified_at)->not->toBeNull()
+            ->and($debt->last_verified_at->format('Y-m-d'))->toBe('2024-03-15');
+    });
+
+    it('updates existing last_verified_at on new reconciliation', function () {
+        $debt = Debt::factory()->create([
+            'balance' => 10000,
+            'original_balance' => 10000,
+            'last_verified_at' => now()->subMonth(),
+        ]);
+
+        $this->service->reconcileDebt(
+            $debt,
+            actualBalance: 9500,
+            reconciliationDate: '2024-06-20'
+        );
+
+        $debt->refresh();
+        expect($debt->last_verified_at->format('Y-m-d'))->toBe('2024-06-20');
+    });
+
+    it('sets last_verified_at to reconciliation date not current date', function () {
+        $debt = Debt::factory()->create([
+            'balance' => 10000,
+            'original_balance' => 10000,
+            'last_verified_at' => null,
+        ]);
+
+        $this->service->reconcileDebt(
+            $debt,
+            actualBalance: 9500,
+            reconciliationDate: '2023-01-01'
+        );
+
+        $debt->refresh();
+        expect($debt->last_verified_at->format('Y-m-d'))->toBe('2023-01-01');
+    });
+});
+
 describe('edge cases', function () {
     it('handles zero interest rate debts', function () {
         $debt = Debt::factory()->create([
