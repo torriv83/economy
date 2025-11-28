@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\SelfLoans;
 
+use App\Livewire\Concerns\HasConsistentFlashMessages;
 use App\Livewire\Concerns\HasDeleteConfirmation;
 use App\Models\SelfLoan\SelfLoan;
 use App\Models\SelfLoan\SelfLoanRepayment;
@@ -14,6 +15,7 @@ use Livewire\Component;
 
 class Overview extends Component
 {
+    use HasConsistentFlashMessages;
     use HasDeleteConfirmation;
 
     public int $selectedLoanId = 0;

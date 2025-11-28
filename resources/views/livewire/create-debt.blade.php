@@ -102,7 +102,10 @@
                     <div x-data="debtTypeCalculator({
                         type: @entangle('type'),
                         balance: @entangle('balance'),
-                        interestRate: @entangle('interestRate')
+                        interestRate: @entangle('interestRate'),
+                        kredittkortPercentage: {{ config('debt.minimum_payment.kredittkort.percentage') }},
+                        kredittkortMinimum: {{ config('debt.minimum_payment.kredittkort.minimum_amount') }},
+                        forbrukslånBuffer: {{ config('debt.minimum_payment.forbrukslån.buffer_percentage') }}
                     })">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             {{ __('app.debt_type') }}

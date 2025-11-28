@@ -56,15 +56,19 @@ class Debt extends Model
     public function calculateMinimumPaymentForType(): float
     {
         if ($this->type === 'kredittkort') {
-            // Credit card: 3% of current balance or 300 kr, whichever is higher
-            return max($this->balance * 0.03, 300);
+            // Credit card: Percentage of current balance or minimum amount, whichever is higher
+            $percentage = config('debt.minimum_payment.kredittkort.percentage');
+            $minimumAmount = config('debt.minimum_payment.kredittkort.minimum_amount');
+
+            return max($this->balance * $percentage, $minimumAmount);
         }
 
-        // Forbrukslån: Monthly interest + small buffer (10%)
+        // Forbrukslån: Monthly interest + buffer
         // Payment must be greater than monthly interest to prevent debt growth
+        $bufferPercentage = config('debt.minimum_payment.forbrukslån.buffer_percentage');
         $monthlyInterest = ($this->balance * ($this->interest_rate / 100)) / 12;
 
-        return round($monthlyInterest * 1.1, 2); // 10% buffer above interest
+        return round($monthlyInterest * $bufferPercentage, 2);
     }
 
     /**

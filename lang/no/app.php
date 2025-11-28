@@ -424,4 +424,11 @@ return [
     'shortcut_new_self_loan' => 'Opprett nytt privat lån',
     'shortcut_new_debt' => 'Opprett ny gjeld',
     'shortcut_show_shortcuts' => 'Vis tastatursnarveier',
+
+    // Flash Messages
+    'flash_operation_failed' => 'Operasjonen mislyktes. Prøv igjen.',
+    'flash_unexpected_error' => 'En uventet feil oppstod.',
+    'flash_record_not_found' => 'Posten ble ikke funnet.',
+    'flash_save_success' => 'Endringene ble lagret.',
+    'flash_save_failed' => 'Kunne ikke lagre endringer.',
 ];

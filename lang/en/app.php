@@ -424,4 +424,11 @@ return [
     'shortcut_new_self_loan' => 'Create new self loan',
     'shortcut_new_debt' => 'Create new debt',
     'shortcut_show_shortcuts' => 'Show keyboard shortcuts',
+
+    // Flash Messages
+    'flash_operation_failed' => 'Operation failed. Please try again.',
+    'flash_unexpected_error' => 'An unexpected error occurred.',
+    'flash_record_not_found' => 'Record not found.',
+    'flash_save_success' => 'Changes saved successfully.',
+    'flash_save_failed' => 'Failed to save changes.',
 ];
