@@ -47,6 +47,8 @@ class DebtList extends Component
 
     public ?int $viewingReconciliationHistoryForDebtId = null;
 
+    public bool $ynabEnabled = false;
+
     protected DebtCalculationService $calculationService;
 
     protected YnabService $ynabService;
@@ -61,6 +63,8 @@ class DebtList extends Component
 
     protected YnabSyncService $ynabSyncService;
 
+    protected \App\Services\SettingsService $globalSettingsService;
+
     public function boot(
         DebtCalculationService $calculationService,
         YnabService $ynabService,
@@ -68,7 +72,8 @@ class DebtList extends Component
         PaymentService $paymentService,
         PayoffSettingsService $settingsService,
         DebtCacheService $debtCacheService,
-        YnabSyncService $ynabSyncService
+        YnabSyncService $ynabSyncService,
+        \App\Services\SettingsService $globalSettingsService
     ): void {
         $this->calculationService = $calculationService;
         $this->ynabService = $ynabService;
@@ -77,10 +82,12 @@ class DebtList extends Component
         $this->settingsService = $settingsService;
         $this->debtCacheService = $debtCacheService;
         $this->ynabSyncService = $ynabSyncService;
+        $this->globalSettingsService = $globalSettingsService;
     }
 
     public function mount(): void
     {
+        $this->ynabEnabled = $this->globalSettingsService->isYnabEnabled();
         // Reconciliations array is initialized on-demand when modals are opened
     }
 

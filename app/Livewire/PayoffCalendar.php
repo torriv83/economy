@@ -62,6 +62,8 @@ class PayoffCalendar extends Component
 
     public string $ynabError = '';
 
+    public bool $ynabEnabled = false;
+
     public function boot(DebtCalculationService $service, YnabTransactionService $ynabTransactionService): void
     {
         $this->calculationService = $service;
@@ -74,6 +76,7 @@ class PayoffCalendar extends Component
         $this->strategy = $strategy;
         $this->currentMonth = (int) now()->month;
         $this->currentYear = (int) now()->year;
+        $this->ynabEnabled = app(\App\Services\SettingsService::class)->isYnabEnabled();
     }
 
     public function previousMonth(): void

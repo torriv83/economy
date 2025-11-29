@@ -173,10 +173,12 @@
     </div>
 
     {{-- Acceleration Opportunities --}}
-    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
-        <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">{{ __('app.acceleration_opportunities') }}</h2>
-        <livewire:ynab.acceleration-opportunities :debt="$debt" />
-    </div>
+    @if (app(\App\Services\SettingsService::class)->isYnabEnabled())
+        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">{{ __('app.acceleration_opportunities') }}</h2>
+            <livewire:ynab.acceleration-opportunities :debt="$debt" />
+        </div>
+    @endif
 
     {{-- Recent Payments --}}
     <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">

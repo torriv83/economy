@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Livewire\Ynab\AccelerationOpportunities;
 use App\Models\Debt;
+use App\Models\Setting;
 use App\Services\AccelerationService;
 use App\Services\YnabService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -12,6 +13,7 @@ use Livewire\Livewire;
 uses(RefreshDatabase::class);
 
 it('shows not configured message when YNAB is not set up', function () {
+    Setting::create(['key' => 'ynab.enabled', 'value' => 'true', 'type' => 'boolean']);
     config(['services.ynab.token' => null]);
     config(['services.ynab.budget_id' => null]);
 
@@ -32,6 +34,10 @@ it('shows not configured message when YNAB is not set up', function () {
 });
 
 it('shows loading skeleton initially', function () {
+    Setting::create(['key' => 'ynab.enabled', 'value' => 'true', 'type' => 'boolean']);
+    Setting::create(['key' => 'ynab.token', 'value' => encrypt('test-token'), 'type' => 'encrypted']);
+    Setting::create(['key' => 'ynab.budget_id', 'value' => 'test-budget', 'type' => 'string']);
+
     config(['services.ynab.token' => 'test-token']);
     config(['services.ynab.budget_id' => 'test-budget']);
 
@@ -48,6 +54,10 @@ it('shows loading skeleton initially', function () {
 });
 
 it('shows opportunities when available', function () {
+    Setting::create(['key' => 'ynab.enabled', 'value' => 'true', 'type' => 'boolean']);
+    Setting::create(['key' => 'ynab.token', 'value' => encrypt('test-token'), 'type' => 'encrypted']);
+    Setting::create(['key' => 'ynab.budget_id', 'value' => 'test-budget', 'type' => 'string']);
+
     config(['services.ynab.token' => 'test-token']);
     config(['services.ynab.budget_id' => 'test-budget']);
 
@@ -100,6 +110,10 @@ it('shows opportunities when available', function () {
 });
 
 it('shows no opportunities message when list is empty', function () {
+    Setting::create(['key' => 'ynab.enabled', 'value' => 'true', 'type' => 'boolean']);
+    Setting::create(['key' => 'ynab.token', 'value' => encrypt('test-token'), 'type' => 'encrypted']);
+    Setting::create(['key' => 'ynab.budget_id', 'value' => 'test-budget', 'type' => 'string']);
+
     config(['services.ynab.token' => 'test-token']);
     config(['services.ynab.budget_id' => 'test-budget']);
 
@@ -117,6 +131,10 @@ it('shows no opportunities message when list is empty', function () {
 });
 
 it('shows error state when API fails', function () {
+    Setting::create(['key' => 'ynab.enabled', 'value' => 'true', 'type' => 'boolean']);
+    Setting::create(['key' => 'ynab.token', 'value' => encrypt('test-token'), 'type' => 'encrypted']);
+    Setting::create(['key' => 'ynab.budget_id', 'value' => 'test-budget', 'type' => 'string']);
+
     config(['services.ynab.token' => 'test-token']);
     config(['services.ynab.budget_id' => 'test-budget']);
 
@@ -133,6 +151,10 @@ it('shows error state when API fails', function () {
 });
 
 it('can refresh opportunities', function () {
+    Setting::create(['key' => 'ynab.enabled', 'value' => 'true', 'type' => 'boolean']);
+    Setting::create(['key' => 'ynab.token', 'value' => encrypt('test-token'), 'type' => 'encrypted']);
+    Setting::create(['key' => 'ynab.budget_id', 'value' => 'test-budget', 'type' => 'string']);
+
     config(['services.ynab.token' => 'test-token']);
     config(['services.ynab.budget_id' => 'test-budget']);
 
@@ -179,6 +201,10 @@ it('can refresh opportunities', function () {
 });
 
 it('displays savings warning for tier 3 opportunities', function () {
+    Setting::create(['key' => 'ynab.enabled', 'value' => 'true', 'type' => 'boolean']);
+    Setting::create(['key' => 'ynab.token', 'value' => encrypt('test-token'), 'type' => 'encrypted']);
+    Setting::create(['key' => 'ynab.budget_id', 'value' => 'test-budget', 'type' => 'string']);
+
     config(['services.ynab.token' => 'test-token']);
     config(['services.ynab.budget_id' => 'test-budget']);
 
@@ -208,6 +234,10 @@ it('displays savings warning for tier 3 opportunities', function () {
 });
 
 it('returns correct tier labels', function () {
+    Setting::create(['key' => 'ynab.enabled', 'value' => 'true', 'type' => 'boolean']);
+    Setting::create(['key' => 'ynab.token', 'value' => encrypt('test-token'), 'type' => 'encrypted']);
+    Setting::create(['key' => 'ynab.budget_id', 'value' => 'test-budget', 'type' => 'string']);
+
     config(['services.ynab.token' => 'test-token']);
     config(['services.ynab.budget_id' => 'test-budget']);
 

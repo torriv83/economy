@@ -1,5 +1,7 @@
 <div>
-    @if (!$isConfigured)
+    @if (!$ynabEnabled)
+        {{-- YNAB disabled - show nothing --}}
+    @elseif (!$isConfigured)
         {{-- YNAB not configured - show prompt --}}
         <div class="text-center py-6 text-gray-500 dark:text-gray-400">
             <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">

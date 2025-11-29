@@ -1,0 +1,225 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services;
+
+use App\Models\Setting;
+use Illuminate\Support\Facades\Cache;
+
+class SettingsService
+{
+    private const DEFAULT_KREDITTKORT_PERCENTAGE = 0.03;
+
+    private const DEFAULT_KREDITTKORT_MINIMUM = 300;
+
+    private const DEFAULT_FORBRUKSLAN_PAYOFF_MONTHS = 60;
+
+    private const CACHE_KEY = 'app_settings';
+
+    private const CACHE_TTL_HOURS = 1;
+
+    /**
+     * Check if YNAB integration is enabled.
+     */
+    public function isYnabEnabled(): bool
+    {
+        return $this->get('ynab.enabled', 'boolean') ?? false;
+    }
+
+    /**
+     * Enable or disable YNAB integration.
+     */
+    public function setYnabEnabled(bool $enabled): void
+    {
+        $this->set('ynab.enabled', $enabled, 'boolean', 'ynab');
+    }
+
+    /**
+     * Get the decrypted YNAB token.
+     */
+    public function getYnabToken(): ?string
+    {
+        return $this->get('ynab.token', 'encrypted');
+    }
+
+    /**
+     * Set and encrypt the YNAB token.
+     */
+    public function setYnabToken(?string $token): void
+    {
+        if ($token === null) {
+            Setting::where('key', 'ynab.token')->delete();
+            $this->clearCacheForKey('ynab.token');
+
+            return;
+        }
+
+        $this->set('ynab.token', $token, 'encrypted', 'ynab');
+    }
+
+    /**
+     * Get the YNAB budget ID.
+     */
+    public function getYnabBudgetId(): ?string
+    {
+        return $this->get('ynab.budget_id', 'string');
+    }
+
+    /**
+     * Set the YNAB budget ID.
+     */
+    public function setYnabBudgetId(?string $budgetId): void
+    {
+        if ($budgetId === null) {
+            Setting::where('key', 'ynab.budget_id')->delete();
+            $this->clearCacheForKey('ynab.budget_id');
+
+            return;
+        }
+
+        $this->set('ynab.budget_id', $budgetId, 'string', 'ynab');
+    }
+
+    /**
+     * Check if YNAB is fully configured (enabled, has token, has budget ID).
+     */
+    public function isYnabConfigured(): bool
+    {
+        return $this->isYnabEnabled()
+            && $this->getYnabToken() !== null
+            && $this->getYnabBudgetId() !== null;
+    }
+
+    /**
+     * Clear all YNAB credentials.
+     */
+    public function clearYnabCredentials(): void
+    {
+        Setting::whereIn('key', ['ynab.token', 'ynab.budget_id'])->delete();
+        $this->clearCacheForKey('ynab.token');
+        $this->clearCacheForKey('ynab.budget_id');
+    }
+
+    /**
+     * Get the kredittkort percentage setting.
+     */
+    public function getKredittkortPercentage(): float
+    {
+        return $this->get('debt.kredittkort_percentage', 'float') ?? self::DEFAULT_KREDITTKORT_PERCENTAGE;
+    }
+
+    /**
+     * Set the kredittkort percentage setting.
+     */
+    public function setKredittkortPercentage(float $percentage): void
+    {
+        $this->set('debt.kredittkort_percentage', $percentage, 'float', 'debt');
+    }
+
+    /**
+     * Get the kredittkort minimum payment setting.
+     */
+    public function getKredittkortMinimum(): float
+    {
+        return $this->get('debt.kredittkort_minimum', 'float') ?? self::DEFAULT_KREDITTKORT_MINIMUM;
+    }
+
+    /**
+     * Set the kredittkort minimum payment setting.
+     */
+    public function setKredittkortMinimum(float $minimum): void
+    {
+        $this->set('debt.kredittkort_minimum', $minimum, 'float', 'debt');
+    }
+
+    /**
+     * Get the forbrukslån payoff months setting.
+     */
+    public function getForbrukslånPayoffMonths(): int
+    {
+        return $this->get('debt.forbrukslan_payoff_months', 'integer') ?? self::DEFAULT_FORBRUKSLAN_PAYOFF_MONTHS;
+    }
+
+    /**
+     * Set the forbrukslån payoff months setting.
+     */
+    public function setForbrukslånPayoffMonths(int $months): void
+    {
+        $this->set('debt.forbrukslan_payoff_months', $months, 'integer', 'debt');
+    }
+
+    /**
+     * Reset all debt settings to their default values.
+     */
+    public function resetDebtSettingsToDefaults(): void
+    {
+        Setting::where('group', 'debt')->delete();
+        $this->clearCache();
+    }
+
+    /**
+     * Get a setting value from the database with caching.
+     */
+    public function get(string $key, string $type = 'string'): mixed
+    {
+        $cacheKey = self::CACHE_KEY.'.'.$key;
+
+        $value = Cache::remember(
+            $cacheKey,
+            now()->addHours(self::CACHE_TTL_HOURS),
+            function () use ($key) {
+                $setting = Setting::where('key', $key)->first();
+
+                if ($setting === null) {
+                    return null;
+                }
+
+                return $setting->typed_value;
+            }
+        );
+
+        if ($value === null) {
+            return null;
+        }
+
+        // Ensure proper type casting
+        return match ($type) {
+            'integer' => (int) $value,
+            'float' => (float) $value,
+            'boolean' => (bool) $value,
+            default => $value,
+        };
+    }
+
+    /**
+     * Set a setting value in the database and clear cache.
+     */
+    public function set(string $key, mixed $value, string $type = 'string', string $group = 'general'): void
+    {
+        $setting = Setting::firstOrNew(['key' => $key]);
+        $setting->type = $type;
+        $setting->group = $group;
+        $setting->typed_value = $value;
+        $setting->save();
+
+        $this->clearCacheForKey($key);
+    }
+
+    /**
+     * Clear the cache for a specific setting key.
+     */
+    protected function clearCacheForKey(string $key): void
+    {
+        $cacheKey = self::CACHE_KEY.'.'.$key;
+        Cache::forget($cacheKey);
+    }
+
+    /**
+     * Clear all settings cache.
+     */
+    public function clearCache(): void
+    {
+        Cache::flush();
+    }
+}

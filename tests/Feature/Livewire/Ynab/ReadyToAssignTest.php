@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Livewire\Ynab\ReadyToAssign;
+use App\Services\SettingsService;
 use App\Services\YnabService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -11,6 +12,22 @@ use Livewire\Livewire;
 beforeEach(function () {
     // Clear YNAB cache before each test to ensure clean state
     Cache::forget('ynab:budget_summary:test-budget');
+
+    // Set up YNAB credentials in settings for all tests
+    $settings = app(SettingsService::class);
+    $settings->setYnabEnabled(true);
+    $settings->setYnabToken('test-token');
+    $settings->setYnabBudgetId('test-budget');
+
+    // Re-bind YnabService to use the settings
+    app()->singleton(YnabService::class, function ($app) {
+        $settings = $app->make(SettingsService::class);
+
+        return new YnabService(
+            token: $settings->getYnabToken() ?? '',
+            budgetId: $settings->getYnabBudgetId() ?? ''
+        );
+    });
 });
 
 it('shows loading state initially then displays amount', function () {
@@ -24,17 +41,6 @@ it('shows loading state initially then displays amount', function () {
         ], 200),
     ]);
 
-    config(['services.ynab.token' => 'test-token']);
-    config(['services.ynab.budget_id' => 'test-budget']);
-
-    // Re-bind the service with the new config
-    app()->singleton(YnabService::class, function () {
-        return new YnabService(
-            token: config('services.ynab.token'),
-            budgetId: config('services.ynab.budget_id')
-        );
-    });
-
     Livewire::test(ReadyToAssign::class)
         ->assertSet('isLoading', false)
         ->assertSet('hasError', false)
@@ -43,13 +49,19 @@ it('shows loading state initially then displays amount', function () {
 });
 
 it('shows nothing when YNAB is not configured', function () {
-    config(['services.ynab.token' => null]);
-    config(['services.ynab.budget_id' => null]);
+    // Disable YNAB and clear credentials
+    $settings = app(SettingsService::class);
+    $settings->setYnabEnabled(false);
+    $settings->setYnabToken(null);
+    $settings->setYnabBudgetId(null);
 
-    app()->singleton(YnabService::class, function () {
+    // Re-bind YnabService to use the updated settings
+    app()->singleton(YnabService::class, function ($app) {
+        $settings = $app->make(SettingsService::class);
+
         return new YnabService(
-            token: config('services.ynab.token') ?? '',
-            budgetId: config('services.ynab.budget_id') ?? ''
+            token: $settings->getYnabToken() ?? '',
+            budgetId: $settings->getYnabBudgetId() ?? ''
         );
     });
 
@@ -63,16 +75,6 @@ it('shows error state when YNAB API fails', function () {
     Http::fake([
         'api.ynab.com/v1/budgets/*' => Http::response(null, 500),
     ]);
-
-    config(['services.ynab.token' => 'test-token']);
-    config(['services.ynab.budget_id' => 'test-budget']);
-
-    app()->singleton(YnabService::class, function () {
-        return new YnabService(
-            token: config('services.ynab.token'),
-            budgetId: config('services.ynab.budget_id')
-        );
-    });
 
     Livewire::test(ReadyToAssign::class)
         ->assertSet('hasError', true)
@@ -98,16 +100,6 @@ it('can refresh the data', function () {
             ], 200),
     ]);
 
-    config(['services.ynab.token' => 'test-token']);
-    config(['services.ynab.budget_id' => 'test-budget']);
-
-    app()->singleton(YnabService::class, function () {
-        return new YnabService(
-            token: config('services.ynab.token'),
-            budgetId: config('services.ynab.budget_id')
-        );
-    });
-
     Livewire::test(ReadyToAssign::class)
         ->assertSet('amount', 1000.0)
         ->call('refresh')
@@ -125,16 +117,6 @@ it('handles zero ready to assign amount', function () {
         ], 200),
     ]);
 
-    config(['services.ynab.token' => 'test-token']);
-    config(['services.ynab.budget_id' => 'test-budget']);
-
-    app()->singleton(YnabService::class, function () {
-        return new YnabService(
-            token: config('services.ynab.token'),
-            budgetId: config('services.ynab.budget_id')
-        );
-    });
-
     Livewire::test(ReadyToAssign::class)
         ->assertSet('amount', 0.0)
         ->assertSee('0 kr');
@@ -150,16 +132,6 @@ it('handles negative ready to assign (overbudgeted)', function () {
             ],
         ], 200),
     ]);
-
-    config(['services.ynab.token' => 'test-token']);
-    config(['services.ynab.budget_id' => 'test-budget']);
-
-    app()->singleton(YnabService::class, function () {
-        return new YnabService(
-            token: config('services.ynab.token'),
-            budgetId: config('services.ynab.budget_id')
-        );
-    });
 
     Livewire::test(ReadyToAssign::class)
         ->assertSet('amount', -500.0)

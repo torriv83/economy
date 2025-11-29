@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Ynab;
 
+use App\Services\SettingsService;
 use App\Services\YnabService;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
@@ -18,15 +19,29 @@ class ReadyToAssign extends Component
 
     public bool $isConfigured = true;
 
+    public bool $ynabEnabled = false;
+
     protected YnabService $ynabService;
 
-    public function boot(YnabService $ynabService): void
+    protected SettingsService $settingsService;
+
+    public function boot(YnabService $ynabService, SettingsService $settingsService): void
     {
         $this->ynabService = $ynabService;
+        $this->settingsService = $settingsService;
     }
 
     public function mount(): void
     {
+        $this->ynabEnabled = $this->settingsService->isYnabEnabled();
+        $this->isConfigured = $this->settingsService->isYnabConfigured();
+
+        if (! $this->ynabEnabled) {
+            $this->isLoading = false;
+
+            return;
+        }
+
         $this->loadReadyToAssign();
     }
 
@@ -36,7 +51,7 @@ class ReadyToAssign extends Component
         $this->hasError = false;
 
         // Check if YNAB is configured
-        if (empty(config('services.ynab.token')) || empty(config('services.ynab.budget_id'))) {
+        if (! $this->settingsService->isYnabConfigured()) {
             $this->isConfigured = false;
             $this->isLoading = false;
 

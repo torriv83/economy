@@ -8,6 +8,7 @@ use App\Services\DebtCacheService;
 use App\Services\DebtCalculationService;
 use App\Services\PaymentService;
 use App\Services\PayoffSettingsService;
+use App\Services\SettingsService;
 use App\Services\YnabDiscrepancyService;
 use App\Services\YnabService;
 use App\Services\YnabSyncService;
@@ -27,7 +28,8 @@ test('shows user friendly message when YNAB is down', function () {
         app(PaymentService::class),
         app(PayoffSettingsService::class),
         app(DebtCacheService::class),
-        app(YnabSyncService::class)
+        app(YnabSyncService::class),
+        app(SettingsService::class)
     );
 
     $component->checkYnab();
@@ -52,7 +54,8 @@ test('shows user friendly message when YNAB times out', function () {
         app(PaymentService::class),
         app(PayoffSettingsService::class),
         app(DebtCacheService::class),
-        app(YnabSyncService::class)
+        app(YnabSyncService::class),
+        app(SettingsService::class)
     );
 
     $component->checkYnab();
@@ -88,7 +91,8 @@ test('proceeds with sync when YNAB is accessible', function () {
         app(PaymentService::class),
         app(PayoffSettingsService::class),
         app(DebtCacheService::class),
-        app(YnabSyncService::class)
+        app(YnabSyncService::class),
+        app(SettingsService::class)
     );
 
     $component->checkYnab();

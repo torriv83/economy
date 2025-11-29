@@ -45,17 +45,20 @@ class MinimumPaymentRule implements ValidationRule
     {
         if ($this->type === 'kredittkort') {
             // Credit card: 3% of balance or 300 kr, whichever is higher
-            return max($this->balance * 0.03, 300);
+            $percentage = config('debt.minimum_payment.kredittkort.percentage', 0.03);
+            $minimumAmount = config('debt.minimum_payment.kredittkort.minimum_amount', 300);
+
+            return max($this->balance * $percentage, $minimumAmount);
         }
 
         // Forbrukslån: Calculate payment that pays off debt in 60 months with interest
         // Using amortization formula: P = (r * PV) / (1 - (1 + r)^-n)
         // where r = monthly rate, PV = balance, n = 60 months
         $monthlyRate = ($this->interestRate / 100) / 12;
-        $numberOfMonths = 60;
+        $numberOfMonths = config('debt.minimum_payment.forbrukslån.payoff_months', 60);
 
         if ($monthlyRate == 0) {
-            // If no interest, simply divide balance by 60 months
+            // If no interest, simply divide balance by number of months
             return $this->balance / $numberOfMonths;
         }
 

@@ -1,5 +1,7 @@
 <div>
-    @if (!$isConfigured)
+    @if (!$ynabEnabled)
+        {{-- YNAB disabled - show nothing --}}
+    @elseif (!$isConfigured)
         {{-- YNAB not configured - show nothing --}}
     @elseif ($isLoading)
         {{-- Loading state --}}
