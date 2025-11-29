@@ -641,7 +641,44 @@
                             <p>{{ $ynabError }}</p>
                         </div>
                     </div>
-                @elseif (!empty($ynabComparisonResults))
+                @elseif (!empty($ynabDebtSummary))
+                    {{-- Debt Summary --}}
+                    <div class="mb-6">
+                        <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{{ __('app.ynab_debt_status') }}</h4>
+                        <div class="grid gap-2">
+                            @foreach ($ynabDebtSummary as $summary)
+                                <div class="flex items-center justify-between px-3 py-2 rounded-lg {{ $summary['status'] === 'all_matched' ? 'bg-green-50 dark:bg-green-900/20' : ($summary['status'] === 'has_issues' ? 'bg-yellow-50 dark:bg-yellow-900/20' : 'bg-gray-50 dark:bg-gray-700/50') }}">
+                                    <span class="font-medium text-gray-900 dark:text-white">{{ $summary['debt_name'] }}</span>
+                                    <div class="flex items-center gap-2">
+                                        @if ($summary['status'] === 'all_matched')
+                                            <span class="inline-flex items-center text-sm text-green-700 dark:text-green-300">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                </svg>
+                                                {{ __('app.ynab_all_matched') }}
+                                            </span>
+                                        @elseif ($summary['status'] === 'has_issues')
+                                            <span class="inline-flex items-center text-sm text-yellow-700 dark:text-yellow-300">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                                </svg>
+                                                {{ __('app.ynab_needs_attention') }}
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center text-sm text-gray-500 dark:text-gray-400">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                                                </svg>
+                                                {{ __('app.ynab_no_transactions') }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    @if (!empty($ynabComparisonResults))
                     {{-- Results --}}
                     <div class="space-y-6">
                         @foreach ($ynabComparisonResults as $result)
@@ -671,7 +708,14 @@
                                                                 </svg>
                                                                 {{ __('app.transaction_missing') }}
                                                             </span>
-                                                        @else
+                                                        @elseif ($tx['status'] === 'linkable')
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200">
+                                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                                                                </svg>
+                                                                {{ __('app.transaction_linkable') }}
+                                                            </span>
+                                                        @elseif ($tx['status'] === 'mismatch')
                                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200">
                                                                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -686,9 +730,12 @@
                                                     <div class="text-lg font-semibold text-gray-900 dark:text-white">
                                                         {{ __('app.ynab_amount') }}: {{ number_format($tx['amount'], 0, ',', ' ') }} kr
                                                     </div>
-                                                    @if ($tx['status'] === 'mismatch' && $tx['local_amount'])
+                                                    @if (($tx['status'] === 'mismatch' || $tx['status'] === 'linkable') && $tx['local_amount'])
                                                         <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">
                                                             {{ __('app.local_amount') }}: {{ number_format($tx['local_amount'], 0, ',', ' ') }} kr
+                                                            @if ($tx['status'] === 'linkable' && isset($tx['local_date']))
+                                                                ({{ \Carbon\Carbon::parse($tx['local_date'])->format('d.m.Y') }})
+                                                            @endif
                                                         </div>
                                                     @endif
                                                     @if ($tx['memo'])
@@ -705,6 +752,14 @@
                                                             class="cursor-pointer px-3 py-1.5 text-sm font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors"
                                                         >
                                                             {{ __('app.import_transaction') }}
+                                                        </button>
+                                                    @elseif ($tx['status'] === 'linkable')
+                                                        <button
+                                                            wire:click="linkYnabTransaction('{{ $tx['id'] }}', {{ $result['debt_id'] }})"
+                                                            type="button"
+                                                            class="cursor-pointer px-3 py-1.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                                                        >
+                                                            {{ __('app.link_transaction') }}
                                                         </button>
                                                     @elseif ($tx['status'] === 'mismatch')
                                                         <button
@@ -723,6 +778,7 @@
                             </div>
                         @endforeach
                     </div>
+                    @endif
                 @endif
             </x-modal.body>
 

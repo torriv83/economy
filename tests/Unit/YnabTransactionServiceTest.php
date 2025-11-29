@@ -164,6 +164,60 @@ test('compare transactions identifies mismatched amounts', function () {
         ->and($results[0]['amount'])->toBe(550.00);
 });
 
+test('import transaction calculates month_number as integer', function () {
+    // Create debt on a specific date with time component
+    $debt = Debt::factory()->create([
+        'name' => 'Test Debt',
+        'balance' => 5000,
+        'ynab_account_id' => 'ynab-123',
+        'created_at' => '2025-11-19 16:18:27', // Middle of the month with time
+    ]);
+
+    // Transaction later in same month (should still be month 1)
+    $transaction = [
+        'id' => 'ynab-tx-month-test',
+        'date' => '2025-11-28', // 9 days later in same month
+        'amount' => 500.00,
+        'payee_name' => 'Bank Payment',
+        'memo' => 'Test payment',
+    ];
+
+    $service = new YnabTransactionService;
+    $paymentService = app(PaymentService::class);
+
+    $payment = $service->importTransaction($debt, $transaction, $paymentService);
+
+    // month_number should be exactly 1 (integer), not a float like 1.277...
+    expect($payment->month_number)->toBe(1)
+        ->and($payment->month_number)->toBeInt();
+});
+
+test('import transaction calculates correct month_number across months', function () {
+    $debt = Debt::factory()->create([
+        'name' => 'Test Debt',
+        'balance' => 5000,
+        'ynab_account_id' => 'ynab-123',
+        'created_at' => '2025-10-15 10:00:00',
+    ]);
+
+    // Transaction in the next month
+    $transaction = [
+        'id' => 'ynab-tx-month-2',
+        'date' => '2025-11-05', // Next month
+        'amount' => 500.00,
+        'payee_name' => 'Bank Payment',
+        'memo' => 'Second month payment',
+    ];
+
+    $service = new YnabTransactionService;
+    $paymentService = app(PaymentService::class);
+
+    $payment = $service->importTransaction($debt, $transaction, $paymentService);
+
+    expect($payment->month_number)->toBe(2)
+        ->and($payment->month_number)->toBeInt();
+});
+
 test('fuzzy matching finds unlinked payments in same month', function () {
     $debt = Debt::factory()->create([
         'name' => 'Test Debt',

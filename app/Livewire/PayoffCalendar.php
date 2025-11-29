@@ -60,6 +60,9 @@ class PayoffCalendar extends Component
     /** @var array<int, array{debt_id: int, debt_name: string, ynab_transactions: array<int, array{id: string, date: string, amount: float, payee_name: string|null, memo: string|null, status: string, local_payment_id: int|null, local_amount: float|null}>}> */
     public array $ynabComparisonResults = [];
 
+    /** @var array<int, array{debt_id: int, debt_name: string, status: string, transaction_count: int}> */
+    public array $ynabDebtSummary = [];
+
     public string $ynabError = '';
 
     public bool $ynabEnabled = false;
@@ -193,6 +196,7 @@ class PayoffCalendar extends Component
     {
         $this->showYnabModal = true;
         $this->ynabComparisonResults = [];
+        $this->ynabDebtSummary = [];
         $this->ynabError = '';
         $this->checkYnabTransactions();
     }
@@ -201,6 +205,7 @@ class PayoffCalendar extends Component
     {
         $this->showYnabModal = false;
         $this->ynabComparisonResults = [];
+        $this->ynabDebtSummary = [];
         $this->ynabError = '';
         $this->isCheckingYnab = false;
     }
@@ -210,6 +215,7 @@ class PayoffCalendar extends Component
         $this->isCheckingYnab = true;
         $this->ynabError = '';
         $this->ynabComparisonResults = [];
+        $this->ynabDebtSummary = [];
 
         $token = config('services.ynab.token');
         $budgetId = config('services.ynab.budget_id');
@@ -241,7 +247,15 @@ class PayoffCalendar extends Component
                     ->orderBy('payment_date', 'desc')
                     ->first();
 
-                $sinceDate = $latestPayment?->payment_date?->subDays(7) ?? $debt->created_at;
+                // Use start of the month the debt was created to catch transactions
+                // made earlier in the same month before the debt was added
+                $monthStart = $debt->created_at->copy()->startOfMonth();
+                $paymentBasedDate = $latestPayment?->payment_date?->subDays(7);
+
+                // Use the earlier of the two dates to ensure we catch all transactions
+                $sinceDate = $paymentBasedDate && $paymentBasedDate->lt($monthStart)
+                    ? $paymentBasedDate
+                    : $monthStart;
 
                 // Fetch transactions from YNAB
                 $ynabTransactions = $ynabService->fetchPaymentTransactions(
@@ -250,11 +264,29 @@ class PayoffCalendar extends Component
                 );
 
                 if ($ynabTransactions->isEmpty()) {
+                    // Track debts with no YNAB transactions
+                    $this->ynabDebtSummary[] = [
+                        'debt_id' => $debt->id,
+                        'debt_name' => $debt->name,
+                        'status' => 'no_transactions',
+                        'transaction_count' => 0,
+                    ];
+
                     continue;
                 }
 
                 // Use service to compare transactions
                 $comparedTransactions = $this->ynabTransactionService->compareTransactionsForDebt($debt, $ynabTransactions);
+
+                // Determine status based on transaction comparison
+                $hasIssues = collect($comparedTransactions)->contains(fn ($tx) => $tx['status'] !== 'matched');
+
+                $this->ynabDebtSummary[] = [
+                    'debt_id' => $debt->id,
+                    'debt_name' => $debt->name,
+                    'status' => $hasIssues ? 'has_issues' : 'all_matched',
+                    'transaction_count' => count($comparedTransactions),
+                ];
 
                 if (! empty($comparedTransactions)) {
                     $this->ynabComparisonResults[] = [
@@ -263,10 +295,6 @@ class PayoffCalendar extends Component
                         'ynab_transactions' => $comparedTransactions,
                     ];
                 }
-            }
-
-            if (empty($this->ynabComparisonResults)) {
-                $this->ynabError = __('app.no_new_ynab_transactions');
             }
         } catch (\Exception $e) {
             $this->ynabError = __('app.ynab_connection_error').': '.$e->getMessage();
@@ -310,6 +338,38 @@ class PayoffCalendar extends Component
         // Refresh the comparison results
         $this->checkYnabTransactions();
         session()->flash('ynab_import_success', __('app.ynab_payment_updated'));
+    }
+
+    public function linkYnabTransaction(string $ynabTransactionId, int $debtId): void
+    {
+        // Find the transaction in our results
+        $transaction = null;
+        foreach ($this->ynabComparisonResults as $result) {
+            if ($result['debt_id'] === $debtId) {
+                foreach ($result['ynab_transactions'] as $tx) {
+                    if ($tx['id'] === $ynabTransactionId && $tx['status'] === 'linkable') {
+                        $transaction = $tx;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        if (! $transaction || ! isset($transaction['local_payment_id'])) {
+            return;
+        }
+
+        $payment = Payment::findOrFail($transaction['local_payment_id']);
+        $this->ynabTransactionService->linkTransactionToPayment(
+            $payment,
+            $ynabTransactionId,
+            $transaction['amount'],
+            $transaction['date']
+        );
+
+        // Refresh the comparison results
+        $this->checkYnabTransactions();
+        session()->flash('ynab_import_success', __('app.ynab_payment_linked'));
     }
 
     /**

@@ -23,7 +23,8 @@ class YnabTransactionService
         $paymentMonth = $paymentDate->format('Y-m');
 
         // Calculate month number based on payment date relative to debt creation
-        $monthNumber = $debt->created_at->diffInMonths($paymentDate) + 1;
+        // Use startOfMonth to compare months properly, ensuring integer result
+        $monthNumber = (int) $debt->created_at->startOfMonth()->diffInMonths($paymentDate->startOfMonth()) + 1;
 
         $payment = null;
 
@@ -131,17 +132,35 @@ class YnabTransactionService
                         'local_amount' => $potentialMatch->actual_amount,
                     ];
                 } else {
-                    // No match found - this is a new transaction
-                    $comparedTransactions[] = [
-                        'id' => $ynabTx['id'],
-                        'date' => $ynabTx['date'],
-                        'amount' => $ynabTx['amount'],
-                        'payee_name' => $ynabTx['payee_name'],
-                        'memo' => $ynabTx['memo'],
-                        'status' => 'missing',
-                        'local_payment_id' => null,
-                        'local_amount' => null,
-                    ];
+                    // Check if there's any payment in the same month (different amount)
+                    $monthPayment = $this->findPaymentInMonth($localPaymentsByMonth, $transactionMonth);
+
+                    if ($monthPayment) {
+                        // Payment exists for this month but with different amount - offer to link
+                        $comparedTransactions[] = [
+                            'id' => $ynabTx['id'],
+                            'date' => $ynabTx['date'],
+                            'amount' => $ynabTx['amount'],
+                            'payee_name' => $ynabTx['payee_name'],
+                            'memo' => $ynabTx['memo'],
+                            'status' => 'linkable',
+                            'local_payment_id' => $monthPayment->id,
+                            'local_amount' => $monthPayment->actual_amount,
+                            'local_date' => $monthPayment->payment_date->format('Y-m-d'),
+                        ];
+                    } else {
+                        // No match found - this is a new transaction
+                        $comparedTransactions[] = [
+                            'id' => $ynabTx['id'],
+                            'date' => $ynabTx['date'],
+                            'amount' => $ynabTx['amount'],
+                            'payee_name' => $ynabTx['payee_name'],
+                            'memo' => $ynabTx['memo'],
+                            'status' => 'missing',
+                            'local_payment_id' => null,
+                            'local_amount' => null,
+                        ];
+                    }
                 }
             }
         }
@@ -170,5 +189,33 @@ class YnabTransactionService
         }
 
         return null;
+    }
+
+    /**
+     * Find any payment in the given month (regardless of amount).
+     *
+     * @param  Collection<string, \Illuminate\Database\Eloquent\Collection<int, Payment>>  $localPaymentsByMonth
+     */
+    private function findPaymentInMonth(Collection $localPaymentsByMonth, string $transactionMonth): ?Payment
+    {
+        if (! isset($localPaymentsByMonth[$transactionMonth])) {
+            return null;
+        }
+
+        return $localPaymentsByMonth[$transactionMonth]->first();
+    }
+
+    /**
+     * Link a YNAB transaction to an existing local payment and update it.
+     */
+    public function linkTransactionToPayment(Payment $payment, string $ynabTransactionId, float $amount, string $date): void
+    {
+        $paymentDate = Carbon::parse($date);
+
+        $payment->update([
+            'actual_amount' => $amount,
+            'payment_date' => $paymentDate,
+            'ynab_transaction_id' => $ynabTransactionId,
+        ]);
     }
 }
