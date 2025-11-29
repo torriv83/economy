@@ -30,18 +30,27 @@ class InterestInsights extends Component
         $this->period = $period;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[Computed]
     public function breakdown(): array
     {
         return $this->insightsService->getInterestBreakdown($this->period);
     }
 
+    /**
+     * @return Collection<int, array{debt_id: int, debt_name: string, interest_paid: float, principal_paid: float, total_paid: float}>
+     */
     #[Computed]
     public function perDebtBreakdown(): Collection
     {
         return $this->insightsService->getPerDebtInterestBreakdown($this->period);
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     #[Computed]
     public function scenarios(): array
     {
@@ -57,18 +66,19 @@ class InterestInsights extends Component
     #[Computed]
     public function hasPayments(): bool
     {
-        return $this->breakdown['total_paid'] > 0;
+        return $this->breakdown()['total_paid'] > 0;
     }
 
     #[Computed]
     public function principalPercentage(): float
     {
-        $total = $this->breakdown['total_paid'];
+        $breakdown = $this->breakdown();
+        $total = $breakdown['total_paid'];
         if ($total <= 0) {
             return 0.0;
         }
 
-        return round(($this->breakdown['principal_paid'] / $total) * 100, 1);
+        return round(($breakdown['principal_paid'] / $total) * 100, 1);
     }
 
     public function render(): View

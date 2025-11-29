@@ -36,7 +36,7 @@ test('displays active self-loans correctly', function () {
 
 test('displays empty state when no active loans exist', function () {
     Livewire::test(Overview::class)
-        ->assertSee('Ingen Aktive Privat Lån');
+        ->assertSee(__('app.no_active_self_loans'));
 });
 
 test('calculates total borrowed correctly', function () {

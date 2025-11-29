@@ -53,7 +53,7 @@ test('displays paid-off loans correctly', function () {
 
 test('shows empty state when no history exists', function () {
     Livewire::test(History::class)
-        ->assertSee('Ingen Historikk Ennå');
+        ->assertSee(__('app.no_history_yet'));
 });
 
 test('does not show active loans in paid-off section', function () {

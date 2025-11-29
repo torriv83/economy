@@ -1,6 +1,6 @@
 <div>
     {{-- Overall Progress Bar --}}
-    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
         <div class="flex items-center justify-between mb-2">
             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('app.overall_progress') }}</span>
             <span class="text-sm font-medium text-gray-900 dark:text-white">{{ number_format($this->overallProgress, 1) }}%</span>
@@ -8,6 +8,11 @@
         <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
             <div class="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-500" style="width: {{ $this->overallProgress }}%"></div>
         </div>
+    </div>
+
+    {{-- Ready to Assign from YNAB --}}
+    <div class="mb-8">
+        <livewire:ynab.ready-to-assign />
     </div>
 
     {{-- Debt Payoff Overview --}}

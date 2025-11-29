@@ -142,6 +142,11 @@
         </div>
     @endif
 
+    {{-- Ready to Assign from YNAB --}}
+    <div class="mb-6">
+        <livewire:ynab.ready-to-assign />
+    </div>
+
     {{-- Calendar Section --}}
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         {{-- Calendar Header with Navigation --}}

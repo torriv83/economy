@@ -5,14 +5,31 @@ declare(strict_types=1);
 namespace App\Services;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 class YnabService
 {
+    /**
+     * Cache TTL in seconds (5 minutes).
+     * YNAB allows 200 requests/hour, so caching helps stay within limits.
+     */
+    private const CACHE_TTL = 300;
+
     public function __construct(
         private readonly string $token,
         private readonly string $budgetId
     ) {}
+
+    /**
+     * Clear all cached YNAB data for this budget.
+     */
+    public function clearCache(): void
+    {
+        Cache::forget("ynab:budget_summary:{$this->budgetId}");
+        Cache::forget("ynab:categories:{$this->budgetId}");
+        Cache::forget("ynab:debt_accounts:{$this->budgetId}");
+    }
 
     /**
      * Check if YNAB API is accessible.
@@ -35,6 +52,7 @@ class YnabService
     /**
      * Fetch all debt accounts from YNAB.
      * Returns accounts of type: personalLoan, otherDebt, creditCard.
+     * Results are cached for 5 minutes to stay within YNAB rate limits.
      *
      * @return \Illuminate\Support\Collection<int, array<string, mixed>>
      *
@@ -42,22 +60,26 @@ class YnabService
      */
     public function fetchDebtAccounts(): Collection
     {
-        $response = Http::withToken($this->token)
-            ->get("https://api.ynab.com/v1/budgets/{$this->budgetId}/accounts")
-            ->throw()
-            ->json();
+        $cacheKey = "ynab:debt_accounts:{$this->budgetId}";
 
-        /** @var array<int, array<string, mixed>> $accountsData */
-        $accountsData = $response['data']['accounts'] ?? [];
+        return Cache::remember($cacheKey, self::CACHE_TTL, function () {
+            $response = Http::withToken($this->token)
+                ->get("https://api.ynab.com/v1/budgets/{$this->budgetId}/accounts")
+                ->throw()
+                ->json();
 
-        /** @var \Illuminate\Support\Collection<int, array<string, mixed>> $accounts */
-        $accounts = collect($accountsData);
+            /** @var array<int, array<string, mixed>> $accountsData */
+            $accountsData = $response['data']['accounts'] ?? [];
 
-        return $accounts->filter(function ($account) {
-            return in_array($account['type'], ['personalLoan', 'otherDebt', 'creditCard'])
-                && ! $account['deleted'];
-        })->map(function ($account) {
-            return $this->mapYnabAccount($account);
+            /** @var \Illuminate\Support\Collection<int, array<string, mixed>> $accounts */
+            $accounts = collect($accountsData);
+
+            return $accounts->filter(function ($account) {
+                return in_array($account['type'], ['personalLoan', 'otherDebt', 'creditCard'])
+                    && ! $account['deleted'];
+            })->map(function ($account) {
+                return $this->mapYnabAccount($account);
+            });
         });
     }
 
@@ -188,6 +210,109 @@ class YnabService
             'amount' => $amount,
             'payee_name' => $transaction['payee_name'] ?? null,
             'memo' => $transaction['memo'] ?? null,
+        ];
+    }
+
+    /**
+     * Fetch budget summary including Ready to Assign amount.
+     * Results are cached for 5 minutes to stay within YNAB rate limits.
+     *
+     * @return array{ready_to_assign: float, currency_format: array<string, mixed>|null}
+     *
+     * @throws \Illuminate\Http\Client\RequestException
+     */
+    public function fetchBudgetSummary(): array
+    {
+        $cacheKey = "ynab:budget_summary:{$this->budgetId}";
+
+        return Cache::remember($cacheKey, self::CACHE_TTL, function () {
+            $response = Http::withToken($this->token)
+                ->get("https://api.ynab.com/v1/budgets/{$this->budgetId}")
+                ->throw()
+                ->json();
+
+            $budget = $response['data']['budget'] ?? [];
+
+            // to_be_budgeted is in milliunits
+            $readyToAssign = ($budget['to_be_budgeted'] ?? 0) / 1000;
+
+            return [
+                'ready_to_assign' => $readyToAssign,
+                'currency_format' => $budget['currency_format'] ?? null,
+            ];
+        });
+    }
+
+    /**
+     * Fetch all categories from YNAB with balances and goal info.
+     * Results are cached for 5 minutes to stay within YNAB rate limits.
+     *
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     *
+     * @throws \Illuminate\Http\Client\RequestException
+     */
+    public function fetchCategories(): Collection
+    {
+        $cacheKey = "ynab:categories:{$this->budgetId}";
+
+        return Cache::remember($cacheKey, self::CACHE_TTL, function () {
+            $response = Http::withToken($this->token)
+                ->get("https://api.ynab.com/v1/budgets/{$this->budgetId}/categories")
+                ->throw()
+                ->json();
+
+            /** @var array<int, array<string, mixed>> $categoryGroups */
+            $categoryGroups = $response['data']['category_groups'] ?? [];
+
+            $categories = collect();
+
+            foreach ($categoryGroups as $group) {
+                // Skip internal YNAB groups
+                if ($group['hidden'] || in_array($group['name'], ['Internal Master Category', 'Credit Card Payments'])) {
+                    continue;
+                }
+
+                foreach ($group['categories'] ?? [] as $category) {
+                    if ($category['hidden'] || $category['deleted']) {
+                        continue;
+                    }
+
+                    $categories->push($this->mapYnabCategory($category, $group['name']));
+                }
+            }
+
+            return $categories;
+        });
+    }
+
+    /**
+     * Map YNAB category data to our app's structure.
+     *
+     * @param  array<string, mixed>  $category
+     * @return array<string, mixed>
+     */
+    protected function mapYnabCategory(array $category, string $groupName): array
+    {
+        // All amounts in milliunits - convert to NOK
+        $balance = ($category['balance'] ?? 0) / 1000;
+        $budgeted = ($category['budgeted'] ?? 0) / 1000;
+        $activity = ($category['activity'] ?? 0) / 1000;
+        $goalTarget = ($category['goal_target'] ?? 0) / 1000;
+        $goalUnderFunded = ($category['goal_under_funded'] ?? 0) / 1000;
+
+        return [
+            'id' => $category['id'],
+            'name' => $category['name'],
+            'group_name' => $groupName,
+            'balance' => $balance,
+            'budgeted' => $budgeted,
+            'activity' => $activity,
+            'goal_type' => $category['goal_type'] ?? null,
+            'goal_target' => $goalTarget,
+            'goal_under_funded' => $goalUnderFunded,
+            'goal_percentage_complete' => $category['goal_percentage_complete'] ?? null,
+            'is_overfunded' => $balance > 0 && $goalTarget > 0 && $balance > $goalTarget,
+            'has_goal' => ($category['goal_type'] ?? null) !== null,
         ];
     }
 }

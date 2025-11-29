@@ -135,11 +135,87 @@ php artisan test --filter=  # Related tests
 
 ---
 
+## [CRITICAL] LAYOUT COMPONENT ARCHITECTURE
+
+**This project uses Layout Components with embedded views - NOT separate routes per page!**
+
+### How Navigation Works in This Project:
+
+Each major section (Debts, Payoff, Settings, etc.) has a **Layout Component** that:
+1. Provides a consistent sidebar menu
+2. Manages view switching via a `$currentView` property
+3. Keeps the URL stable (e.g., always `/debts`, never `/debts/4` or `/debts/create`)
+
+### Pattern Example - DebtLayout:
+
+```php
+// DebtLayout.php manages these views:
+public string $currentView = 'overview'; // overview, create, detail, edit, progress, insights, reconciliations
+
+public function showDetail(int $debtId): void {
+    $this->viewingDebtId = $debtId;
+    $this->currentView = 'detail';
+}
+
+public function showCreate(): void {
+    $this->currentView = 'create';
+}
+```
+
+```blade
+{{-- debt-layout.blade.php switches content based on $currentView --}}
+@if ($currentView === 'overview')
+    <livewire:debt-list />
+@elseif ($currentView === 'detail' && $viewingDebt)
+    <livewire:debts.debt-detail :debt="$viewingDebt" :embedded="true" />
+@elseif ($currentView === 'create')
+    <livewire:create-debt />
+@endif
+```
+
+### Adding New Views - THE RIGHT WAY:
+
+1. **Add a method to the Layout component**: `showNewView()`
+2. **Add the view case to the Blade template**: `@elseif ($currentView === 'newview')`
+3. **Add sidebar button if needed**: Using `wire:click="showNewView"`
+4. **Navigate from child components using**: `$parent.showNewView()`
+
+### Adding New Views - THE WRONG WAY (DO NOT DO THIS):
+
+- [X] Creating a new route like `/debts/something`
+- [X] Using `<a href="{{ route('debts.something') }}">`
+- [X] Creating standalone Livewire components with their own layouts
+- [X] Duplicating sidebar navigation in child components
+
+### Navigation from Child Components:
+
+```blade
+{{-- CORRECT: Use $parent to call layout methods --}}
+<button wire:click="$parent.showDetail({{ $debt->id }})">View</button>
+<button wire:click="$parent.editDebt({{ $debt->id }})">Edit</button>
+<button wire:click="$parent.showCreate">Add New</button>
+
+{{-- WRONG: Using routes that change the URL --}}
+<a href="{{ route('debts.show', $debt) }}">View</a>
+```
+
+### Query Parameter Support (for direct URL access):
+
+The layout components support query parameters for bookmarkable URLs:
+- `/debts?view=detail&debtId=4` - View debt #4
+- `/debts?view=edit&debtId=4` - Edit debt #4
+- `/debts?view=create` - Create new debt
+
+---
+
 ## [COMMON MISTAKES] THINGS I TEND TO FORGET
 
 **Double-check these before finishing:**
 
-- [ ] **Routes** - Did I register the route for new pages/components?
+- [ ] **Layout Component Pattern** - Is this a sub-view that should use `$parent.showX()` instead of a new route?
+- [ ] **Sidebar Consistency** - Does the new view maintain the sidebar? (Use embedded mode, not standalone)
+- [ ] **URL Stability** - Does navigation keep the URL stable (e.g., `/debts`) or wrongly change it?
+- [ ] **Routes** - Did I register the route for new pages/components? (Only for TOP-LEVEL pages!)
 - [ ] **Navigation** - Did I add links to the new page from menus/UI?
 - [ ] **Run migrations** - Did I actually run `php artisan migrate`?
 - [ ] **Update factories** - If I added columns, did I update the factory?

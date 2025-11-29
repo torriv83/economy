@@ -54,6 +54,15 @@ describe('YNAB modal', function () {
 
     test('shows error when YNAB not configured', function () {
         config(['services.ynab.token' => null]);
+        config(['services.ynab.budget_id' => null]);
+
+        // Re-bind the service with empty strings to avoid constructor error
+        app()->singleton(YnabService::class, function () {
+            return new YnabService(
+                token: config('services.ynab.token') ?? '',
+                budgetId: config('services.ynab.budget_id') ?? ''
+            );
+        });
 
         Livewire::test(PayoffCalendar::class)
             ->call('openYnabModal')

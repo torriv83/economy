@@ -152,7 +152,7 @@ class YnabTransactionService
     /**
      * Find a fuzzy match for a YNAB transaction in local payments.
      *
-     * @param  Collection<string, Collection<int, Payment>>  $localPaymentsByMonth
+     * @param  Collection<string, \Illuminate\Database\Eloquent\Collection<int, Payment>>  $localPaymentsByMonth
      */
     private function findFuzzyMatch(Collection $localPaymentsByMonth, string $transactionMonth, float $amount): ?Payment
     {

@@ -1,17 +1,5 @@
 FEATURE IDEAS 💡
 
-Quick wins (high value, relatively simple):
-- What-if scenarios: Compare 3-5 different extra payment amounts side-by-side
-- Snowflake tracking: Log one-time windfalls (tax refunds, bonuses) and see immediate impact
-
-High-value additions:
-- Budget tracking: Set monthly debt budget and track adherence
-
-Advanced features:
-- Keyboard shortcuts: Alt+H (home), Alt+S (strategies), Alt+P (plan)
-
-Long-term:
-- PWA conversion for offline access + home screen install
 - AI recommendations based on payment patterns
 
 

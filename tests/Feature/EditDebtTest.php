@@ -8,13 +8,13 @@ use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
-test('edit debt page renders successfully', function () {
+test('edit debt page renders successfully via DebtLayout', function () {
     $debt = Debt::factory()->create();
 
-    $response = $this->get("/debts/{$debt->id}/edit");
+    $response = $this->get(route('debts', ['view' => 'edit', 'debtId' => $debt->id]));
 
     $response->assertSuccessful();
-    $response->assertSee('Edit Debt');
+    $response->assertSee(__('app.edit_debt'));
 });
 
 test('edit debt component loads debt data correctly', function () {
