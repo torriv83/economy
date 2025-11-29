@@ -47,18 +47,17 @@ class AccelerationOpportunities extends Component
         $this->ynabEnabled = $this->settingsService->isYnabEnabled();
         $this->isConfigured = $this->settingsService->isYnabConfigured();
 
-        if (! $this->ynabEnabled) {
+        // Don't load YNAB data here - let wire:init handle it for instant page navigation
+        // Set isLoading to false if YNAB is disabled or not configured (nothing to load)
+        if (! $this->ynabEnabled || ! $this->isConfigured) {
             $this->isLoading = false;
-
-            return;
         }
-
-        $this->loadOpportunities();
     }
 
     public function loadOpportunities(): void
     {
-        $this->isLoading = true;
+        // Don't set isLoading = true here - it's already true from mount()
+        // Setting it again causes unnecessary re-renders that break Alpine.js state
         $this->hasError = false;
 
         // Check if YNAB is configured
@@ -80,6 +79,9 @@ class AccelerationOpportunities extends Component
 
     public function refresh(): void
     {
+        // Show loading state for refresh
+        $this->isLoading = true;
+
         // Clear YNAB cache to get fresh data
         $this->ynabService->clearCache();
         $this->loadOpportunities();

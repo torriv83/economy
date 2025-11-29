@@ -1,4 +1,4 @@
-<div>
+<div wire:init="loadOpportunities" x-data="{ expanded: false, initialCount: 5 }">
     @if (!$ynabEnabled)
         {{-- YNAB disabled - show nothing --}}
     @elseif (!$isConfigured)
@@ -56,15 +56,16 @@
         </div>
     @else
         {{-- Opportunities list --}}
-        <div class="space-y-3" x-data="{ expanded: false, initialCount: 5 }">
+        <div class="space-y-3">
             <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{ __('app.acceleration_description') }}</p>
 
             @foreach ($opportunities as $index => $opportunity)
                 <div
-                    x-show="expanded || {{ $index }} < initialCount"
-                    x-transition:enter="transition ease-out duration-200"
-                    x-transition:enter-start="opacity-0 -translate-y-2"
-                    x-transition:enter-end="opacity-100 translate-y-0"
+                    wire:key="opportunity-{{ $index }}-{{ $opportunity['name'] }}"
+                    @if ($index >= 5)
+                        x-show="expanded"
+                        x-cloak
+                    @endif
                     class="flex items-start gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-colors"
                 >
                     {{-- Icon based on source --}}

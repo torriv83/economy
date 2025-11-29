@@ -560,4 +560,12 @@ return [
     'ynab_budget_id_required' => 'Budget ID is required.',
     'ynab_budget_id_string' => 'Budget ID must be a string.',
     'ynab_budget_id_uuid' => 'Budget ID must be a valid UUID.',
+
+    // YNAB Background Sync
+    'ynab_background_sync' => 'Background Sync',
+    'ynab_background_sync_description' => 'Keep YNAB data updated automatically in the background for faster page loading.',
+    'ynab_enable_background_sync' => 'Enable background sync',
+    'ynab_sync_interval' => 'Sync interval',
+    'ynab_last_sync' => 'Last synced',
+    'minutes' => 'minutes',
 ];

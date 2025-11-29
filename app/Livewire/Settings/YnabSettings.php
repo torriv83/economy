@@ -23,6 +23,15 @@ class YnabSettings extends Component
 
     public bool $isTesting = false;
 
+    public bool $backgroundSyncEnabled = false;
+
+    public int $backgroundSyncInterval = 30;
+
+    public ?string $lastSyncAt = null;
+
+    /** @var array<int, int> */
+    public array $intervalOptions = [5, 10, 15, 30, 60];
+
     protected SettingsService $settingsService;
 
     /**
@@ -67,11 +76,29 @@ class YnabSettings extends Component
         if ($storedBudgetId !== null) {
             $this->budgetId = $storedBudgetId;
         }
+
+        // Load background sync settings
+        $this->backgroundSyncEnabled = $this->settingsService->isYnabBackgroundSyncEnabled();
+        $this->backgroundSyncInterval = $this->settingsService->getYnabBackgroundSyncInterval();
+        $lastSync = $this->settingsService->getYnabLastSyncAt();
+        $this->lastSyncAt = $lastSync?->format('d.m.Y H:i');
     }
 
     public function updatedYnabEnabled(): void
     {
         $this->settingsService->setYnabEnabled($this->ynabEnabled);
+        $this->dispatch('ynab-settings-saved');
+    }
+
+    public function updatedBackgroundSyncEnabled(): void
+    {
+        $this->settingsService->setYnabBackgroundSyncEnabled($this->backgroundSyncEnabled);
+        $this->dispatch('ynab-settings-saved');
+    }
+
+    public function updatedBackgroundSyncInterval(): void
+    {
+        $this->settingsService->setYnabBackgroundSyncInterval($this->backgroundSyncInterval);
         $this->dispatch('ynab-settings-saved');
     }
 

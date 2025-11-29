@@ -3,34 +3,27 @@
 declare(strict_types=1);
 
 use App\Livewire\Ynab\ReadyToAssign;
-use App\Services\SettingsService;
+use App\Models\Setting;
 use App\Services\YnabService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
 
+uses(RefreshDatabase::class);
+
 beforeEach(function () {
     // Clear YNAB cache before each test to ensure clean state
     Cache::forget('ynab:budget_summary:test-budget');
-
-    // Set up YNAB credentials in settings for all tests
-    $settings = app(SettingsService::class);
-    $settings->setYnabEnabled(true);
-    $settings->setYnabToken('test-token');
-    $settings->setYnabBudgetId('test-budget');
-
-    // Re-bind YnabService to use the settings
-    app()->singleton(YnabService::class, function ($app) {
-        $settings = $app->make(SettingsService::class);
-
-        return new YnabService(
-            token: $settings->getYnabToken() ?? '',
-            budgetId: $settings->getYnabBudgetId() ?? ''
-        );
-    });
 });
 
 it('shows loading state initially then displays amount', function () {
+    Setting::create(['key' => 'ynab.enabled', 'value' => 'true', 'type' => 'boolean', 'group' => 'ynab']);
+    Setting::create(['key' => 'ynab.token', 'value' => encrypt('test-token'), 'type' => 'encrypted', 'group' => 'ynab']);
+    Setting::create(['key' => 'ynab.budget_id', 'value' => 'test-budget', 'type' => 'string', 'group' => 'ynab']);
+
+    app()->singleton(YnabService::class, fn () => new YnabService('test-token', 'test-budget'));
+
     Http::fake([
         'api.ynab.com/v1/budgets/*' => Http::response([
             'data' => [
@@ -49,21 +42,10 @@ it('shows loading state initially then displays amount', function () {
 });
 
 it('shows nothing when YNAB is not configured', function () {
-    // Disable YNAB and clear credentials
-    $settings = app(SettingsService::class);
-    $settings->setYnabEnabled(false);
-    $settings->setYnabToken(null);
-    $settings->setYnabBudgetId(null);
+    // Don't create any YNAB settings - this simulates unconfigured state
+    // RefreshDatabase ensures we start with an empty settings table
 
-    // Re-bind YnabService to use the updated settings
-    app()->singleton(YnabService::class, function ($app) {
-        $settings = $app->make(SettingsService::class);
-
-        return new YnabService(
-            token: $settings->getYnabToken() ?? '',
-            budgetId: $settings->getYnabBudgetId() ?? ''
-        );
-    });
+    app()->singleton(YnabService::class, fn () => new YnabService('', ''));
 
     Livewire::test(ReadyToAssign::class)
         ->assertSet('isConfigured', false)
@@ -72,6 +54,12 @@ it('shows nothing when YNAB is not configured', function () {
 });
 
 it('shows error state when YNAB API fails', function () {
+    Setting::create(['key' => 'ynab.enabled', 'value' => 'true', 'type' => 'boolean', 'group' => 'ynab']);
+    Setting::create(['key' => 'ynab.token', 'value' => encrypt('test-token'), 'type' => 'encrypted', 'group' => 'ynab']);
+    Setting::create(['key' => 'ynab.budget_id', 'value' => 'test-budget', 'type' => 'string', 'group' => 'ynab']);
+
+    app()->singleton(YnabService::class, fn () => new YnabService('test-token', 'test-budget'));
+
     Http::fake([
         'api.ynab.com/v1/budgets/*' => Http::response(null, 500),
     ]);
@@ -82,6 +70,12 @@ it('shows error state when YNAB API fails', function () {
 });
 
 it('can refresh the data', function () {
+    Setting::create(['key' => 'ynab.enabled', 'value' => 'true', 'type' => 'boolean', 'group' => 'ynab']);
+    Setting::create(['key' => 'ynab.token', 'value' => encrypt('test-token'), 'type' => 'encrypted', 'group' => 'ynab']);
+    Setting::create(['key' => 'ynab.budget_id', 'value' => 'test-budget', 'type' => 'string', 'group' => 'ynab']);
+
+    app()->singleton(YnabService::class, fn () => new YnabService('test-token', 'test-budget'));
+
     Http::fake([
         'api.ynab.com/v1/budgets/*' => Http::sequence()
             ->push([
@@ -107,6 +101,12 @@ it('can refresh the data', function () {
 });
 
 it('handles zero ready to assign amount', function () {
+    Setting::create(['key' => 'ynab.enabled', 'value' => 'true', 'type' => 'boolean', 'group' => 'ynab']);
+    Setting::create(['key' => 'ynab.token', 'value' => encrypt('test-token'), 'type' => 'encrypted', 'group' => 'ynab']);
+    Setting::create(['key' => 'ynab.budget_id', 'value' => 'test-budget', 'type' => 'string', 'group' => 'ynab']);
+
+    app()->singleton(YnabService::class, fn () => new YnabService('test-token', 'test-budget'));
+
     Http::fake([
         'api.ynab.com/v1/budgets/*' => Http::response([
             'data' => [
@@ -123,6 +123,12 @@ it('handles zero ready to assign amount', function () {
 });
 
 it('handles negative ready to assign (overbudgeted)', function () {
+    Setting::create(['key' => 'ynab.enabled', 'value' => 'true', 'type' => 'boolean', 'group' => 'ynab']);
+    Setting::create(['key' => 'ynab.token', 'value' => encrypt('test-token'), 'type' => 'encrypted', 'group' => 'ynab']);
+    Setting::create(['key' => 'ynab.budget_id', 'value' => 'test-budget', 'type' => 'string', 'group' => 'ynab']);
+
+    app()->singleton(YnabService::class, fn () => new YnabService('test-token', 'test-budget'));
+
     Http::fake([
         'api.ynab.com/v1/budgets/*' => Http::response([
             'data' => [

@@ -102,6 +102,77 @@ class SettingsService
     }
 
     /**
+     * Check if YNAB background sync is enabled.
+     */
+    public function isYnabBackgroundSyncEnabled(): bool
+    {
+        return $this->get('ynab.background_sync_enabled', 'boolean') ?? false;
+    }
+
+    /**
+     * Enable or disable YNAB background sync.
+     */
+    public function setYnabBackgroundSyncEnabled(bool $enabled): void
+    {
+        $this->set('ynab.background_sync_enabled', $enabled, 'boolean', 'ynab');
+    }
+
+    /**
+     * Get the YNAB background sync interval in minutes.
+     */
+    public function getYnabBackgroundSyncInterval(): int
+    {
+        return $this->get('ynab.background_sync_interval', 'integer') ?? 30;
+    }
+
+    /**
+     * Set the YNAB background sync interval in minutes.
+     */
+    public function setYnabBackgroundSyncInterval(int $minutes): void
+    {
+        $this->set('ynab.background_sync_interval', $minutes, 'integer', 'ynab');
+    }
+
+    /**
+     * Get the timestamp of the last YNAB background sync.
+     */
+    public function getYnabLastSyncAt(): ?\DateTimeInterface
+    {
+        $timestamp = $this->get('ynab.last_sync_at', 'string');
+
+        return $timestamp ? new \DateTimeImmutable($timestamp) : null;
+    }
+
+    /**
+     * Set the timestamp of the last YNAB background sync.
+     */
+    public function setYnabLastSyncAt(\DateTimeInterface $datetime): void
+    {
+        $this->set('ynab.last_sync_at', $datetime->format('Y-m-d H:i:s'), 'string', 'ynab');
+    }
+
+    /**
+     * Check if YNAB background sync is due based on the interval.
+     */
+    public function isYnabSyncDue(): bool
+    {
+        if (! $this->isYnabBackgroundSyncEnabled() || ! $this->isYnabConfigured()) {
+            return false;
+        }
+
+        $lastSync = $this->getYnabLastSyncAt();
+
+        if ($lastSync === null) {
+            return true;
+        }
+
+        $intervalMinutes = $this->getYnabBackgroundSyncInterval();
+        $nextSyncAt = (new \DateTimeImmutable)->setTimestamp($lastSync->getTimestamp() + ($intervalMinutes * 60));
+
+        return new \DateTimeImmutable >= $nextSyncAt;
+    }
+
+    /**
      * Get the kredittkort percentage setting.
      */
     public function getKredittkortPercentage(): float

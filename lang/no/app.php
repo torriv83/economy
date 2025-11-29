@@ -560,4 +560,12 @@ return [
     'ynab_budget_id_required' => 'Budsjett-ID er påkrevd.',
     'ynab_budget_id_string' => 'Budsjett-ID må være en tekst.',
     'ynab_budget_id_uuid' => 'Budsjett-ID må være en gyldig UUID.',
+
+    // YNAB Background Sync
+    'ynab_background_sync' => 'Bakgrunnssynkronisering',
+    'ynab_background_sync_description' => 'Hold YNAB-data oppdatert automatisk i bakgrunnen for raskere sidelasting.',
+    'ynab_enable_background_sync' => 'Aktiver bakgrunnssynkronisering',
+    'ynab_sync_interval' => 'Synkroniseringsintervall',
+    'ynab_last_sync' => 'Sist synkronisert',
+    'minutes' => 'minutter',
 ];

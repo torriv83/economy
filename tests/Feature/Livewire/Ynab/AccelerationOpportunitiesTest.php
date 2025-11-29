@@ -33,7 +33,7 @@ it('shows not configured message when YNAB is not set up', function () {
         ->assertSee(__('app.ynab_not_configured'));
 });
 
-it('shows loading skeleton initially', function () {
+it('shows loading state initially with deferred loading via wire:init', function () {
     Setting::create(['key' => 'ynab.enabled', 'value' => 'true', 'type' => 'boolean']);
     Setting::create(['key' => 'ynab.token', 'value' => encrypt('test-token'), 'type' => 'encrypted']);
     Setting::create(['key' => 'ynab.budget_id', 'value' => 'test-budget', 'type' => 'string']);
@@ -43,14 +43,50 @@ it('shows loading skeleton initially', function () {
 
     $debt = Debt::factory()->create();
 
-    // Mock the service to return empty opportunities (simulating a slow response handled elsewhere)
-    $this->mock(AccelerationService::class, function ($mock) {
+    // Component should start with isLoading=true (deferred loading via wire:init)
+    // The mount() method no longer calls loadOpportunities - that's done via wire:init
+    Livewire::test(AccelerationOpportunities::class, ['debt' => $debt])
+        ->assertSet('isLoading', true)
+        ->assertSet('ynabEnabled', true)
+        ->assertSet('isConfigured', true);
+});
+
+it('loads data when loadOpportunities is called via wire:init', function () {
+    Setting::create(['key' => 'ynab.enabled', 'value' => 'true', 'type' => 'boolean']);
+    Setting::create(['key' => 'ynab.token', 'value' => encrypt('test-token'), 'type' => 'encrypted']);
+    Setting::create(['key' => 'ynab.budget_id', 'value' => 'test-budget', 'type' => 'string']);
+
+    config(['services.ynab.token' => 'test-token']);
+    config(['services.ynab.budget_id' => 'test-budget']);
+
+    $debt = Debt::factory()->create();
+
+    $opportunities = collect([
+        [
+            'source' => 'ready_to_assign',
+            'name' => 'Ready to Assign',
+            'group_name' => null,
+            'amount' => 1500.0,
+            'type' => 'one_time',
+            'tier' => 1,
+            'impact' => ['months_saved' => 1, 'weeks_saved' => 0, 'interest_saved' => 500.0, 'new_payoff_date' => now()->addMonths(11)->format('Y-m-d')],
+            'warning' => null,
+        ],
+    ]);
+
+    $this->mock(AccelerationService::class, function ($mock) use ($opportunities) {
         $mock->shouldReceive('getOpportunities')
-            ->andReturn(collect());
+            ->once()
+            ->andReturn($opportunities);
     });
 
+    // Test that calling loadOpportunities (which wire:init will do) loads the data
     Livewire::test(AccelerationOpportunities::class, ['debt' => $debt])
-        ->assertSet('isLoading', false);
+        ->assertSet('isLoading', true)
+        ->call('loadOpportunities')
+        ->assertSet('isLoading', false)
+        ->assertSee('Ready to Assign')
+        ->assertSee('1 500 kr');
 });
 
 it('shows opportunities when available', function () {
@@ -102,6 +138,7 @@ it('shows opportunities when available', function () {
     });
 
     Livewire::test(AccelerationOpportunities::class, ['debt' => $debt])
+        ->call('loadOpportunities')
         ->assertSet('isLoading', false)
         ->assertSee('Ready to Assign')
         ->assertSee('2 500 kr')
@@ -125,6 +162,7 @@ it('shows no opportunities message when list is empty', function () {
     });
 
     Livewire::test(AccelerationOpportunities::class, ['debt' => $debt])
+        ->call('loadOpportunities')
         ->assertSet('isLoading', false)
         ->assertSet('opportunities', fn ($o) => $o->isEmpty())
         ->assertSee(__('app.no_opportunities'));
@@ -146,6 +184,7 @@ it('shows error state when API fails', function () {
     });
 
     Livewire::test(AccelerationOpportunities::class, ['debt' => $debt])
+        ->call('loadOpportunities')
         ->assertSet('hasError', true)
         ->assertSet('isLoading', false);
 });
@@ -195,6 +234,7 @@ it('can refresh opportunities', function () {
         ->andReturn($refreshedOpportunities);
 
     Livewire::test(AccelerationOpportunities::class, ['debt' => $debt])
+        ->call('loadOpportunities')
         ->assertSee('1 000 kr')
         ->call('refresh')
         ->assertSee('3 000 kr');
@@ -229,6 +269,7 @@ it('displays savings warning for tier 3 opportunities', function () {
     });
 
     Livewire::test(AccelerationOpportunities::class, ['debt' => $debt])
+        ->call('loadOpportunities')
         ->assertSee('Emergency Fund')
         ->assertSee(__('app.savings_redirect_warning'));
 });
@@ -248,7 +289,8 @@ it('returns correct tier labels', function () {
             ->andReturn(collect());
     });
 
-    $component = Livewire::test(AccelerationOpportunities::class, ['debt' => $debt]);
+    $component = Livewire::test(AccelerationOpportunities::class, ['debt' => $debt])
+        ->call('loadOpportunities');
 
     expect($component->instance()->getTierLabel(1))->toBe(__('app.acceleration_tier_1'));
     expect($component->instance()->getTierLabel(2))->toBe(__('app.acceleration_tier_2'));

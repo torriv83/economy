@@ -201,6 +201,60 @@
                             </button>
                         @endif
                     </div>
+
+                    {{-- Background Sync Section --}}
+                    @if($isConfigured)
+                        <div class="pt-6 border-t border-gray-200 dark:border-gray-700 space-y-4">
+                            <h3 class="text-sm font-medium text-gray-900 dark:text-white">{{ __('app.ynab_background_sync') }}</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ __('app.ynab_background_sync_description') }}</p>
+
+                            {{-- Background Sync Toggle --}}
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label for="backgroundSyncEnabled" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        {{ __('app.ynab_enable_background_sync') }}
+                                    </label>
+                                </div>
+                                <button
+                                    type="button"
+                                    id="backgroundSyncEnabled"
+                                    wire:click="$toggle('backgroundSyncEnabled')"
+                                    class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 {{ $backgroundSyncEnabled ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-600' }}"
+                                    role="switch"
+                                    aria-checked="{{ $backgroundSyncEnabled ? 'true' : 'false' }}"
+                                >
+                                    <span
+                                        class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {{ $backgroundSyncEnabled ? 'translate-x-5' : 'translate-x-0' }}"
+                                    ></span>
+                                </button>
+                            </div>
+
+                            {{-- Sync Interval Selector --}}
+                            @if($backgroundSyncEnabled)
+                                <div>
+                                    <label for="backgroundSyncInterval" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        {{ __('app.ynab_sync_interval') }}
+                                    </label>
+                                    <select
+                                        id="backgroundSyncInterval"
+                                        wire:model.live="backgroundSyncInterval"
+                                        class="mt-2 w-full sm:w-48 px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all"
+                                    >
+                                        @foreach($intervalOptions as $interval)
+                                            <option value="{{ $interval }}">{{ $interval }} {{ __('app.minutes') }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                {{-- Last Sync Info --}}
+                                @if($lastSyncAt)
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                                        {{ __('app.ynab_last_sync') }}: {{ $lastSyncAt }}
+                                    </p>
+                                @endif
+                            @endif
+                        </div>
+                    @endif
                 </div>
             @else
                 {{-- Disabled State --}}
