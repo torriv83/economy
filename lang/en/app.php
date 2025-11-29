@@ -494,4 +494,6 @@ return [
     'from_category' => 'From :category',
     'tier' => 'Tier :number',
     'synced_with_ynab' => 'Synced with YNAB',
+    'show_less' => 'Show less',
+    'show_more_count' => 'Show :count more',
 ];

@@ -1,29 +1,31 @@
 <div class="space-y-6">
-    {{-- Filter Card --}}
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-                    {{ __('app.filter') }}
-                </h2>
-            </div>
+    @if ($debtId === null)
+        {{-- Filter Card - only shown when viewing all reconciliations --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                        {{ __('app.filter') }}
+                    </h2>
+                </div>
 
-            {{-- Filter Dropdown --}}
-            <div class="w-full sm:w-64">
-                <label for="filterDebtId" class="sr-only">{{ __('app.filter_by_debt') }}</label>
-                <select
-                    id="filterDebtId"
-                    wire:model.live="filterDebtId"
-                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors cursor-pointer"
-                >
-                    <option value="">{{ __('app.all_debts') }}</option>
-                    @foreach ($this->debts as $debt)
-                        <option value="{{ $debt->id }}">{{ $debt->name }}</option>
-                    @endforeach
-                </select>
+                {{-- Filter Dropdown --}}
+                <div class="w-full sm:w-64">
+                    <label for="filterDebtId" class="sr-only">{{ __('app.filter_by_debt') }}</label>
+                    <select
+                        id="filterDebtId"
+                        wire:model.live="filterDebtId"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors cursor-pointer"
+                    >
+                        <option value="">{{ __('app.all_debts') }}</option>
+                        @foreach ($this->debts as $filterDebt)
+                            <option value="{{ $filterDebt->id }}">{{ $filterDebt->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
         </div>
-    </div>
+    @endif
 
     {{-- Reconciliation List --}}
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
@@ -49,12 +51,14 @@
                     <div wire:key="reconciliation-{{ $reconciliation->id }}" class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                         <div class="flex items-start justify-between gap-4">
                             <div class="flex-1 min-w-0">
-                                {{-- Debt Name --}}
-                                <div class="flex items-center gap-2 mb-2">
-                                    <span class="text-sm font-semibold text-gray-900 dark:text-white">
-                                        {{ $reconciliation->debt->name }}
-                                    </span>
-                                </div>
+                                @if ($debtId === null)
+                                    {{-- Debt Name - only shown when viewing all reconciliations --}}
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="text-sm font-semibold text-gray-900 dark:text-white">
+                                            {{ $reconciliation->debt->name }}
+                                        </span>
+                                    </div>
+                                @endif
 
                                 {{-- Date and Amount --}}
                                 <div class="flex items-center gap-3 mb-2">

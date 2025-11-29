@@ -16,7 +16,20 @@ class ReconciliationHistory extends Component
 {
     use HasReconciliationModals;
 
+    /**
+     * When set, locks the component to show only this debt's reconciliations (no filter shown)
+     */
+    public ?int $debtId = null;
+
+    /**
+     * Used for filtering when viewing all reconciliations (debtId is null)
+     */
     public ?int $filterDebtId = null;
+
+    public function mount(?int $debtId = null): void
+    {
+        $this->debtId = $debtId;
+    }
 
     /**
      * Reset computed properties cache when filter changes
@@ -27,7 +40,7 @@ class ReconciliationHistory extends Component
     }
 
     /**
-     * Get all reconciliations, optionally filtered by debt
+     * Get all reconciliations, filtered by debt when debtId is set
      *
      * @return Collection<int, Payment>
      */
@@ -37,13 +50,30 @@ class ReconciliationHistory extends Component
         $query = Payment::with('debt')
             ->where('is_reconciliation_adjustment', true);
 
-        if ($this->filterDebtId !== null) {
+        // If viewing specific debt history, always filter by that debt
+        if ($this->debtId !== null) {
+            $query->where('debt_id', $this->debtId);
+        } elseif ($this->filterDebtId !== null) {
+            // Otherwise use the filter dropdown value
             $query->where('debt_id', $this->filterDebtId);
         }
 
         return $query->orderBy('payment_date', 'desc')
             ->orderBy('created_at', 'desc')
             ->get();
+    }
+
+    /**
+     * Get the debt being viewed (when debtId is set)
+     */
+    #[Computed]
+    public function debt(): ?Debt
+    {
+        if ($this->debtId === null) {
+            return null;
+        }
+
+        return Debt::find($this->debtId);
     }
 
     /**

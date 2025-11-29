@@ -494,4 +494,6 @@ return [
     'from_category' => 'Fra :category',
     'tier' => 'Nivå :number',
     'synced_with_ynab' => 'Synkronisert med YNAB',
+    'show_less' => 'Vis færre',
+    'show_more_count' => 'Vis :count flere',
 ];

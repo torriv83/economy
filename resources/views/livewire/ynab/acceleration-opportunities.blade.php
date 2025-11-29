@@ -54,11 +54,17 @@
         </div>
     @else
         {{-- Opportunities list --}}
-        <div class="space-y-3">
+        <div class="space-y-3" x-data="{ expanded: false, initialCount: 5 }">
             <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{ __('app.acceleration_description') }}</p>
 
-            @foreach ($opportunities as $opportunity)
-                <div class="flex items-start gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-colors">
+            @foreach ($opportunities as $index => $opportunity)
+                <div
+                    x-show="expanded || {{ $index }} < initialCount"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 -translate-y-2"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    class="flex items-start gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-colors"
+                >
                     {{-- Icon based on source --}}
                     <div class="h-10 w-10 rounded-lg flex items-center justify-center shrink-0 {{ $this->getTierColor($opportunity['tier']) }}">
                         @if ($opportunity['source'] === 'ready_to_assign')
@@ -131,6 +137,25 @@
                     </div>
                 </div>
             @endforeach
+
+            {{-- Show more/less button --}}
+            @if ($opportunities->count() > 5)
+                <button
+                    x-on:click="expanded = !expanded"
+                    class="w-full py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer flex items-center justify-center gap-1"
+                >
+                    <span x-text="expanded ? '{{ __('app.show_less') }}' : '{{ __('app.show_more_count', ['count' => $opportunities->count() - 5]) }}'"></span>
+                    <svg
+                        class="h-4 w-4 transition-transform"
+                        :class="{ 'rotate-180': expanded }"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+            @endif
         </div>
 
         {{-- Refresh button --}}

@@ -455,3 +455,70 @@ describe('edge cases', function () {
             ->assertSee('Second Debt');
     });
 });
+
+describe('specific debt view (debtId)', function () {
+    it('only shows reconciliations for the specific debt when debtId is passed', function () {
+        $debt1 = Debt::factory()->create(['name' => 'Debt One']);
+        $debt2 = Debt::factory()->create(['name' => 'Debt Two']);
+
+        Payment::factory()->reconciliation()->create([
+            'debt_id' => $debt1->id,
+            'notes' => 'Reconciliation for debt one',
+        ]);
+
+        Payment::factory()->reconciliation()->create([
+            'debt_id' => $debt2->id,
+            'notes' => 'Reconciliation for debt two',
+        ]);
+
+        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt1->id])
+            ->assertSee('Reconciliation for debt one')
+            ->assertDontSee('Reconciliation for debt two');
+    });
+
+    it('does not show filter dropdown when debtId is passed', function () {
+        $debt = Debt::factory()->create(['name' => 'Test Debt']);
+
+        Payment::factory()->reconciliation()->create([
+            'debt_id' => $debt->id,
+        ]);
+
+        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+            ->assertDontSee(__('app.filter'))
+            ->assertDontSee(__('app.all_debts'));
+    });
+
+    it('shows filter dropdown when debtId is not passed', function () {
+        Livewire::test(ReconciliationHistory::class)
+            ->assertSee(__('app.filter'))
+            ->assertSee(__('app.all_debts'));
+    });
+
+    it('does not show debt name in reconciliation items when viewing specific debt', function () {
+        $debt = Debt::factory()->create(['name' => 'My Special Debt']);
+
+        Payment::factory()->reconciliation()->create([
+            'debt_id' => $debt->id,
+            'notes' => 'Test note',
+        ]);
+
+        // When viewing specific debt, debt name should not be shown in list items
+        Livewire::test(ReconciliationHistory::class, ['debtId' => $debt->id])
+            ->assertSee('Test note')
+            ->assertDontSee('My Special Debt');
+    });
+
+    it('shows debt name in reconciliation items when viewing all reconciliations', function () {
+        $debt = Debt::factory()->create(['name' => 'My Special Debt']);
+
+        Payment::factory()->reconciliation()->create([
+            'debt_id' => $debt->id,
+            'notes' => 'Test note',
+        ]);
+
+        // When viewing all reconciliations, debt name should be shown
+        Livewire::test(ReconciliationHistory::class)
+            ->assertSee('Test note')
+            ->assertSee('My Special Debt');
+    });
+});
