@@ -205,8 +205,10 @@
                     {{-- Background Sync Section --}}
                     @if($isConfigured)
                         <div class="pt-6 border-t border-gray-200 dark:border-gray-700 space-y-4">
-                            <h3 class="text-sm font-medium text-gray-900 dark:text-white">{{ __('app.ynab_background_sync') }}</h3>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ __('app.ynab_background_sync_description') }}</p>
+                            <div>
+                                <h3 class="text-base font-semibold text-gray-900 dark:text-white">{{ __('app.ynab_background_sync') }}</h3>
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ __('app.ynab_background_sync_description') }}</p>
+                            </div>
 
                             {{-- Background Sync Toggle --}}
                             <div class="flex items-center justify-between">
