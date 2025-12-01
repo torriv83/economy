@@ -142,11 +142,25 @@
 
         {{-- Progress Chart --}}
         <div class="premium-card rounded-2xl p-6 animate-fade-in-up">
-            <h2 class="font-display text-lg font-semibold text-slate-900 dark:text-white mb-6">{{ __('app.debt_reduction_over_time') }}</h2>
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="font-display text-lg font-semibold text-slate-900 dark:text-white">{{ __('app.debt_reduction_over_time') }}</h2>
+                {{-- Legend for historical vs projected --}}
+                <div class="flex items-center gap-4 text-xs">
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-6 h-0.5 bg-emerald-500 dark:bg-emerald-400"></div>
+                        <span class="text-slate-600 dark:text-slate-400">{{ __('app.historical') }}</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-6 h-0.5 bg-emerald-500/50 dark:bg-emerald-400/50 border-dashed" style="border-top: 2px dashed currentColor; height: 0;"></div>
+                        <span class="text-slate-600 dark:text-slate-400">{{ __('app.projected') }}</span>
+                    </div>
+                </div>
+            </div>
             <div class="relative h-96"
                 x-data="{
                     chart: null,
                     chartData: @js($this->progressData),
+                    historicalEndIndex: @js($this->progressData['historicalEndIndex'] ?? -1),
                     init() {
                         this.loadChartJs();
                     },
@@ -169,6 +183,7 @@
 
                         const isDarkMode = document.documentElement.classList.contains('dark');
                         const ctx = canvas.getContext('2d');
+                        const historicalEndIndex = this.historicalEndIndex;
 
                         // Create gradient for total line (emerald/cyan momentum gradient)
                         const gradient = ctx.createLinearGradient(0, 0, 0, 400);
@@ -180,43 +195,88 @@
                             gradient.addColorStop(1, 'rgba(6, 182, 212, 0.0)');
                         }
 
-                        // Build datasets from chartData
+                        // Build datasets from chartData with segment styling for projections
                         const datasets = this.chartData.datasets.map((dataset, index) => {
                             const isTotal = dataset.isTotal === true;
+                            const baseColor = isTotal
+                                ? (isDarkMode ? 'rgb(52, 211, 153)' : 'rgb(16, 185, 129)')
+                                : dataset.borderColor;
+
+                            // Parse hex color to get rgba version for transparency
+                            const hexToRgba = (hex, alpha) => {
+                                const r = parseInt(hex.slice(1, 3), 16);
+                                const g = parseInt(hex.slice(3, 5), 16);
+                                const b = parseInt(hex.slice(5, 7), 16);
+                                return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                            };
+
+                            // Get the color for projected segments (more transparent)
+                            const getProjectedColor = (color) => {
+                                if (color.startsWith('#')) {
+                                    return hexToRgba(color, 0.5);
+                                } else if (color.startsWith('rgb(')) {
+                                    return color.replace('rgb(', 'rgba(').replace(')', ', 0.5)');
+                                }
+                                return color;
+                            };
 
                             if (isTotal) {
                                 // Total line with emerald/cyan gradient fill
                                 return {
                                     label: dataset.label,
                                     data: dataset.data,
-                                    borderColor: isDarkMode ? 'rgb(52, 211, 153)' : 'rgb(16, 185, 129)',
+                                    borderColor: baseColor,
                                     backgroundColor: gradient,
                                     borderWidth: 3,
                                     fill: true,
                                     tension: 0.4,
-                                    pointRadius: 4,
+                                    pointRadius: (ctx) => {
+                                        // Smaller points for projected data
+                                        return ctx.dataIndex > historicalEndIndex ? 2 : 4;
+                                    },
                                     pointHoverRadius: 6,
-                                    pointBackgroundColor: isDarkMode ? 'rgb(52, 211, 153)' : 'rgb(16, 185, 129)',
+                                    pointBackgroundColor: baseColor,
                                     pointBorderColor: isDarkMode ? 'rgb(30, 41, 59)' : 'rgb(255, 255, 255)',
                                     pointBorderWidth: 2,
-                                    order: 1, // Draw behind individual debts
+                                    order: 1,
+                                    segment: {
+                                        borderDash: (ctx) => ctx.p0DataIndex >= historicalEndIndex ? [5, 5] : [],
+                                        borderColor: (ctx) => {
+                                            if (ctx.p0DataIndex >= historicalEndIndex) {
+                                                return getProjectedColor(baseColor);
+                                            }
+                                            return baseColor;
+                                        },
+                                    },
                                 };
                             } else {
-                                // Individual debt lines
+                                // Individual debt lines with segment styling
                                 return {
                                     label: dataset.label,
                                     data: dataset.data,
-                                    borderColor: dataset.borderColor,
+                                    borderColor: baseColor,
                                     backgroundColor: dataset.borderColor + '20',
                                     borderWidth: 2,
                                     fill: false,
                                     tension: 0.4,
-                                    pointRadius: 3,
+                                    pointRadius: (ctx) => {
+                                        // Smaller points for projected data
+                                        return ctx.dataIndex > historicalEndIndex ? 2 : 3;
+                                    },
                                     pointHoverRadius: 5,
-                                    pointBackgroundColor: dataset.borderColor,
+                                    pointBackgroundColor: baseColor,
                                     pointBorderColor: isDarkMode ? 'rgb(30, 41, 59)' : 'rgb(255, 255, 255)',
                                     pointBorderWidth: 2,
-                                    order: 0, // Draw on top
+                                    order: 0,
+                                    segment: {
+                                        borderDash: (ctx) => ctx.p0DataIndex >= historicalEndIndex ? [5, 5] : [],
+                                        borderColor: (ctx) => {
+                                            if (ctx.p0DataIndex >= historicalEndIndex) {
+                                                return getProjectedColor(baseColor);
+                                            }
+                                            return baseColor;
+                                        },
+                                    },
                                 };
                             }
                         });
@@ -267,6 +327,12 @@
                                             family: 'Source Sans 3, ui-sans-serif, system-ui, sans-serif'
                                         },
                                         callbacks: {
+                                            title: (items) => {
+                                                const index = items[0].dataIndex;
+                                                const label = items[0].label;
+                                                const isProjected = index > historicalEndIndex;
+                                                return isProjected ? label + ' ({{ __('app.projected') }})' : label;
+                                            },
                                             label: function(context) {
                                                 return context.dataset.label + ': ' + context.parsed.y.toLocaleString('nb-NO') + ' kr';
                                             }

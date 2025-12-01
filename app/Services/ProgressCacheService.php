@@ -21,6 +21,17 @@ class ProgressCacheService
     private const CACHE_TTL_HOURS = 1;
 
     /**
+     * Get the environment-aware cache key prefix.
+     * This ensures test and production caches never collide.
+     */
+    private static function getPrefix(): string
+    {
+        $env = app()->environment();
+
+        return self::CACHE_KEY_PREFIX.'_'.$env;
+    }
+
+    /**
      * Generate a cache key for progress data based on debt and payment state.
      *
      * The cache key is derived from the latest update timestamps of both
@@ -32,7 +43,7 @@ class ProgressCacheService
         $paymentMaxUpdated = Payment::max('updated_at') ?? '';
         $debtMaxUpdated = Debt::max('updated_at') ?? '';
 
-        return self::CACHE_KEY_PREFIX.':'.md5($paymentMaxUpdated.$debtMaxUpdated);
+        return self::getPrefix().':'.md5($paymentMaxUpdated.$debtMaxUpdated);
     }
 
     /**
@@ -70,7 +81,7 @@ class ProgressCacheService
             /** @var \Illuminate\Redis\Connections\Connection $redis */
             $redis = $store->getRedis();
             $prefix = config('cache.prefix', 'laravel').':';
-            $keys = $redis->keys($prefix.self::CACHE_KEY_PREFIX.':*');
+            $keys = $redis->keys($prefix.self::getPrefix().':*');
             foreach ($keys as $key) {
                 $cacheKey = str_replace($prefix, '', $key);
                 Cache::forget($cacheKey);

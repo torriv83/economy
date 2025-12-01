@@ -197,6 +197,7 @@ return [
     'already_paid' => 'Allerede betalt',
     'paid' => 'Betalt',
     'historical' => 'Historisk',
+    'projected' => 'Projeksjon',
     'notes' => 'Notater',
     'payment_notes' => 'Betalingsnotater',
     'add_note' => 'Legg til notat',

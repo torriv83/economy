@@ -197,6 +197,7 @@ return [
     'already_paid' => 'Already paid',
     'paid' => 'Paid',
     'historical' => 'Historical',
+    'projected' => 'Projected',
     'notes' => 'Notes',
     'payment_notes' => 'Payment Notes',
     'add_note' => 'Add note',
