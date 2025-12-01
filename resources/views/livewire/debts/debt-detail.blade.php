@@ -22,7 +22,7 @@
             </div>
             <button
                 wire:click="$parent.editFromDetail"
-                class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-all duration-200 cursor-pointer">
+                class="px-4 py-2 text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-500 rounded-xl transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2">
                 {{ __('app.edit') }}
             </button>
         </div>
@@ -33,8 +33,9 @@
         {{-- Current Balance --}}
         <div class="premium-card rounded-2xl p-5 stat-card">
             <p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{{ __('app.current_balance') }}</p>
-            <p class="font-display text-xl font-bold text-slate-900 dark:text-white">
-                {{ number_format($debt->balance, 0, ',', ' ') }} kr
+            <p class="font-display text-xl font-bold">
+                <span class="gradient-text">{{ number_format($debt->balance, 0, ',', ' ') }}</span>
+                <span class="text-sm font-normal text-slate-400 dark:text-slate-500">kr</span>
             </p>
         </div>
 

@@ -20,8 +20,9 @@
                     <p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">
                         {{ __('app.total_owed_to_self') }}
                     </p>
-                    <p class="font-display font-bold text-3xl text-slate-900 dark:text-white">
-                        {{ number_format($this->totalBorrowed, 0, ',', ' ') }} kr
+                    <p class="font-display font-bold text-3xl">
+                        <span class="gradient-text">{{ number_format($this->totalBorrowed, 0, ',', ' ') }}</span>
+                        <span class="text-lg font-normal text-slate-400 dark:text-slate-500">kr</span>
                     </p>
                     <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">
                         {{ $this->loansCount }} {{ trans_choice('app.active_loans', $this->loansCount) }}
@@ -122,7 +123,7 @@
                             <button
                                 type="button"
                                 wire:click="confirmDelete({{ $loan['id'] }}, '{{ $loan['name'] }}')"
-                                class="col-span-2 px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 rounded-xl transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                                class="col-span-2 px-4 py-2.5 text-sm font-medium text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:text-rose-600 hover:border-rose-300 dark:hover:text-rose-400 dark:hover:border-rose-800 rounded-xl transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2">
                                 {{ __('app.delete') }}
                             </button>
                         </div>

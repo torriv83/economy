@@ -368,7 +368,7 @@
                                                             <button
                                                                 type="button"
                                                                 wire:click="deleteNote({{ $month['month'] }}, {{ $debtId }})"
-                                                                class="px-3 py-1 text-xs bg-rose-500 hover:bg-rose-600 text-white rounded-lg transition-colors cursor-pointer"
+                                                                class="px-3 py-1 text-xs text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:text-rose-600 hover:border-rose-300 dark:hover:text-rose-400 dark:hover:border-rose-700 rounded-lg transition-colors cursor-pointer"
                                                             >
                                                                 {{ __('app.delete_note') }}
                                                             </button>
@@ -376,7 +376,7 @@
                                                         <button
                                                             type="button"
                                                             wire:click="toggleNoteInput({{ $month['month'] }}, {{ $debtId }})"
-                                                            class="px-3 py-1 text-xs bg-slate-500 hover:bg-slate-600 text-white rounded-lg transition-colors cursor-pointer"
+                                                            class="px-3 py-1 text-xs text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors cursor-pointer"
                                                         >
                                                             {{ __('app.cancel') }}
                                                         </button>
@@ -538,7 +538,7 @@
                                                             <button
                                                                 type="button"
                                                                 wire:click="deleteNote({{ $month['month'] }}, {{ $debtId }})"
-                                                                class="px-3 py-1.5 text-xs bg-rose-500 hover:bg-rose-600 text-white rounded-lg transition-colors cursor-pointer"
+                                                                class="px-3 py-1.5 text-xs text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:text-rose-600 hover:border-rose-300 dark:hover:text-rose-400 dark:hover:border-rose-700 rounded-lg transition-colors cursor-pointer"
                                                             >
                                                                 {{ __('app.delete_note') }}
                                                             </button>
@@ -546,7 +546,7 @@
                                                         <button
                                                             type="button"
                                                             wire:click="toggleNoteInput({{ $month['month'] }}, {{ $debtId }})"
-                                                            class="px-3 py-1.5 text-xs bg-slate-500 hover:bg-slate-600 text-white rounded-lg transition-colors cursor-pointer"
+                                                            class="px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors cursor-pointer"
                                                         >
                                                             {{ __('app.cancel') }}
                                                         </button>
