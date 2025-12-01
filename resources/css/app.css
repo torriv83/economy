@@ -1,36 +1,558 @@
-@import 'tailwindcss';
+/* Import distinctive fonts - must be before Tailwind for proper ordering */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Source+Sans+3:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
 
-/* Hide elements with x-cloak until Alpine initializes */
-[x-cloak] { display: none !important; }
+@import 'tailwindcss';
 
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
+/* Hide elements with x-cloak until Alpine initializes */
+[x-cloak] { display: none !important; }
+
+/* ============================================
+   DESIGN SYSTEM: "Financial Momentum"
+   A premium, progress-focused aesthetic
+   ============================================ */
+
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    /* Typography - Distinctive font pairing */
+    --font-display: 'Sora', ui-sans-serif, system-ui, sans-serif;
+    --font-sans: 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
+
+    /* Primary palette - Deep slate foundation */
+    --color-slate-950: oklch(0.13 0.02 265);
+    --color-slate-925: oklch(0.16 0.02 265);
+    --color-slate-900: oklch(0.19 0.02 265);
+    --color-slate-850: oklch(0.22 0.015 265);
+    --color-slate-800: oklch(0.27 0.015 265);
+
+    /* Accent - Vibrant emerald for progress */
+    --color-momentum: oklch(0.72 0.17 162);
+    --color-momentum-light: oklch(0.82 0.14 162);
+    --color-momentum-dark: oklch(0.55 0.15 162);
+
+    /* Secondary accents */
+    --color-warning: oklch(0.78 0.15 70);
+    --color-danger: oklch(0.65 0.2 25);
+    --color-info: oklch(0.7 0.12 230);
 }
 
 @variant dark (&:where(.dark, .dark *));
 
-/* Sortable.js drag styles (used by Alpine sort plugin) */
+/* ============================================
+   GLOBAL STYLES
+   ============================================ */
+
+/* Smooth page transitions */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Base body styling */
+body {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Display font for headings */
+h1, h2, h3, h4, h5, h6,
+.font-display {
+    font-family: var(--font-display);
+}
+
+/* ============================================
+   CUSTOM COMPONENTS
+   ============================================ */
+
+/* Glass card effect */
+.glass-card {
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.1) 0%,
+        rgba(255, 255, 255, 0.05) 100%
+    );
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark .glass-card {
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.05) 0%,
+        rgba(255, 255, 255, 0.02) 100%
+    );
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Premium card with subtle gradient */
+.premium-card {
+    background: linear-gradient(
+        145deg,
+        rgb(255 255 255) 0%,
+        rgb(248 250 252) 100%
+    );
+    box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.04),
+        0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.dark .premium-card {
+    background: linear-gradient(
+        145deg,
+        rgb(30 41 59) 0%,
+        rgb(23 32 47) 100%
+    );
+    box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.3),
+        0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Momentum glow effect */
+.momentum-glow {
+    box-shadow:
+        0 0 20px rgba(16, 185, 129, 0.15),
+        0 0 40px rgba(16, 185, 129, 0.1);
+}
+
+.dark .momentum-glow {
+    box-shadow:
+        0 0 30px rgba(16, 185, 129, 0.2),
+        0 0 60px rgba(16, 185, 129, 0.1);
+}
+
+/* ============================================
+   PROGRESS RING ANIMATION
+   ============================================ */
+
+.progress-ring {
+    transform: rotate(-90deg);
+}
+
+.progress-ring-circle {
+    transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-ring-bg {
+    stroke: rgb(226 232 240); /* slate-200 */
+}
+
+.dark .progress-ring-bg {
+    stroke: rgb(51 65 85); /* slate-700 */
+}
+
+.progress-ring-fill {
+    stroke: url(#momentum-gradient);
+}
+
+/* ============================================
+   ENTRANCE ANIMATIONS
+   ============================================ */
+
+@keyframes fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fade-in-scale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes slide-in-right {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes count-up {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes pulse-soft {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.animate-fade-in-up {
+    animation: fade-in-up 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-fade-in-scale {
+    animation: fade-in-scale 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-slide-in-right {
+    animation: slide-in-right 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-pulse-soft {
+    animation: pulse-soft 2s ease-in-out infinite;
+}
+
+/* Stagger children animations */
+.stagger-children > * {
+    opacity: 0;
+    animation: fade-in-up 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 250ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 300ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 350ms; }
+.stagger-children > *:nth-child(9) { animation-delay: 400ms; }
+.stagger-children > *:nth-child(10) { animation-delay: 450ms; }
+
+/* ============================================
+   GRADIENT TEXT
+   ============================================ */
+
+.gradient-text {
+    background: linear-gradient(135deg, rgb(16 185 129) 0%, rgb(6 182 212) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.gradient-text-warm {
+    background: linear-gradient(135deg, rgb(251 146 60) 0%, rgb(245 158 11) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ============================================
+   STAT CARDS
+   ============================================ */
+
+.stat-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, rgb(16 185 129) 0%, rgb(6 182 212) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.stat-card:hover::before {
+    opacity: 1;
+}
+
+/* ============================================
+   INTERACTIVE ELEMENTS
+   ============================================ */
+
+/* Button hover lift */
+.btn-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.dark .btn-lift:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+/* Momentum button (primary CTA) */
+.btn-momentum {
+    background: linear-gradient(135deg, rgb(16 185 129) 0%, rgb(5 150 105) 100%);
+    color: white;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-momentum:hover {
+    background: linear-gradient(135deg, rgb(5 150 105) 0%, rgb(4 120 87) 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+}
+
+/* Card hover states */
+.card-interactive {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.card-interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+}
+
+.dark .card-interactive:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================
+   DEBT CARD SPECIAL STYLES
+   ============================================ */
+
+.debt-card {
+    position: relative;
+    border-radius: 16px;
+    border: 1px solid transparent;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.debt-card:hover {
+    box-shadow:
+        0 4px 20px rgba(16, 185, 129, 0.1),
+        0 8px 32px rgba(0, 0, 0, 0.08);
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.dark .debt-card:hover {
+    box-shadow:
+        0 4px 20px rgba(16, 185, 129, 0.15),
+        0 8px 32px rgba(0, 0, 0, 0.3);
+    border-color: rgba(16, 185, 129, 0.4);
+}
+
+/* Priority badge - no hover effects to avoid rendering issues */
+
+/* ============================================
+   NAVIGATION STYLES
+   ============================================ */
+
+.nav-link {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.75rem; /* rounded-xl to match pill shape */
+    transition: color 0.2s ease;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, rgb(16 185 129) 0%, rgb(6 182 212) 100%);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+    opacity: 1;
+}
+
+/* Sidebar link states */
+.sidebar-link {
+    border-left: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.sidebar-link:hover {
+    background: linear-gradient(90deg, rgba(16, 185, 129, 0.05) 0%, transparent 100%);
+    border-left-color: rgba(16, 185, 129, 0.5);
+}
+
+.dark .sidebar-link:hover {
+    background: linear-gradient(90deg, rgba(16, 185, 129, 0.08) 0%, transparent 100%);
+}
+
+.sidebar-link-active {
+    background: linear-gradient(90deg, rgba(16, 185, 129, 0.1) 0%, transparent 100%);
+    border-left: 3px solid rgb(16 185 129);
+}
+
+.dark .sidebar-link-active {
+    background: linear-gradient(90deg, rgba(16, 185, 129, 0.15) 0%, transparent 100%);
+}
+
+/* ============================================
+   SORTABLE DRAG & DROP
+   ============================================ */
+
 .sortable-chosen,
 .sortable-drag {
-    transform: scale(1.02) rotate(1deg);
-    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.15), 0 8px 10px -6px rgb(0 0 0 / 0.15);
-    border-color: rgb(59 130 246) !important;
-    border-width: 2px !important;
+    transform: scale(1.02) rotate(0.5deg);
+    box-shadow:
+        0 20px 40px rgba(0, 0, 0, 0.15),
+        0 0 0 2px rgb(16 185 129);
+    border-radius: 16px;
     z-index: 50;
     opacity: 1 !important;
 }
 
 .sortable-ghost {
     opacity: 0.4 !important;
-    border: 2px dashed rgb(59 130 246) !important;
-    background: rgb(239 246 255) !important;
+    border: 2px dashed rgb(16 185 129) !important;
+    background: rgba(16, 185, 129, 0.05) !important;
+    border-radius: 16px !important;
     transform: none !important;
     box-shadow: none !important;
 }
 
 .dark .sortable-ghost {
-    background: rgb(30 58 138 / 0.3) !important;
+    background: rgba(16, 185, 129, 0.1) !important;
+}
+
+/* ============================================
+   CUSTOM SCROLLBAR
+   ============================================ */
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgb(203 213 225);
+    border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgb(148 163 184);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgb(71 85 105);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgb(100 116 139);
+}
+
+/* ============================================
+   UTILITY PATTERNS
+   ============================================ */
+
+/* Subtle grid background */
+.bg-grid {
+    background-image:
+        linear-gradient(rgba(148, 163, 184, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+    background-size: 32px 32px;
+}
+
+.dark .bg-grid {
+    background-image:
+        linear-gradient(rgba(148, 163, 184, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.03) 1px, transparent 1px);
+}
+
+/* Dot pattern */
+.bg-dots {
+    background-image: radial-gradient(rgba(148, 163, 184, 0.15) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+.dark .bg-dots {
+    background-image: radial-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+}
+
+/* Noise texture overlay */
+.noise-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.02;
+    pointer-events: none;
+}
+
+/* ============================================
+   LOADING STATES
+   ============================================ */
+
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        rgb(241 245 249) 25%,
+        rgb(226 232 240) 50%,
+        rgb(241 245 249) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+.dark .skeleton {
+    background: linear-gradient(
+        90deg,
+        rgb(51 65 85) 25%,
+        rgb(71 85 105) 50%,
+        rgb(51 65 85) 75%
+    );
+    background-size: 200% 100%;
+}
+
+/* ============================================
+   FOCUS STATES (Accessibility)
+   ============================================ */
+
+.focus-ring {
+    outline: none;
+}
+
+.focus-ring:focus-visible {
+    outline: 2px solid rgb(16 185 129);
+    outline-offset: 2px;
+}
+
+/* ============================================
+   RESPONSIVE HELPERS
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }

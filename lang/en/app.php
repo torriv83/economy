@@ -269,6 +269,7 @@ return [
     'minimum_payment_help_forbrukslån' => 'Consumer loan: Minimum payment must cover monthly interest',
     'added_on' => 'Added on',
     'last_verified' => 'Last verified',
+    'verified' => 'Verified',
     'never_verified' => 'Never verified',
     'debt_verified_balance_correct' => 'Debt verified - balance is correct.',
     'calculated_minimum' => 'Calculated minimum',

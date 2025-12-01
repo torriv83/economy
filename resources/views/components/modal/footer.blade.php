@@ -11,6 +11,6 @@ $alignClasses = [
 ][$align] ?? 'justify-end';
 @endphp
 
-<div {{ $attributes->merge(['class' => "bg-gray-50 dark:bg-gray-800/50 px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex {$alignClasses} gap-3"]) }}>
+<div {{ $attributes->merge(['class' => "bg-slate-50 dark:bg-slate-800/30 px-6 py-4 border-t border-slate-200 dark:border-slate-700/50 flex {$alignClasses} gap-3"]) }}>
     {{ $slot }}
 </div>

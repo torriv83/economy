@@ -1,56 +1,63 @@
 <div>
     @if (session('message'))
-        <div class="mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 px-4 py-3 rounded-lg">
-            {{ session('message') }}
+        <div class="mb-6 premium-card rounded-xl border border-emerald-200 dark:border-emerald-800/50 px-4 py-3">
+            <div class="flex items-center gap-3">
+                <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <p class="text-sm font-medium text-emerald-700 dark:text-emerald-300">{{ session('message') }}</p>
+            </div>
         </div>
     @endif
 
     @if (count($this->selfLoans) > 0)
         {{-- Summary Card --}}
-        <div class="mb-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div class="mb-8 premium-card rounded-2xl border border-slate-200/50 dark:border-slate-700/50 p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">
                         {{ __('app.total_owed_to_self') }}
                     </p>
-                    <p class="text-3xl font-bold text-gray-900 dark:text-white">
+                    <p class="font-display font-bold text-3xl text-slate-900 dark:text-white">
                         {{ number_format($this->totalBorrowed, 0, ',', ' ') }} kr
                     </p>
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">
                         {{ $this->loansCount }} {{ trans_choice('app.active_loans', $this->loansCount) }}
                     </p>
                 </div>
-                <div class="h-16 w-16 bg-teal-100 dark:bg-teal-900/20 rounded-lg flex items-center justify-center">
-                    <svg class="h-8 w-8 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 dark:from-emerald-500/20 dark:to-cyan-500/20 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
                     </svg>
                 </div>
             </div>
         </div>
 
         {{-- Self-Loans Grid --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach ($this->selfLoans as $loan)
-                <div wire:key="loan-{{ $loan['id'] }}" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+                <div wire:key="loan-{{ $loan['id'] }}" class="premium-card rounded-2xl border border-slate-200/50 dark:border-slate-700/50 card-interactive overflow-hidden">
                     <div class="p-6">
                         {{-- Loan Name with Edit Icon --}}
                         <div class="mb-4 flex items-start justify-between">
                             <div class="flex-1">
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                <h3 class="font-display font-semibold text-lg text-slate-900 dark:text-white">
                                     {{ $loan['name'] }}
                                 </h3>
                             </div>
                             <button
                                 wire:click="openEditModal({{ $loan['id'] }})"
-                                class="ml-2 p-1.5 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-offset-2 rounded"
+                                class="ml-2 p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                                 title="{{ __('app.edit') }}">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                                 </svg>
                             </button>
                         </div>
                         @if ($loan['description'])
-                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 mb-4">
+                            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1 mb-4">
                                 {{ $loan['description'] }}
                             </p>
                         @endif
@@ -59,20 +66,20 @@
                         @if ($loan['progress_percentage'] > 0)
                             <div class="mb-4">
                                 <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                    <span class="text-xs font-medium text-slate-500 dark:text-slate-400">
                                         {{ __('app.repaid_progress') }}
                                     </span>
-                                    <span class="text-xs font-bold text-teal-600 dark:text-teal-400">
+                                    <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">
                                         {{ number_format($loan['progress_percentage'], 1, ',', ' ') }}%
                                     </span>
                                 </div>
-                                <div class="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                <div class="relative h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                                     <div
-                                        class="absolute inset-y-0 left-0 bg-gradient-to-r from-teal-500 to-teal-600 dark:from-teal-600 dark:to-teal-700 rounded-full transition-all duration-500"
+                                        class="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full transition-all duration-500"
                                         style="width: {{ $loan['progress_percentage'] }}%"
                                     ></div>
                                 </div>
-                                <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                <div class="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
                                     {{ number_format($loan['total_repaid'], 0, ',', ' ') }} kr {{ __('app.of') }} {{ number_format($loan['original_amount'], 0, ',', ' ') }} kr {{ __('app.repaid') }}
                                 </div>
                             </div>
@@ -81,41 +88,41 @@
                         {{-- Loan Details --}}
                         <div class="space-y-3 mb-6">
                             <div class="flex justify-between items-baseline">
-                                <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.balance') }}</span>
-                                <span class="text-xl font-bold text-gray-900 dark:text-white">
+                                <span class="text-sm text-slate-500 dark:text-slate-400">{{ __('app.balance') }}</span>
+                                <span class="font-display font-bold text-xl text-slate-900 dark:text-white">
                                     {{ number_format($loan['current_balance'], 0, ',', ' ') }} kr
                                 </span>
                             </div>
                             <div class="flex justify-between items-baseline">
-                                <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.original_amount') }}</span>
-                                <span class="font-medium text-gray-900 dark:text-white">
+                                <span class="text-sm text-slate-500 dark:text-slate-400">{{ __('app.original_amount') }}</span>
+                                <span class="font-medium text-slate-700 dark:text-slate-300">
                                     {{ number_format($loan['original_amount'], 0, ',', ' ') }} kr
                                 </span>
                             </div>
-                            <div class="flex justify-between items-baseline pt-2 border-t border-gray-200 dark:border-gray-700">
-                                <span class="text-xs text-gray-500 dark:text-gray-400">{{ __('app.created') }}</span>
-                                <span class="text-xs text-gray-600 dark:text-gray-300">
+                            <div class="flex justify-between items-baseline pt-3 border-t border-slate-200/50 dark:border-slate-700/50">
+                                <span class="text-xs text-slate-400 dark:text-slate-500">{{ __('app.created') }}</span>
+                                <span class="text-xs text-slate-500 dark:text-slate-400">
                                     {{ $loan['created_at'] }}
                                 </span>
                             </div>
                         </div>
 
                         {{-- Actions --}}
-                        <div class="grid grid-cols-2 gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <div class="grid grid-cols-2 gap-3 pt-4 border-t border-slate-200/50 dark:border-slate-700/50">
                             <button
                                 wire:click="openRepaymentModal({{ $loan['id'] }})"
-                                class="px-3 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-offset-2">
+                                class="btn-momentum px-4 py-2.5 text-sm font-medium rounded-xl transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">
                                 {{ __('app.add_repayment') }}
                             </button>
                             <button
                                 wire:click="openWithdrawalModal({{ $loan['id'] }})"
-                                class="px-3 py-2 text-sm font-medium text-teal-700 dark:text-teal-300 bg-teal-100 hover:bg-teal-200 dark:bg-teal-900/30 dark:hover:bg-teal-900/50 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-offset-2">
+                                class="px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">
                                 {{ __('app.withdraw_more') }}
                             </button>
                             <button
                                 type="button"
                                 wire:click="confirmDelete({{ $loan['id'] }}, '{{ $loan['name'] }}')"
-                                class="col-span-2 px-3 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400 focus:ring-offset-2">
+                                class="col-span-2 px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 rounded-xl transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
                                 {{ __('app.delete') }}
                             </button>
                         </div>
@@ -126,33 +133,33 @@
             {{-- Add New Self-Loan Placeholder --}}
             <button
                 wire:click="$parent.showCreate"
-                class="bg-white dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-teal-500 dark:hover:border-teal-500 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all p-6 flex flex-col items-center justify-center min-h-[300px] group focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-offset-2 cursor-pointer">
-                <div class="h-16 w-16 bg-gray-100 dark:bg-gray-700 group-hover:bg-teal-100 dark:group-hover:bg-teal-900/30 rounded-full flex items-center justify-center mb-4 transition-colors">
-                    <svg class="h-8 w-8 text-gray-400 dark:text-gray-500 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                class="premium-card rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-all p-6 flex flex-col items-center justify-center min-h-[300px] group focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 cursor-pointer">
+                <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 group-hover:bg-gradient-to-br group-hover:from-emerald-500/10 group-hover:to-cyan-500/10 dark:group-hover:from-emerald-500/20 dark:group-hover:to-cyan-500/20 rounded-xl flex items-center justify-center mb-4 transition-colors">
+                    <svg class="w-8 h-8 text-slate-400 dark:text-slate-500 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                     </svg>
                 </div>
-                <h3 class="text-lg font-semibold text-gray-600 dark:text-gray-400 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                <h3 class="font-display font-semibold text-lg text-slate-600 dark:text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                     {{ __('app.create_self_loan') }}
                 </h3>
-                <p class="text-sm text-gray-500 dark:text-gray-500 mt-2 text-center">
+                <p class="text-sm text-slate-500 dark:text-slate-500 mt-2 text-center">
                     {{ __('app.click_to_add_self_loan') }}
                 </p>
             </button>
         </div>
     @else
         {{-- Empty State --}}
-        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
+        <div class="premium-card rounded-2xl border border-slate-200/50 dark:border-slate-700/50 p-12 text-center">
             <div class="max-w-sm mx-auto">
-                <div class="h-16 w-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="h-8 w-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 dark:from-emerald-500/20 dark:to-cyan-500/20 flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-10 h-10 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
                     </svg>
                 </div>
-                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                <h2 class="font-display font-semibold text-xl text-slate-900 dark:text-white mb-2">
                     {{ __('app.no_active_self_loans') }}
                 </h2>
-                <p class="text-gray-600 dark:text-gray-400 mb-6">
+                <p class="text-slate-500 dark:text-slate-400 mb-6">
                     {{ __('app.no_self_loans_message') }}
                 </p>
             </div>

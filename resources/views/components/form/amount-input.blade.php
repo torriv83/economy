@@ -10,10 +10,10 @@
 ])
 
 <div>
-    <label for="{{ $id }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-        {{ $label }}@if($required ?? false) *@endif
+    <label for="{{ $id }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 font-body">
+        {{ $label }}@if($required ?? false) <span class="text-rose-500">*</span>@endif
         @if(isset($hint))
-            <span class="font-normal text-gray-500 dark:text-gray-400">({{ $hint }})</span>
+            <span class="font-normal text-slate-500 dark:text-slate-400">({{ $hint }})</span>
         @endif
     </label>
     <input
@@ -23,10 +23,10 @@
         step="0.01"
         min="{{ $min ?? '0.01' }}"
         @if(isset($max)) max="{{ $max }}" @endif
-        class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none {{ $error ? 'border-red-500 dark:border-red-400' : '' }}"
+        class="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition-colors duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none {{ $error ? 'border-rose-500 dark:border-rose-400 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500' : 'border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500' }}"
         @if($required ?? false) required @endif
     >
     @if(isset($error) && $error)
-        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $error }}</p>
+        <p class="mt-1.5 text-sm text-rose-600 dark:text-rose-400">{{ $error }}</p>
     @endif
 </div>

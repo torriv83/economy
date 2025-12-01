@@ -12,16 +12,10 @@
 
 @php
 $iconColors = [
-    'danger' => 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',
-    'warning' => 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400',
-    'info' => 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
-][$variant] ?? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400';
-
-$confirmButtonColors = [
-    'danger' => 'bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 focus:ring-red-500',
-    'warning' => 'bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 focus:ring-yellow-500',
-    'info' => 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:ring-blue-500',
-][$variant] ?? 'bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 focus:ring-red-500';
+    'danger' => 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400',
+    'warning' => 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400',
+    'info' => 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400',
+][$variant] ?? 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400';
 
 $defaultConfirmText = $variant === 'danger' ? __('app.delete') : __('app.confirm');
 $confirmLabel = $confirmText ?? $defaultConfirmText;
@@ -49,10 +43,10 @@ $cancelLabel = $cancelText ?? __('app.cancel');
 
         {{-- Content --}}
         <div class="flex-1">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white" id="modal-title">
+            <h3 class="font-display text-lg font-semibold text-slate-900 dark:text-white" id="modal-title">
                 {{ $title }}
             </h3>
-            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
                 {{ $message }}
             </p>
         </div>

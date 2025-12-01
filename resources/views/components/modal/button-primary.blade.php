@@ -8,17 +8,17 @@
 
 @php
 $variantClasses = [
-    'primary' => 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400',
-    'danger' => 'bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 focus:ring-red-500 dark:focus:ring-red-400',
-    'warning' => 'bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 focus:ring-yellow-500 dark:focus:ring-yellow-400',
-    'success' => 'bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 focus:ring-green-500 dark:focus:ring-green-400',
-][$variant] ?? 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400';
+    'primary' => 'btn-momentum',
+    'danger' => 'bg-rose-600 hover:bg-rose-700 dark:bg-rose-500 dark:hover:bg-rose-600 shadow-rose-500/20 hover:shadow-rose-500/30',
+    'warning' => 'bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 shadow-amber-500/20 hover:shadow-amber-500/30',
+    'success' => 'bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 shadow-emerald-500/20 hover:shadow-emerald-500/30',
+][$variant] ?? 'btn-momentum';
 @endphp
 
 <button
     type="{{ $type }}"
     {{ $attributes->merge([
-        'class' => "inline-flex items-center justify-center px-4 py-2.5 rounded-lg text-sm font-semibold text-white shadow-sm {$variantClasses} focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+        'class' => "inline-flex items-center justify-center px-4 py-2.5 rounded-lg text-sm font-semibold text-white shadow-lg {$variantClasses} focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none transition-all cursor-pointer"
     ]) }}
     @if($loading && $loadingTarget)
         wire:loading.attr="disabled"

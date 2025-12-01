@@ -28,7 +28,7 @@ $modalId = $id ?? 'modal-' . uniqid();
     role="dialog"
     aria-modal="true"
 >
-    {{-- Backdrop --}}
+    {{-- Backdrop with blur effect --}}
     <div
         x-show="show"
         x-transition:enter="ease-out duration-300"
@@ -37,7 +37,7 @@ $modalId = $id ?? 'modal-' . uniqid();
         x-transition:leave="ease-in duration-200"
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
-        class="fixed inset-0 bg-black/50 dark:bg-black/70 transition-opacity cursor-pointer"
+        class="fixed inset-0 bg-slate-900/50 dark:bg-slate-950/70 backdrop-blur-sm transition-opacity cursor-pointer"
         @if($closeable) x-on:click="show = false" @endif
         aria-hidden="true"
     ></div>
@@ -53,7 +53,7 @@ $modalId = $id ?? 'modal-' . uniqid();
                 x-transition:leave="ease-in duration-200"
                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                class="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 text-left shadow-xl ring-1 ring-black/5 dark:ring-white/10 transition-all sm:my-8 sm:w-full {{ $maxWidthClasses }}"
+                class="premium-card relative transform overflow-hidden rounded-2xl text-left shadow-2xl ring-1 ring-slate-200/50 dark:ring-white/10 transition-all sm:my-8 sm:w-full {{ $maxWidthClasses }}"
                 @click.stop
             >
                 {{ $slot }}

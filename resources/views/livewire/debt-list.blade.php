@@ -20,9 +20,9 @@
                     <button
                         type="button"
                         wire:click="checkYnab"
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2">
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        class="inline-flex items-center gap-2 px-4 py-2.5 bg-cyan-50 hover:bg-cyan-100 dark:bg-cyan-900/20 dark:hover:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 font-medium rounded-xl transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 btn-lift">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
                         </svg>
                         {{ __('app.check_ynab') }}
                     </button>
@@ -30,9 +30,9 @@
                 <button
                     type="button"
                     wire:click="enableReorderMode"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:ring-offset-2">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium rounded-xl transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                     </svg>
                     {{ __('app.reorder_debts') }}
                 </button>
@@ -40,13 +40,13 @@
                 <button
                     type="button"
                     wire:click="cancelReorder"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:ring-offset-2">
+                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium rounded-xl transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2">
                     {{ __('app.cancel') }}
                 </button>
                 <button
                     type="button"
                     x-on:click="saveOrder"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2">
+                    class="inline-flex items-center gap-2 px-5 py-2.5 btn-momentum rounded-xl cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2">
                     {{ __('app.save_order') }}
                 </button>
             @endif
@@ -54,269 +54,303 @@
     </x-page-header>
 
     @if (count($this->debts) > 0)
-            {{-- Summary Cards --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                {{-- Total Debt Card --}}
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                                {{ __('app.total_debt') }}
+        {{-- Hero Stats Section --}}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+            {{-- Total Debt Card --}}
+            <div class="premium-card rounded-2xl p-6 stat-card">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">
+                            {{ __('app.total_debt') }}
+                        </p>
+                        <p class="text-4xl font-display font-bold text-slate-900 dark:text-white tracking-tight">
+                            {{ number_format($this->totalDebt, 0, ',', ' ') }}
+                            <span class="text-xl font-normal text-slate-400 dark:text-slate-500">kr</span>
+                        </p>
+                        @if ($this->lastUpdated)
+                            <p class="text-sm text-slate-500 dark:text-slate-400 mt-3 flex items-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                {{ __('app.last_updated') }}: {{ $this->lastUpdated }}
                             </p>
-                            <p class="text-3xl font-bold text-gray-900 dark:text-white">
-                                {{ number_format($this->totalDebt, 0, ',', ' ') }} kr
-                            </p>
-                            @if ($this->lastUpdated)
-                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                                    {{ __('app.last_updated') }}: {{ $this->lastUpdated }}
-                                </p>
-                            @endif
-                        </div>
-                        <div class="h-16 w-16 bg-red-100 dark:bg-red-900/20 rounded-lg flex items-center justify-center">
-                            <svg class="h-8 w-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
+                        @endif
+                    </div>
+                    {{-- Decorative Icon --}}
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-rose-500/10 to-orange-500/10 dark:from-rose-500/20 dark:to-orange-500/20 flex items-center justify-center">
+                        <svg class="h-8 w-8 text-rose-500 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                        </svg>
                     </div>
                 </div>
+            </div>
 
-                {{-- Estimated Payoff Card --}}
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                                {{ __('app.debt_free_in') }}
-                            </p>
-                            @if ($this->strategyEstimate)
-                                <p class="text-3xl font-bold text-gray-900 dark:text-white">
+            {{-- Debt Free Timeline Card --}}
+            <div class="premium-card rounded-2xl p-6 stat-card">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">
+                            {{ __('app.debt_free_in') }}
+                        </p>
+                        @if ($this->strategyEstimate)
+                            <p class="text-4xl font-display font-bold tracking-tight">
+                                <span class="gradient-text">
                                     @if ($this->strategyEstimate['years'] > 0)
                                         {{ $this->strategyEstimate['years'] }} {{ trans_choice('app.years', $this->strategyEstimate['years']) }}
                                     @endif
                                     @if ($this->strategyEstimate['months'] > 0)
                                         {{ $this->strategyEstimate['months'] }} {{ trans_choice('app.months', $this->strategyEstimate['months']) }}
                                     @endif
-                                </p>
-                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                                    <span>{{ __('app.with_chosen_strategy') }}</span>
-                                    @if ($this->payoffEstimate)
-                                        <span class="text-xs text-gray-500 dark:text-gray-400 ml-1">({{ $this->payoffEstimate['years'] > 0 ? $this->payoffEstimate['years'] . ' ' . trans_choice('app.years', $this->payoffEstimate['years']) . ' ' : '' }}{{ $this->payoffEstimate['months'] > 0 ? $this->payoffEstimate['months'] . ' ' . trans_choice('app.months', $this->payoffEstimate['months']) . ' ' : '' }}{{ __('app.with_minimum_payments') }})</span>
-                                    @endif
-                                </p>
-                            @else
-                                <p class="text-2xl font-bold text-gray-500 dark:text-gray-400">
-                                    {{ __('app.unable_to_calculate') }}
-                                </p>
-                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                                    {{ __('app.add_minimum_payments') }}
-                                </p>
-                            @endif
-                        </div>
-                        <div class="h-16 w-16 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-                            <svg class="h-8 w-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
+                                </span>
+                            </p>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 mt-3">
+                                <span>{{ __('app.with_chosen_strategy') }}</span>
+                                @if ($this->payoffEstimate)
+                                    <span class="text-xs text-slate-400 dark:text-slate-500 ml-1">({{ $this->payoffEstimate['years'] > 0 ? $this->payoffEstimate['years'] . ' ' . trans_choice('app.years', $this->payoffEstimate['years']) . ' ' : '' }}{{ $this->payoffEstimate['months'] > 0 ? $this->payoffEstimate['months'] . ' ' . trans_choice('app.months', $this->payoffEstimate['months']) . ' ' : '' }}{{ __('app.with_minimum_payments') }})</span>
+                                @endif
+                            </p>
+                        @else
+                            <p class="text-2xl font-display font-bold text-slate-400 dark:text-slate-500">
+                                {{ __('app.unable_to_calculate') }}
+                            </p>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 mt-3">
+                                {{ __('app.add_minimum_payments') }}
+                            </p>
+                        @endif
+                    </div>
+                    {{-- Decorative Icon --}}
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 dark:from-emerald-500/20 dark:to-cyan-500/20 flex items-center justify-center">
+                        <svg class="h-8 w-8 text-emerald-500 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                     </div>
                 </div>
             </div>
+        </div>
 
-            {{-- Debt Cards Grid --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-                 @if($reorderMode) x-sort.ghost="updatePosition($item, $position)" x-sort:config="{{ json_encode(['animation' => 150]) }}" @endif>
-                @foreach ($this->debts as $index => $debt)
-                    <div wire:key="debt-{{ $debt['id'] }}"
-                         @if($reorderMode) x-sort:item="{{ $debt['id'] }}" @endif
-                         class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 {{ $reorderMode ? 'cursor-grab active:cursor-grabbing' : 'hover:border-gray-300 dark:hover:border-gray-600' }} transition-colors relative">
-                        {{-- Priority Number Badge --}}
-                        <div class="absolute top-2 right-2 w-8 h-8 {{ $reorderMode ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400' }} rounded-full flex items-center justify-center text-sm font-bold transition-colors z-10">
-                            {{ $debt['customPriority'] ?? $index + 1 }}
+        {{-- Debt Cards Grid --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 stagger-children"
+             @if($reorderMode) x-sort.ghost="updatePosition($item, $position)" x-sort:config="{{ json_encode(['animation' => 150]) }}" @endif>
+            @foreach ($this->debts as $index => $debt)
+                <div wire:key="debt-{{ $debt['id'] }}"
+                     @if($reorderMode) x-sort:item="{{ $debt['id'] }}" @endif
+                     class="debt-card premium-card overflow-hidden {{ $reorderMode ? 'cursor-grab active:cursor-grabbing' : '' }}">
+                    {{-- Card Header with Priority Badge --}}
+                    <div class="relative p-6 pb-4">
+                        {{-- Priority Badge --}}
+                        <div class="absolute top-4 right-4 priority-badge">
+                            <div class="w-10 h-10 rounded-xl {{ $reorderMode ? 'bg-gradient-to-br from-emerald-500 to-cyan-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400' }} flex items-center justify-center text-sm font-bold transition-all">
+                                {{ $debt['customPriority'] ?? $index + 1 }}
+                            </div>
                         </div>
 
-                        <div class="p-6">
-                            {{-- Debt Name --}}
-                            <div class="flex items-start justify-between mb-4">
-                                <div class="flex items-center gap-2 flex-1">
-                                    <button
-                                       wire:click="$parent.showDetail({{ $debt['id'] }})"
-                                       class="text-lg font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer">
-                                        {{ $debt['name'] }}
-                                    </button>
-                                </div>
-                                @if (!$debt['isCompliant'] && !$reorderMode)
-                                    <div class="relative group">
-                                        <div class="flex items-center gap-1 px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 text-xs font-medium rounded">
-                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                                            </svg>
-                                        </div>
-                                        <!-- Tooltip -->
-                                        <div class="absolute right-0 top-full mt-2 w-64 p-3 bg-gray-900 dark:bg-gray-700 text-white text-sm rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-                                            <div class="absolute -top-1 right-4 w-2 h-2 bg-gray-900 dark:bg-gray-700 transform rotate-45"></div>
-                                            <p class="font-medium mb-1">{{ __('app.non_compliant_minimum') }}</p>
-                                            <p class="text-xs text-gray-300 dark:text-gray-400">{{ $debt['warning'] }}</p>
-                                        </div>
+                        {{-- Debt Name & Warning --}}
+                        <div class="flex items-start gap-2 pr-14">
+                            <button
+                               wire:click="$parent.showDetail({{ $debt['id'] }})"
+                               class="text-lg font-display font-semibold text-slate-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer text-left">
+                                {{ $debt['name'] }}
+                            </button>
+                            @if (!$debt['isCompliant'] && !$reorderMode)
+                                <div class="relative group shrink-0">
+                                    <div class="w-6 h-6 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                        </svg>
                                     </div>
-                                @endif
-                            </div>
-
-                            {{-- Progress Bar --}}
-                            @if ($debt['progressPercentage'] > 0)
-                                <div class="mb-4">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <span class="text-xs font-medium text-gray-600 dark:text-gray-400">
-                                            {{ __('app.paid_off_progress') }}
-                                        </span>
-                                        <span class="text-xs font-bold text-blue-600 dark:text-blue-400">
-                                            {{ number_format($debt['progressPercentage'], 1, ',', ' ') }}%
-                                        </span>
-                                    </div>
-                                    <div class="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                        <div
-                                            class="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-full transition-all duration-500"
-                                            style="width: {{ $debt['progressPercentage'] }}%"
-                                        ></div>
-                                    </div>
-                                    <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                        {{ number_format($debt['amountPaid'], 0, ',', ' ') }} kr {{ __('app.of') }} {{ number_format($debt['originalBalance'], 0, ',', ' ') }} kr {{ __('app.paid') }}
+                                    {{-- Tooltip --}}
+                                    <div class="absolute right-0 top-full mt-2 w-64 p-3 bg-slate-900 dark:bg-slate-700 text-white text-sm rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20">
+                                        <div class="absolute -top-1 right-4 w-2 h-2 bg-slate-900 dark:bg-slate-700 transform rotate-45"></div>
+                                        <p class="font-medium mb-1">{{ __('app.non_compliant_minimum') }}</p>
+                                        <p class="text-xs text-slate-300 dark:text-slate-400">{{ $debt['warning'] }}</p>
                                     </div>
                                 </div>
                             @endif
+                        </div>
 
-                            {{-- Debt Details --}}
-                            <div class="space-y-3 mb-6">
-                                <div class="flex justify-between items-baseline">
-                                    <span class="text-sm text-gray-600 dark:text-gray-400">
-                                        {{ __('app.balance') }}
-                                        @if (!$reorderMode)
-                                            <button
-                                                wire:click="openReconciliationModal({{ $debt['id'] }})"
-                                                type="button"
-                                                class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline ml-1 cursor-pointer"
-                                            >({{ __('app.reconcile') }})</button>
-                                            @php
-                                                $reconciliationCount = $this->getReconciliationCountForDebt($debt['id']);
-                                            @endphp
-                                            @if ($reconciliationCount > 0)
-                                                <button
-                                                    wire:click="openReconciliationHistory({{ $debt['id'] }})"
-                                                    type="button"
-                                                    class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:underline ml-1 cursor-pointer"
-                                                >({{ __('app.view_history') }} {{ $reconciliationCount }})</button>
-                                            @endif
-                                        @endif
-                                    </span>
-                                    <span class="text-xl font-bold text-gray-900 dark:text-white">
-                                        {{ number_format($debt['balance'], 0, ',', ' ') }} kr
-                                    </span>
-                                </div>
-                                <div class="flex justify-between items-baseline">
-                                    <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.original_balance') }}</span>
-                                    <span class="font-medium text-gray-900 dark:text-white">
-                                        {{ number_format($debt['originalBalance'], 0, ',', ' ') }} kr
-                                    </span>
-                                </div>
-                                <div class="flex justify-between items-baseline">
-                                    <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.interest_rate') }}</span>
-                                    <span class="font-medium text-gray-900 dark:text-white">
-                                        {{ number_format($debt['interestRate'], 1, ',', ' ') }} %
-                                    </span>
-                                </div>
-                                @if ($debt['minimumPayment'])
-                                    <div class="flex justify-between items-baseline">
-                                        <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.minimum_payment') }}</span>
-                                        <span class="font-medium text-gray-900 dark:text-white">
-                                            {{ number_format($debt['minimumPayment'], 0, ',', ' ') }} kr{{ __('app.per_month') }}
-                                        </span>
+                        {{-- Progress Ring --}}
+                        @if ($debt['progressPercentage'] > 0)
+                            <div class="mt-4 flex items-center gap-4">
+                                {{-- SVG Progress Ring --}}
+                                <div class="relative w-20 h-20 shrink-0">
+                                    <svg class="progress-ring w-20 h-20" viewBox="0 0 80 80">
+                                        {{-- Background circle --}}
+                                        <circle
+                                            class="progress-ring-bg"
+                                            cx="40"
+                                            cy="40"
+                                            r="34"
+                                            fill="none"
+                                            stroke-width="6"
+                                        />
+                                        {{-- Progress circle --}}
+                                        <circle
+                                            class="progress-ring-circle"
+                                            cx="40"
+                                            cy="40"
+                                            r="34"
+                                            fill="none"
+                                            stroke="url(#momentum-gradient)"
+                                            stroke-width="6"
+                                            stroke-linecap="round"
+                                            stroke-dasharray="{{ 2 * 3.14159 * 34 }}"
+                                            stroke-dashoffset="{{ 2 * 3.14159 * 34 * (1 - $debt['progressPercentage'] / 100) }}"
+                                        />
+                                    </svg>
+                                    {{-- Percentage in center --}}
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <span class="text-sm font-bold text-slate-900 dark:text-white">{{ number_format($debt['progressPercentage'], 0) }}%</span>
                                     </div>
-                                @endif
-                                @if ($debt['dueDay'])
-                                    <div class="flex justify-between items-baseline">
-                                        <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('app.payment_due') }}</span>
-                                        <span class="font-medium text-gray-900 dark:text-white">
-                                            {{ __('app.due_on_day', ['day' => $debt['dueDay']]) }}
-                                        </span>
-                                    </div>
-                                @endif
-                                <div class="flex justify-between items-baseline pt-2 border-t border-gray-200 dark:border-gray-700">
-                                    <span class="text-xs text-gray-500 dark:text-gray-400">{{ __('app.added_on') }}</span>
-                                    <span class="text-xs text-gray-600 dark:text-gray-300">
-                                        {{ $debt['createdAt'] }}
-                                    </span>
                                 </div>
-                                <div class="flex justify-between items-baseline">
-                                    <span class="text-xs text-gray-500 dark:text-gray-400">{{ __('app.last_verified') }}</span>
-                                    <span class="text-xs {{ $debt['lastVerifiedAt'] ? 'text-gray-600 dark:text-gray-300' : 'text-amber-600 dark:text-amber-400' }}">
-                                        {{ $debt['lastVerifiedAt'] ?? __('app.never_verified') }}
-                                    </span>
+                                {{-- Progress Text --}}
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">{{ __('app.paid_off_progress') }}</p>
+                                    <p class="text-sm text-slate-700 dark:text-slate-300">
+                                        <span class="font-semibold">{{ number_format($debt['amountPaid'], 0, ',', ' ') }}</span>
+                                        <span class="text-slate-400 dark:text-slate-500">{{ __('app.of') }} {{ number_format($debt['originalBalance'], 0, ',', ' ') }} kr</span>
+                                    </p>
                                 </div>
                             </div>
+                        @endif
+                    </div>
 
-                            {{-- Actions --}}
-                            @if (!$reorderMode)
-                                <div class="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    {{-- Card Body --}}
+                    <div class="px-6 pb-4 space-y-3">
+                        {{-- Balance Row --}}
+                        <div class="flex justify-between items-baseline">
+                            <span class="text-sm text-slate-500 dark:text-slate-400">
+                                {{ __('app.balance') }}
+                                @if (!$reorderMode)
                                     <button
+                                        wire:click="openReconciliationModal({{ $debt['id'] }})"
                                         type="button"
-                                        wire:click="$parent.editDebt({{ $debt['id'] }})"
-                                        class="flex-1 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors text-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2">
-                                        {{ __('app.edit') }}
-                                    </button>
-                                    <button type="button"
-                                            wire:click="confirmDelete({{ $debt['id'] }}, '{{ $debt['name'] }}')"
-                                            aria-label="{{ __('app.delete_debt', ['name' => $debt['name']]) }}"
-                                            class="flex-1 px-3 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400 focus:ring-offset-2">
-                                        {{ __('app.delete') }}
-                                    </button>
-                                </div>
-                            @endif
+                                        class="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 hover:underline ml-1 cursor-pointer text-xs font-medium"
+                                    >({{ __('app.reconcile') }})</button>
+                                    @php
+                                        $reconciliationCount = $this->getReconciliationCountForDebt($debt['id']);
+                                    @endphp
+                                    @if ($reconciliationCount > 0)
+                                        <button
+                                            wire:click="openReconciliationHistory({{ $debt['id'] }})"
+                                            type="button"
+                                            class="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 hover:underline ml-1 cursor-pointer text-xs"
+                                        >({{ $reconciliationCount }})</button>
+                                    @endif
+                                @endif
+                            </span>
+                            <span class="text-xl font-display font-bold text-slate-900 dark:text-white">
+                                {{ number_format($debt['balance'], 0, ',', ' ') }} <span class="text-sm font-normal text-slate-400">kr</span>
+                            </span>
                         </div>
-                    </div>
-                @endforeach
 
-                {{-- Add New Debt Placeholder --}}
-                @if (!$reorderMode)
-                    <button
-                       wire:click="$parent.showCreate"
-                       class="bg-white dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all p-6 flex flex-col items-center justify-center min-h-[300px] group focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 cursor-pointer">
-                        <div class="h-16 w-16 bg-gray-100 dark:bg-gray-700 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 rounded-full flex items-center justify-center mb-4 transition-colors">
-                            <svg class="h-8 w-8 text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                            </svg>
+                        {{-- Interest Rate --}}
+                        <div class="flex justify-between items-baseline">
+                            <span class="text-sm text-slate-500 dark:text-slate-400">{{ __('app.interest_rate') }}</span>
+                            <span class="font-semibold text-slate-700 dark:text-slate-300">
+                                {{ number_format($debt['interestRate'], 1, ',', ' ') }}%
+                            </span>
                         </div>
-                        <h3 class="text-lg font-semibold text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                            {{ __('app.add_new_debt') }}
-                        </h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-500 mt-2 text-center">
-                            {{ __('app.click_to_add_debt') }}
-                        </p>
-                    </button>
-                @endif
-            </div>
-        @else
-            {{-- Empty State --}}
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
-                <div class="max-w-sm mx-auto">
-                    <div class="h-16 w-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="h-8 w-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+
+                        {{-- Minimum Payment --}}
+                        @if ($debt['minimumPayment'])
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-sm text-slate-500 dark:text-slate-400">{{ __('app.minimum_payment') }}</span>
+                                <span class="font-semibold text-slate-700 dark:text-slate-300">
+                                    {{ number_format($debt['minimumPayment'], 0, ',', ' ') }} kr{{ __('app.per_month') }}
+                                </span>
+                            </div>
+                        @endif
+
+                        {{-- Due Day --}}
+                        @if ($debt['dueDay'])
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-sm text-slate-500 dark:text-slate-400">{{ __('app.payment_due') }}</span>
+                                <span class="font-medium text-slate-700 dark:text-slate-300">
+                                    {{ __('app.due_on_day', ['day' => $debt['dueDay']]) }}
+                                </span>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- Card Footer --}}
+                    <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-800/30">
+                        <div class="flex items-center justify-between text-xs text-slate-400 dark:text-slate-500 mb-3">
+                            <span>{{ __('app.added_on') }} {{ $debt['createdAt'] }}</span>
+                            <span class="{{ $debt['lastVerifiedAt'] ? '' : 'text-amber-500 dark:text-amber-400' }}">
+                                @if ($debt['lastVerifiedAt'])
+                                    {{ __('app.verified') }} {{ $debt['lastVerifiedAt'] }}
+                                @else
+                                    {{ __('app.never_verified') }}
+                                @endif
+                            </span>
+                        </div>
+
+                        {{-- Actions --}}
+                        @if (!$reorderMode)
+                            <div class="flex gap-2">
+                                <button
+                                    type="button"
+                                    wire:click="$parent.editDebt({{ $debt['id'] }})"
+                                    class="flex-1 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl transition-colors text-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2">
+                                    {{ __('app.edit') }}
+                                </button>
+                                <button type="button"
+                                        wire:click="confirmDelete({{ $debt['id'] }}, '{{ $debt['name'] }}')"
+                                        aria-label="{{ __('app.delete_debt', ['name' => $debt['name']]) }}"
+                                        class="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-rose-500 hover:bg-rose-600 dark:bg-rose-600 dark:hover:bg-rose-700 rounded-xl transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2">
+                                    {{ __('app.delete') }}
+                                </button>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endforeach
+
+            {{-- Add New Debt Card --}}
+            @if (!$reorderMode)
+                <button
+                   wire:click="$parent.showCreate"
+                   class="debt-card border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 hover:border-emerald-400 dark:hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10 rounded-2xl p-8 flex flex-col items-center justify-center min-h-[280px] group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 cursor-pointer transition-all">
+                    <div class="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/30 flex items-center justify-center mb-4 transition-colors">
+                        <svg class="h-8 w-8 text-slate-400 dark:text-slate-500 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                         </svg>
                     </div>
-                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                        {{ __('app.no_debts') }}
-                    </h2>
-                    <p class="text-gray-600 dark:text-gray-400 mb-6">
-                        {{ __('app.no_debts_message') }}
+                    <h3 class="text-lg font-display font-semibold text-slate-600 dark:text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors mb-1">
+                        {{ __('app.add_new_debt') }}
+                    </h3>
+                    <p class="text-sm text-slate-400 dark:text-slate-500 text-center">
+                        {{ __('app.click_to_add_debt') }}
                     </p>
-                    <button
-                       wire:click="$parent.showCreate"
-                       class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 cursor-pointer">
-                        {{ __('app.add_first_debt') }}
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                    </button>
+                </button>
+            @endif
+        </div>
+    @else
+        {{-- Empty State --}}
+        <div class="premium-card rounded-2xl p-16 text-center">
+            <div class="max-w-md mx-auto">
+                <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 dark:from-emerald-500/20 dark:to-cyan-500/20 flex items-center justify-center mx-auto mb-6">
+                    <svg class="h-10 w-10 text-emerald-500 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                 </div>
+                <h2 class="text-2xl font-display font-bold text-slate-900 dark:text-white mb-3">
+                    {{ __('app.no_debts') }}
+                </h2>
+                <p class="text-slate-500 dark:text-slate-400 mb-8">
+                    {{ __('app.no_debts_message') }}
+                </p>
+                <button
+                   wire:click="$parent.showCreate"
+                   class="inline-flex items-center gap-2 px-6 py-3 btn-momentum rounded-xl cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2">
+                    {{ __('app.add_first_debt') }}
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                </button>
             </div>
-        @endif
+        </div>
+    @endif
 
     {{-- YNAB Sync Modal --}}
     @if ($showYnabSync)
@@ -326,51 +360,51 @@
             <x-modal.body>
                         @if (count($ynabDiscrepancies['new']) === 0 && count($ynabDiscrepancies['closed']) === 0 && count($ynabDiscrepancies['potential_matches']) === 0 && empty($ynabDiscrepancies['balance_mismatch'] ?? []))
                             <div class="text-center py-8">
-                                <svg class="mx-auto h-12 w-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                <svg class="mx-auto h-12 w-12 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                <p class="mt-4 text-lg font-medium text-gray-900 dark:text-white">{{ __('app.ynab_all_synced') }}</p>
-                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ __('app.ynab_no_differences') }}</p>
+                                <p class="mt-4 text-lg font-medium text-slate-900 dark:text-white">{{ __('app.ynab_all_synced') }}</p>
+                                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ __('app.ynab_no_differences') }}</p>
                             </div>
                         @else
                             {{-- Potential Matches Section --}}
                             @if (count($ynabDiscrepancies['potential_matches']) > 0)
                                 <div class="mb-6">
-                                    <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                                        <svg class="h-5 w-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    <h4 class="text-sm font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                        <svg class="h-5 w-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                                         </svg>
                                         {{ __('app.ynab_potential_matches') }} ({{ count($ynabDiscrepancies['potential_matches']) }})
                                     </h4>
                                     <div class="space-y-3">
                                         @foreach ($ynabDiscrepancies['potential_matches'] as $match)
-                                            <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                                            <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
                                                 <div class="space-y-3">
                                                     <div class="flex items-start justify-between">
                                                         <div class="flex-1">
-                                                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">{{ __('app.ynab_source') }}</p>
-                                                            <p class="font-semibold text-gray-900 dark:text-white">{{ $match['ynab']['name'] }}</p>
-                                                            <div class="mt-1 space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                                                            <p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{{ __('app.ynab_source') }}</p>
+                                                            <p class="font-semibold text-slate-900 dark:text-white">{{ $match['ynab']['name'] }}</p>
+                                                            <div class="mt-1 space-y-1 text-sm text-slate-600 dark:text-slate-400">
                                                                 <p>{{ number_format($match['ynab']['balance'], 0, ',', ' ') }} kr • {{ number_format($match['ynab']['interest_rate'], 1, ',', ' ') }}%</p>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div class="border-t border-yellow-200 dark:border-yellow-800 pt-3">
-                                                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">{{ __('app.your_app') }}</p>
-                                                        <p class="font-semibold text-gray-900 dark:text-white">{{ $match['local']['name'] }}</p>
-                                                        <div class="mt-1 space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                                                    <div class="border-t border-amber-200 dark:border-amber-800 pt-3">
+                                                        <p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{{ __('app.your_app') }}</p>
+                                                        <p class="font-semibold text-slate-900 dark:text-white">{{ $match['local']['name'] }}</p>
+                                                        <div class="mt-1 space-y-1 text-sm text-slate-600 dark:text-slate-400">
                                                             <p>{{ number_format($match['local']['balance'], 0, ',', ' ') }} kr • {{ number_format($match['local']['interest_rate'], 1, ',', ' ') }}%</p>
                                                         </div>
                                                     </div>
                                                     <div class="flex gap-2 pt-2">
                                                         <button
                                                             wire:click="ignorePotentialMatch('{{ $match['ynab']['name'] }}')"
-                                                            class="flex-1 px-3 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white text-sm font-medium rounded-lg transition-colors cursor-pointer">
+                                                            class="flex-1 px-3 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-900 dark:text-white text-sm font-medium rounded-lg transition-colors cursor-pointer">
                                                             {{ __('app.not_same_debt') }}
                                                         </button>
                                                         <button
                                                             wire:click="openLinkConfirmation({{ $match['local']['id'] }}, {{ json_encode($match['ynab']) }})"
-                                                            class="flex-1 px-3 py-2 bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer">
+                                                            class="flex-1 px-3 py-2 bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer">
                                                             {{ __('app.same_debt') }}
                                                         </button>
                                                     </div>
@@ -385,28 +419,28 @@
                             @if (count($ynabDiscrepancies['new']) > 0)
                                 <div class="mb-6">
                                     <div class="flex items-center justify-between mb-3">
-                                        <h4 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                                            <svg class="h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        <h4 class="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                                            <svg class="h-5 w-5 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                                             </svg>
                                             {{ __('app.new_debts_in_ynab') }} ({{ count($ynabDiscrepancies['new']) }})
                                         </h4>
                                         <button
                                             wire:click="importAllYnabDebts"
-                                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer flex items-center gap-2">
-                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                            class="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer flex items-center gap-2">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                                             </svg>
                                             {{ __('app.import_all') }}
                                         </button>
                                     </div>
                                     <div class="space-y-3">
                                         @foreach ($ynabDiscrepancies['new'] as $debt)
-                                            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                                            <div class="bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-xl p-4">
                                                 <div class="flex items-start justify-between">
                                                     <div class="flex-1">
-                                                        <p class="font-semibold text-gray-900 dark:text-white">{{ $debt['name'] }}</p>
-                                                        <div class="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                                                        <p class="font-semibold text-slate-900 dark:text-white">{{ $debt['name'] }}</p>
+                                                        <div class="mt-2 space-y-1 text-sm text-slate-600 dark:text-slate-400">
                                                             <p>{{ __('app.balance_label') }} <span class="font-medium">{{ number_format($debt['balance'], 0, ',', ' ') }} kr</span></p>
                                                             <p>{{ __('app.interest_label') }} <span class="font-medium">{{ number_format($debt['interest_rate'], 1, ',', ' ') }}%</span></p>
                                                             @if ($debt['minimum_payment'])
@@ -416,7 +450,7 @@
                                                     </div>
                                                     <button
                                                         wire:click="importYnabDebt({{ json_encode($debt) }})"
-                                                        class="ml-4 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer">
+                                                        class="ml-4 px-3 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer">
                                                         {{ __('app.import') }}
                                                     </button>
                                                 </div>
@@ -429,22 +463,22 @@
                             {{-- Balance Mismatch Section --}}
                             @if (!empty($ynabDiscrepancies['balance_mismatch'] ?? []))
                                 <div class="mb-6">
-                                    <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                                        <svg class="h-5 w-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    <h4 class="text-sm font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                        <svg class="h-5 w-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                                         </svg>
                                         {{ __('app.balance_mismatch') }} ({{ count($ynabDiscrepancies['balance_mismatch']) }})
                                     </h4>
                                     <div class="space-y-3">
                                         @foreach ($ynabDiscrepancies['balance_mismatch'] as $mismatch)
-                                            <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                                            <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
                                                 <div class="flex items-start justify-between">
                                                     <div class="flex-1">
-                                                        <p class="font-semibold text-gray-900 dark:text-white">{{ $mismatch['local_debt']->name }}</p>
-                                                        <div class="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                                                        <p class="font-semibold text-slate-900 dark:text-white">{{ $mismatch['local_debt']->name }}</p>
+                                                        <div class="mt-2 space-y-1 text-sm text-slate-600 dark:text-slate-400">
                                                             <p>{{ __('app.in_app') }} <span class="font-medium">{{ number_format($mismatch['local_balance'], 0, ',', ' ') }} kr</span></p>
                                                             <p>{{ __('app.in_ynab') }} <span class="font-medium">{{ number_format($mismatch['ynab_balance'], 0, ',', ' ') }} kr</span></p>
-                                                            <p class="{{ $mismatch['difference'] > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400' }}">
+                                                            <p class="{{ $mismatch['difference'] > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400' }}">
                                                                 {{ __('app.difference_label') }} <span class="font-medium">{{ $mismatch['difference'] >= 0 ? '+' : '' }}{{ number_format($mismatch['difference'], 0, ',', ' ') }} kr</span>
                                                             </p>
                                                         </div>
@@ -464,25 +498,25 @@
                             {{-- Closed Debts Section --}}
                             @if (count($ynabDiscrepancies['closed']) > 0)
                                 <div>
-                                    <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                                        <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    <h4 class="text-sm font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                        <svg class="h-5 w-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                                         </svg>
                                         {{ __('app.closed_in_ynab') }} ({{ count($ynabDiscrepancies['closed']) }})
                                     </h4>
                                     <div class="space-y-3">
                                         @foreach ($ynabDiscrepancies['closed'] as $debt)
-                                            <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                                            <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4">
                                                 <div class="flex items-center justify-between">
                                                     <div>
-                                                        <p class="font-semibold text-gray-900 dark:text-white">{{ $debt['name'] }}</p>
-                                                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                                        <p class="font-semibold text-slate-900 dark:text-white">{{ $debt['name'] }}</p>
+                                                        <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">
                                                             {{ __('app.closed_in_ynab_exists_here') }}
                                                         </p>
                                                     </div>
                                                     <button
                                                         wire:click="deleteClosedDebt({{ $debt['id'] }}, '{{ $debt['name'] }}')"
-                                                        class="ml-4 px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer">
+                                                        class="ml-4 px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer">
                                                         {{ __('app.delete') }}
                                                     </button>
                                                 </div>
@@ -502,7 +536,7 @@
             <x-modal.header :title="__('app.link_to_ynab')" on-close="closeLinkConfirmation" />
 
             <x-modal.body>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
                     {{ __('app.select_fields_to_update') }}
                 </p>
 
@@ -513,11 +547,11 @@
                             type="checkbox"
                             wire:model="selectedFieldsToUpdate"
                             value="name"
-                            class="mt-1 h-4 w-4 text-yellow-600 rounded border-gray-300 focus:ring-yellow-500 dark:border-gray-600 dark:bg-gray-700 cursor-pointer">
+                            class="mt-1 h-4 w-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-700 cursor-pointer">
                         <div class="flex-1">
-                            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ __('app.name') }}</p>
+                            <p class="text-sm font-medium text-slate-900 dark:text-white">{{ __('app.name') }}</p>
                             @if (!empty($linkingYnabDebt))
-                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $linkingYnabDebt['name'] }}</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">{{ $linkingYnabDebt['name'] }}</p>
                             @endif
                         </div>
                     </label>
@@ -528,11 +562,11 @@
                             type="checkbox"
                             wire:model="selectedFieldsToUpdate"
                             value="balance"
-                            class="mt-1 h-4 w-4 text-yellow-600 rounded border-gray-300 focus:ring-yellow-500 dark:border-gray-600 dark:bg-gray-700 cursor-pointer">
+                            class="mt-1 h-4 w-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-700 cursor-pointer">
                         <div class="flex-1">
-                            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ __('app.balance') }}</p>
+                            <p class="text-sm font-medium text-slate-900 dark:text-white">{{ __('app.balance') }}</p>
                             @if (!empty($linkingYnabDebt))
-                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ number_format($linkingYnabDebt['balance'], 0, ',', ' ') }} kr</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">{{ number_format($linkingYnabDebt['balance'], 0, ',', ' ') }} kr</p>
                             @endif
                         </div>
                     </label>
@@ -543,11 +577,11 @@
                             type="checkbox"
                             wire:model="selectedFieldsToUpdate"
                             value="interest_rate"
-                            class="mt-1 h-4 w-4 text-yellow-600 rounded border-gray-300 focus:ring-yellow-500 dark:border-gray-600 dark:bg-gray-700 cursor-pointer">
+                            class="mt-1 h-4 w-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-700 cursor-pointer">
                         <div class="flex-1">
-                            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ __('app.interest_rate') }}</p>
+                            <p class="text-sm font-medium text-slate-900 dark:text-white">{{ __('app.interest_rate') }}</p>
                             @if (!empty($linkingYnabDebt))
-                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ number_format($linkingYnabDebt['interest_rate'], 1, ',', ' ') }}%</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">{{ number_format($linkingYnabDebt['interest_rate'], 1, ',', ' ') }}%</p>
                             @endif
                         </div>
                     </label>
@@ -558,18 +592,18 @@
                             type="checkbox"
                             wire:model="selectedFieldsToUpdate"
                             value="minimum_payment"
-                            class="mt-1 h-4 w-4 text-yellow-600 rounded border-gray-300 focus:ring-yellow-500 dark:border-gray-600 dark:bg-gray-700 cursor-pointer">
+                            class="mt-1 h-4 w-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-700 cursor-pointer">
                         <div class="flex-1">
-                            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ __('app.minimum_payment') }}</p>
+                            <p class="text-sm font-medium text-slate-900 dark:text-white">{{ __('app.minimum_payment') }}</p>
                             @if (!empty($linkingYnabDebt) && $linkingYnabDebt['minimum_payment'])
-                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ number_format($linkingYnabDebt['minimum_payment'], 0, ',', ' ') }} kr{{ __('app.per_month') }}</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">{{ number_format($linkingYnabDebt['minimum_payment'], 0, ',', ' ') }} kr{{ __('app.per_month') }}</p>
                             @endif
                         </div>
                     </label>
                 </div>
 
-                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                    <p class="text-xs text-gray-600 dark:text-gray-400">
+                <div class="bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-xl p-3">
+                    <p class="text-xs text-slate-600 dark:text-slate-400">
                         <strong>{{ __('app.important') }}</strong> {{ __('app.ynab_account_id_saved') }}
                     </p>
                 </div>
@@ -600,27 +634,27 @@
         <x-modal wire:model="reconciliations.{{ $debtModel->id }}.show" max-width="lg">
             <form wire:submit.prevent="reconcileDebt({{ $debtModel->id }})">
                 <x-modal.header :title="__('app.reconcile_debt')">
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{{ $debtModel->name }}</p>
+                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ $debtModel->name }}</p>
                 </x-modal.header>
 
                 <x-modal.body>
                     <div class="space-y-5">
                         {{-- Current Calculated Balance --}}
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                                 {{ __('app.calculated_balance') }}
                             </label>
-                            <div class="text-lg font-semibold text-gray-900 dark:text-white">
+                            <div class="text-lg font-semibold text-slate-900 dark:text-white">
                                 {{ number_format($debtModel->balance, 2, ',', ' ') }} kr
                             </div>
-                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
                                 {{ __('app.based_on_original_balance') }}
                             </p>
                         </div>
 
                         {{-- Actual Balance Input --}}
                         <div>
-                            <label for="actualBalance-{{ $debtModel->id }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <label for="actualBalance-{{ $debtModel->id }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                                 {{ __('app.actual_balance') }} *
                             </label>
                             <div class="relative">
@@ -631,14 +665,14 @@
                                     step="0.01"
                                     min="0"
                                     placeholder="{{ __('app.actual_balance_placeholder') }}"
-                                    class="w-full px-4 py-2.5 pr-14 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none @error('reconciliations.' . $debtModel->id . '.balance') border-red-500 dark:border-red-400 @enderror"
+                                    class="w-full px-4 py-2.5 pr-14 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none @error('reconciliations.' . $debtModel->id . '.balance') border-rose-500 dark:border-rose-400 @enderror"
                                 >
                                 <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                                    <span class="text-gray-500 dark:text-gray-400 text-sm font-medium">NOK</span>
+                                    <span class="text-slate-500 dark:text-slate-400 text-sm font-medium">NOK</span>
                                 </div>
                             </div>
                             @error('reconciliations.' . $debtModel->id . '.balance')
-                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                <p class="mt-1 text-sm text-rose-600 dark:text-rose-400">{{ $message }}</p>
                             @enderror
                         </div>
 
@@ -647,16 +681,16 @@
                             @php
                                 $difference = $this->getReconciliationDifference($debtModel->id);
                             @endphp
-                            <div class="p-4 rounded-lg {{ $difference < 0 ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' : ($difference > 0 ? 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800' : 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800') }}">
+                            <div class="p-4 rounded-xl {{ $difference < 0 ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800' : ($difference > 0 ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800' : 'bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800') }}">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-sm font-medium {{ $difference < 0 ? 'text-green-900 dark:text-green-200' : ($difference > 0 ? 'text-yellow-900 dark:text-yellow-200' : 'text-blue-900 dark:text-blue-200') }}">
+                                    <span class="text-sm font-medium {{ $difference < 0 ? 'text-emerald-900 dark:text-emerald-200' : ($difference > 0 ? 'text-amber-900 dark:text-amber-200' : 'text-cyan-900 dark:text-cyan-200') }}">
                                         {{ __('app.difference') }}:
                                     </span>
-                                    <span class="text-lg font-bold {{ $difference < 0 ? 'text-green-900 dark:text-green-200' : ($difference > 0 ? 'text-yellow-900 dark:text-yellow-200' : 'text-blue-900 dark:text-blue-200') }}">
+                                    <span class="text-lg font-bold {{ $difference < 0 ? 'text-emerald-900 dark:text-emerald-200' : ($difference > 0 ? 'text-amber-900 dark:text-amber-200' : 'text-cyan-900 dark:text-cyan-200') }}">
                                         {{ $difference >= 0 ? '+' : '' }}{{ number_format($difference, 2, ',', ' ') }} kr
                                     </span>
                                 </div>
-                                <p class="mt-1 text-xs {{ $difference < 0 ? 'text-green-700 dark:text-green-300' : ($difference > 0 ? 'text-yellow-700 dark:text-yellow-300' : 'text-blue-700 dark:text-blue-300') }}">
+                                <p class="mt-1 text-xs {{ $difference < 0 ? 'text-emerald-700 dark:text-emerald-300' : ($difference > 0 ? 'text-amber-700 dark:text-amber-300' : 'text-cyan-700 dark:text-cyan-300') }}">
                                     @if (abs($difference) < 0.01)
                                         {{ __('app.balance_correct') }}
                                     @elseif ($difference < 0)
@@ -670,7 +704,7 @@
 
                         {{-- Reconciliation Date --}}
                         <div>
-                            <label for="reconciliationDate-{{ $debtModel->id }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <label for="reconciliationDate-{{ $debtModel->id }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                                 {{ __('app.reconciliation_date') }} *
                             </label>
                             <input
@@ -678,16 +712,16 @@
                                 id="reconciliationDate-{{ $debtModel->id }}"
                                 wire:model="reconciliations.{{ $debtModel->id }}.date"
                                 placeholder="DD.MM.YYYY"
-                                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent @error('reconciliations.' . $debtModel->id . '.date') border-red-500 dark:border-red-400 @enderror"
+                                class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-transparent @error('reconciliations.' . $debtModel->id . '.date') border-rose-500 dark:border-rose-400 @enderror"
                             >
                             @error('reconciliations.' . $debtModel->id . '.date')
-                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                <p class="mt-1 text-sm text-rose-600 dark:text-rose-400">{{ $message }}</p>
                             @enderror
                         </div>
 
                         {{-- Notes --}}
                         <div>
-                            <label for="notes-{{ $debtModel->id }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <label for="notes-{{ $debtModel->id }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                                 {{ __('app.notes') }} ({{ __('app.optional') }})
                             </label>
                             <textarea
@@ -695,10 +729,10 @@
                                 wire:model="reconciliations.{{ $debtModel->id }}.notes"
                                 rows="3"
                                 placeholder="{{ __('app.reconciliation_notes_placeholder') }}"
-                                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent @error('reconciliations.' . $debtModel->id . '.notes') border-red-500 dark:border-red-400 @enderror"
+                                class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-transparent @error('reconciliations.' . $debtModel->id . '.notes') border-rose-500 dark:border-rose-400 @enderror"
                             ></textarea>
                             @error('reconciliations.' . $debtModel->id . '.notes')
-                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                <p class="mt-1 text-sm text-rose-600 dark:text-rose-400">{{ $message }}</p>
                             @enderror
                         </div>
                     </div>
@@ -725,7 +759,7 @@
     @if ($showReconciliationHistory && $viewingReconciliationHistoryForDebtId)
         <x-modal wire:model="showReconciliationHistory" max-width="lg">
             <x-modal.header :title="__('app.reconciliation_history')" on-close="closeReconciliationHistory">
-                <p class="text-sm text-gray-600 dark:text-gray-400">{{ $this->historyDebtName }}</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">{{ $this->historyDebtName }}</p>
             </x-modal.header>
 
             <x-modal.body class="max-h-[60vh] overflow-y-auto">
@@ -734,4 +768,3 @@
         </x-modal>
     @endif
 </div>
-

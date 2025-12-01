@@ -269,6 +269,7 @@ return [
     'minimum_payment_help_forbrukslån' => 'Forbrukslån: Minimumsbetalingen må dekke månedsrenten',
     'added_on' => 'Lagt til',
     'last_verified' => 'Sist bekreftet',
+    'verified' => 'Bekreftet',
     'never_verified' => 'Aldri bekreftet',
     'debt_verified_balance_correct' => 'Gjeld bekreftet - saldo er korrekt.',
     'calculated_minimum' => 'Beregnet minimum',

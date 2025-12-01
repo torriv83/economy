@@ -5,7 +5,8 @@
       "Bash(cat:*)",
       "Bash(taskkill //F //IM chrome.exe //T)",
       "Skill(superpowers-laravel:brainstorming)",
-      "Skill(superpowers-laravel:writing-plans)"
+      "Skill(superpowers-laravel:writing-plans)",
+      "Skill(frontend-design:frontend-design)"
     ],
     "deny": [],
     "ask": []
