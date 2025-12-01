@@ -83,14 +83,14 @@ class PaymentPlan extends Component
         }
 
         $historicalPayments = $this->paymentService->getHistoricalPayments();
+        $highestHistoricalMonth = count($historicalPayments);
 
         $fullSchedule = $this->calculationService->generatePaymentSchedule(
             $debts,
             $this->extraPayment,
-            $this->strategy
+            $this->strategy,
+            $highestHistoricalMonth
         );
-
-        $highestHistoricalMonth = count($historicalPayments);
 
         $futureSchedule = array_map(function ($month) use ($highestHistoricalMonth) {
             $month['month'] = $month['month'] + $highestHistoricalMonth;

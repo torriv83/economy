@@ -388,9 +388,10 @@ class DebtCalculationService
      * Generate a payment schedule based on the selected strategy.
      *
      * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $debts
+     * @param  int  $actualPaymentMonthOffset  Offset to align schedule months with actual payment month_numbers
      * @return array<string, mixed>
      */
-    public function generatePaymentSchedule(Collection $debts, float $extraPayment, string $strategy = 'avalanche'): array
+    public function generatePaymentSchedule(Collection $debts, float $extraPayment, string $strategy = 'avalanche', int $actualPaymentMonthOffset = 0): array
     {
         if ($debts->isEmpty()) {
             return [
@@ -401,10 +402,10 @@ class DebtCalculationService
             ];
         }
 
-        $cacheKey = $this->getPaymentScheduleCacheKey($debts, $extraPayment, $strategy);
+        $cacheKey = $this->getPaymentScheduleCacheKey($debts, $extraPayment, $strategy).':'.$actualPaymentMonthOffset;
 
-        return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($debts, $extraPayment, $strategy) {
-            return $this->calculatePaymentSchedule($debts, $extraPayment, $strategy);
+        return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($debts, $extraPayment, $strategy, $actualPaymentMonthOffset) {
+            return $this->calculatePaymentSchedule($debts, $extraPayment, $strategy, $actualPaymentMonthOffset);
         });
     }
 
@@ -412,9 +413,10 @@ class DebtCalculationService
      * Calculate the payment schedule (uncached).
      *
      * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $debts
+     * @param  int  $actualPaymentMonthOffset  Offset to align schedule months with actual payment month_numbers
      * @return array<string, mixed>
      */
-    protected function calculatePaymentSchedule(Collection $debts, float $extraPayment, string $strategy): array
+    protected function calculatePaymentSchedule(Collection $debts, float $extraPayment, string $strategy, int $actualPaymentMonthOffset = 0): array
     {
         $orderedDebts = match ($strategy) {
             'snowball' => $this->orderBySnowball($debts),
@@ -425,27 +427,33 @@ class DebtCalculationService
         // Get all actual payments organized by month and debt
         $actualPayments = $this->getActualPaymentsByMonth($debts);
 
-        $remainingDebts = $orderedDebts->map(function ($debt) use ($actualPayments) {
-            // Check if this debt has reconciliation adjustments
-            $hasReconciliation = $debt->payments()
-                ->where('is_reconciliation_adjustment', true)
-                ->exists();
-
-            // If reconciled: Use current balance (reconciliation sets the truth from this point forward)
-            // If not reconciled but has payments: Replay from original_balance to simulate payment history
-            // If no payments: Use current balance for accurate projections
-            if ($hasReconciliation) {
-                // Reconciliation means the current balance IS the truth - don't replay from original
+        $remainingDebts = $orderedDebts->map(function ($debt) use ($actualPayments, $actualPaymentMonthOffset) {
+            // When offset > 0, we're projecting from current state (historical months handled separately)
+            // Always use current balance since it already reflects historical payments
+            if ($actualPaymentMonthOffset > 0) {
                 $startingBalance = $debt->balance;
             } else {
-                // Check if there are actual payments for this debt
-                $hasActualPaymentsForDebt = collect($actualPayments)->contains(function ($monthPayments) use ($debt) {
-                    return isset($monthPayments[$debt->name]);
-                });
+                // Check if this debt has reconciliation adjustments
+                $hasReconciliation = $debt->payments()
+                    ->where('is_reconciliation_adjustment', true)
+                    ->exists();
 
-                $startingBalance = $hasActualPaymentsForDebt
-                    ? ($debt->original_balance ?? $debt->balance)
-                    : $debt->balance;
+                // If reconciled: Use current balance (reconciliation sets the truth from this point forward)
+                // If not reconciled but has payments: Replay from original_balance to simulate payment history
+                // If no payments: Use current balance for accurate projections
+                if ($hasReconciliation) {
+                    // Reconciliation means the current balance IS the truth - don't replay from original
+                    $startingBalance = $debt->balance;
+                } else {
+                    // Check if there are actual payments for this debt
+                    $hasActualPaymentsForDebt = collect($actualPayments)->contains(function ($monthPayments) use ($debt) {
+                        return isset($monthPayments[$debt->name]);
+                    });
+
+                    $startingBalance = $hasActualPaymentsForDebt
+                        ? ($debt->original_balance ?? $debt->balance)
+                        : $debt->balance;
+                }
             }
 
             return [
@@ -495,13 +503,14 @@ class DebtCalculationService
             $totalPaidThisMonth = 0;
             $priorityDebtName = $remainingDebts[0]['name'] ?? null;
 
-            $hasActualPayments = isset($actualPayments[$month]);
+            $actualPaymentMonth = $month + $actualPaymentMonthOffset;
+            $hasActualPayments = isset($actualPayments[$actualPaymentMonth]);
 
             // Calculate how much of the extra payment budget has already been used this month
             // This handles the case where user changes strategy after paying one debt with extra
             $extraPaymentUsedThisMonth = 0;
             if ($hasActualPayments) {
-                foreach ($actualPayments[$month] as $debtName => $paymentData) {
+                foreach ($actualPayments[$actualPaymentMonth] as $debtName => $paymentData) {
                     $debtMinimum = collect($remainingDebts)->firstWhere('name', $debtName)['minimum_payment'] ?? 0;
                     $extraPaid = max(0, $paymentData['actual_amount'] - $debtMinimum);
                     $extraPaymentUsedThisMonth += $extraPaid;
@@ -525,8 +534,8 @@ class DebtCalculationService
                 $paymentNotes = null;
                 $cumulativePrincipalPaid = 0;
 
-                if ($hasActualPayments && isset($actualPayments[$month][$debtName])) {
-                    $paymentData = $actualPayments[$month][$debtName];
+                if ($hasActualPayments && isset($actualPayments[$actualPaymentMonth][$debtName])) {
+                    $paymentData = $actualPayments[$actualPaymentMonth][$debtName];
                     $actualAmount = $paymentData['actual_amount'];
                     $principalPaid = $paymentData['principal_paid'];
                     $cumulativePrincipalPaid = $paymentData['cumulative_principal_paid'];
@@ -557,7 +566,7 @@ class DebtCalculationService
                     // When using actual payments, use cumulative principal_paid to calculate remaining
                     // because database balance = original_balance - SUM(principal_paid)
                     // Note: cumulative_principal_paid includes reconciliation adjustments
-                    if ($hasActualPayments && isset($actualPayments[$month][$debtName])) {
+                    if ($hasActualPayments && isset($actualPayments[$actualPaymentMonth][$debtName])) {
                         // Calculate remaining balance based on cumulative principal paid
                         // This matches how updateDebtBalances() calculates: original_balance - SUM(principal_paid)
                         $newBalance = round($debt['original_balance'] - $cumulativePrincipalPaid, 2);

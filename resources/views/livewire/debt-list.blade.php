@@ -63,8 +63,8 @@
                         <p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">
                             {{ __('app.total_debt') }}
                         </p>
-                        <p class="text-4xl font-display font-bold text-slate-900 dark:text-white tracking-tight">
-                            {{ number_format($this->totalDebt, 0, ',', ' ') }}
+                        <p class="text-4xl font-display font-bold tracking-tight">
+                            <span class="gradient-text">{{ number_format($this->totalDebt, 0, ',', ' ') }}</span>
                             <span class="text-xl font-normal text-slate-400 dark:text-slate-500">kr</span>
                         </p>
                         @if ($this->lastUpdated)
@@ -139,7 +139,7 @@
                     <div class="relative p-6 pb-4">
                         {{-- Priority Badge --}}
                         <div class="absolute top-4 right-4 priority-badge">
-                            <div class="w-10 h-10 rounded-xl {{ $reorderMode ? 'bg-gradient-to-br from-emerald-500 to-cyan-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400' }} flex items-center justify-center text-sm font-bold transition-all">
+                            <div class="w-10 h-10 rounded-xl {{ $reorderMode ? 'bg-gradient-to-br from-emerald-500 to-cyan-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600' }} flex items-center justify-center text-sm font-bold transition-all">
                                 {{ $debt['customPriority'] ?? $index + 1 }}
                             </div>
                         </div>
@@ -169,7 +169,11 @@
                         </div>
 
                         {{-- Progress Ring --}}
-                        @if ($debt['progressPercentage'] > 0)
+                        @if ($debt['originalBalance'])
+                            @php
+                                $displayProgress = max(0, $debt['progressPercentage']);
+                                $displayAmountPaid = max(0, $debt['amountPaid']);
+                            @endphp
                             <div class="mt-4 flex items-center gap-4">
                                 {{-- SVG Progress Ring --}}
                                 <div class="relative w-20 h-20 shrink-0">
@@ -194,19 +198,19 @@
                                             stroke-width="6"
                                             stroke-linecap="round"
                                             stroke-dasharray="{{ 2 * 3.14159 * 34 }}"
-                                            stroke-dashoffset="{{ 2 * 3.14159 * 34 * (1 - $debt['progressPercentage'] / 100) }}"
+                                            stroke-dashoffset="{{ 2 * 3.14159 * 34 * (1 - $displayProgress / 100) }}"
                                         />
                                     </svg>
                                     {{-- Percentage in center --}}
                                     <div class="absolute inset-0 flex items-center justify-center">
-                                        <span class="text-sm font-bold text-slate-900 dark:text-white">{{ number_format($debt['progressPercentage'], 0) }}%</span>
+                                        <span class="text-sm font-bold text-slate-900 dark:text-white">{{ number_format($displayProgress, 0) }}%</span>
                                     </div>
                                 </div>
                                 {{-- Progress Text --}}
                                 <div class="flex-1 min-w-0">
                                     <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">{{ __('app.paid_off_progress') }}</p>
                                     <p class="text-sm text-slate-700 dark:text-slate-300">
-                                        <span class="font-semibold">{{ number_format($debt['amountPaid'], 0, ',', ' ') }}</span>
+                                        <span class="font-semibold">{{ number_format($displayAmountPaid, 0, ',', ' ') }}</span>
                                         <span class="text-slate-400 dark:text-slate-500">{{ __('app.of') }} {{ number_format($debt['originalBalance'], 0, ',', ' ') }} kr</span>
                                     </p>
                                 </div>
@@ -273,31 +277,34 @@
                     </div>
 
                     {{-- Card Footer --}}
-                    <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-800/30">
-                        <div class="flex items-center justify-between text-xs text-slate-400 dark:text-slate-500 mb-3">
-                            <span>{{ __('app.added_on') }} {{ $debt['createdAt'] }}</span>
-                            <span class="{{ $debt['lastVerifiedAt'] ? '' : 'text-amber-500 dark:text-amber-400' }}">
-                                @if ($debt['lastVerifiedAt'])
-                                    {{ __('app.verified') }} {{ $debt['lastVerifiedAt'] }}
-                                @else
-                                    {{ __('app.never_verified') }}
-                                @endif
-                            </span>
+                    <div class="border-t border-slate-100 dark:border-slate-800/50">
+                        {{-- Metadata row with subtle background --}}
+                        <div class="px-6 py-3 bg-slate-50/50 dark:bg-slate-800/30">
+                            <div class="flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
+                                <span>{{ __('app.added_on') }} {{ $debt['createdAt'] }}</span>
+                                <span class="{{ $debt['lastVerifiedAt'] ? '' : 'text-amber-500 dark:text-amber-400' }}">
+                                    @if ($debt['lastVerifiedAt'])
+                                        {{ __('app.verified') }} {{ $debt['lastVerifiedAt'] }}
+                                    @else
+                                        {{ __('app.never_verified') }}
+                                    @endif
+                                </span>
+                            </div>
                         </div>
 
                         {{-- Actions --}}
                         @if (!$reorderMode)
-                            <div class="flex gap-2">
+                            <div class="px-6 py-4 flex gap-2">
                                 <button
                                     type="button"
                                     wire:click="$parent.editDebt({{ $debt['id'] }})"
-                                    class="flex-1 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl transition-colors text-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2">
+                                    class="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-500 rounded-xl transition-colors text-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2">
                                     {{ __('app.edit') }}
                                 </button>
                                 <button type="button"
                                         wire:click="confirmDelete({{ $debt['id'] }}, '{{ $debt['name'] }}')"
                                         aria-label="{{ __('app.delete_debt', ['name' => $debt['name']]) }}"
-                                        class="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-rose-500 hover:bg-rose-600 dark:bg-rose-600 dark:hover:bg-rose-700 rounded-xl transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2">
+                                        class="flex-1 px-4 py-2.5 text-sm font-medium text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:text-rose-600 hover:border-rose-300 dark:hover:text-rose-400 dark:hover:border-rose-800 rounded-xl transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2">
                                     {{ __('app.delete') }}
                                 </button>
                             </div>

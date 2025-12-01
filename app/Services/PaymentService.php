@@ -275,16 +275,46 @@ class PaymentService
     {
         $currentMonth = now()->format('Y-m');
 
-        $payments = Payment::with('debt')
+        // Get ALL payments (including reconciliations) to calculate running balances
+        $allPayments = Payment::with('debt')
             ->where('payment_month', '<', $currentMonth)
             ->orderBy('payment_month')
             ->orderBy('debt_id')
+            ->orderBy('created_at')
             ->get();
+
+        // Track cumulative principal paid per debt to calculate remaining balance
+        $cumulativePrincipal = [];
+        $endOfMonthBalances = []; // [payment_month][debt_id] => remaining balance
+
+        foreach ($allPayments as $payment) {
+            $debtId = $payment->debt_id;
+            $paymentMonth = $payment->payment_month;
+
+            if (! isset($cumulativePrincipal[$debtId])) {
+                $cumulativePrincipal[$debtId] = 0;
+            }
+
+            $cumulativePrincipal[$debtId] += $payment->principal_paid;
+
+            // Store the end-of-month balance for this debt (last payment wins)
+            $remaining = max(0, $payment->debt->original_balance - $cumulativePrincipal[$debtId]);
+
+            if (! isset($endOfMonthBalances[$paymentMonth])) {
+                $endOfMonthBalances[$paymentMonth] = [];
+            }
+            $endOfMonthBalances[$paymentMonth][$debtId] = round($remaining, 2);
+        }
+
+        // Now get only non-reconciliation payments for display
+        $displayPayments = $allPayments->filter(function ($payment) {
+            return ! $payment->is_reconciliation_adjustment;
+        });
 
         $groupedPayments = [];
         $monthMapping = [];
 
-        foreach ($payments as $payment) {
+        foreach ($displayPayments as $payment) {
             /** @var \App\Models\Debt $debt */
             $debt = $payment->debt;
             $paymentMonth = $payment->payment_month;
@@ -305,10 +335,13 @@ class PaymentService
                 ];
             }
 
+            // Use end-of-month balance instead of balance after this specific payment
+            $remaining = $endOfMonthBalances[$paymentMonth][$debt->id] ?? 0;
+
             $groupedPayments[$paymentMonth]['payments'][] = [
                 'name' => $debt->name,
                 'amount' => $payment->actual_amount,
-                'remaining' => 0,
+                'remaining' => $remaining,
                 'isPriority' => false,
             ];
         }

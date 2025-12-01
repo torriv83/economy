@@ -463,18 +463,44 @@ class PayoffCalendar extends Component
         $events = [];
         $schedule = $this->paymentSchedule;
         $actualPayments = $this->actualPayments;
-
-        if (empty($schedule['schedule'])) {
-            return [];
-        }
+        $currentMonthKey = Carbon::create($this->currentYear, $this->currentMonth, 1)->format('Y-m');
+        $currentMonthDate = Carbon::create($this->currentYear, $this->currentMonth, 1);
+        $isPastMonth = $currentMonthDate->lt(now()->startOfMonth());
 
         // Group actual payments by debt_id and payment_month for quick lookup
         $actualPaymentsByDebtAndMonth = $actualPayments->groupBy(function ($payment) {
             return $payment->debt_id.'_'.$payment->payment_month;
         })->map(fn ($group) => $group->first());
 
-        // Only process the current month's schedule
-        $currentMonthKey = Carbon::create($this->currentYear, $this->currentMonth, 1)->format('Y-m');
+        // For past months, show actual payments directly (no schedule needed)
+        if ($isPastMonth) {
+            foreach ($actualPayments as $payment) {
+                $actualDateKey = $payment->payment_date->format('Y-m-d');
+
+                if (! isset($events[$actualDateKey])) {
+                    $events[$actualDateKey] = [
+                        'type' => 'payment',
+                        'amount' => 0,
+                        'debts' => [],
+                    ];
+                }
+
+                $events[$actualDateKey]['amount'] += $payment->actual_amount;
+                $events[$actualDateKey]['debts'][] = [
+                    'name' => $payment->debt->name,
+                    'amount' => $payment->actual_amount,
+                    'isPriority' => false,
+                    'isPaid' => true,
+                ];
+            }
+
+            return $events;
+        }
+
+        // For current/future months, use the schedule
+        if (empty($schedule['schedule'])) {
+            return [];
+        }
 
         foreach ($schedule['schedule'] as $monthData) {
             $baseDate = Carbon::parse($monthData['date']);
