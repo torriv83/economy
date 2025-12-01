@@ -12,7 +12,7 @@
     {{-- Countdown Widget (Prominent) --}}
     @if ($this->debtFreeDate && $this->countdown['months'] > 0)
         <div wire:key="countdown-{{ $strategy }}-{{ $extraPayment }}"
-             class="premium-card rounded-2xl border border-emerald-200 dark:border-emerald-800/50 mb-6 sm:mb-8 transition-all duration-200 overflow-hidden"
+             class="relative premium-card rounded-2xl border border-emerald-200 dark:border-emerald-800/50 mb-6 sm:mb-8 transition-all duration-200 overflow-hidden"
              :class="showCountdown ? 'p-4 sm:p-6 md:p-8' : 'px-4 py-2'"
              x-data="{
                  showCountdown: $persist(true).as('countdown-expanded'),
