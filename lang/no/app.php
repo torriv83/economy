@@ -117,7 +117,7 @@ return [
     'all_time' => 'Totalt',
 
     // Strategy Comparison
-    'payoff_planning' => 'Nedbetalingsplanlegging',
+    'payoff_planning' => 'Planlegg',
     'payoff_strategies' => 'Nedbetalingsstrategier',
     'strategies_description' => 'Sammenlign ulike metoder for å bli gjeldsfri raskere',
     'monthly_plan' => 'Månedsplan',

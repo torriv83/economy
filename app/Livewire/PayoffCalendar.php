@@ -31,6 +31,8 @@ class PayoffCalendar extends Component
 
     protected DebtCalculationService $calculationService;
 
+    protected PaymentService $paymentService;
+
     protected YnabTransactionService $ynabTransactionService;
 
     // Modal state
@@ -67,9 +69,10 @@ class PayoffCalendar extends Component
 
     public bool $ynabEnabled = false;
 
-    public function boot(DebtCalculationService $service, YnabTransactionService $ynabTransactionService): void
+    public function boot(DebtCalculationService $service, PaymentService $paymentService, YnabTransactionService $ynabTransactionService): void
     {
         $this->calculationService = $service;
+        $this->paymentService = $paymentService;
         $this->ynabTransactionService = $ynabTransactionService;
     }
 
@@ -409,7 +412,16 @@ class PayoffCalendar extends Component
             ];
         }
 
-        return $this->calculationService->generatePaymentSchedule($debts, $this->extraPayment, $this->strategy);
+        // Calculate offset to skip historical months (same pattern as PaymentPlan)
+        $historicalPayments = $this->paymentService->getHistoricalPayments();
+        $historicalMonthOffset = count($historicalPayments);
+
+        return $this->calculationService->generatePaymentSchedule(
+            $debts,
+            $this->extraPayment,
+            $this->strategy,
+            $historicalMonthOffset
+        );
     }
 
     /**

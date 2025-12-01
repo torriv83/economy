@@ -117,7 +117,7 @@ return [
     'all_time' => 'All Time',
 
     // Strategy Comparison
-    'payoff_planning' => 'Payoff Planning',
+    'payoff_planning' => 'Plan',
     'payoff_strategies' => 'Payoff Strategies',
     'strategies_description' => 'Compare different methods to become debt-free faster',
     'monthly_plan' => 'Monthly Plan',
