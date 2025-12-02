@@ -431,6 +431,7 @@ return [
     'memo' => 'Memo',
     'close' => 'Close',
     'refresh' => 'Refresh',
+    'click_to_refresh' => 'Click to refresh',
     'ynab_sync' => 'YNAB Sync',
     'ynab_all_synced' => 'All synced!',
     'ynab_no_differences' => 'No differences found between YNAB and your debts',

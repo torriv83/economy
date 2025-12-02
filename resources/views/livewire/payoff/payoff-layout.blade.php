@@ -35,7 +35,13 @@
             'calendar' => __('app.calendar_description'),
             default => ''
         }"
-    />
+    >
+        @if (app(\App\Services\SettingsService::class)->isYnabEnabled() && $currentView !== 'strategies')
+            <x-slot:actions>
+                <livewire:ynab.ready-to-assign :compact="true" />
+            </x-slot:actions>
+        @endif
+    </x-page-header>
 
     {{-- Main Content --}}
     <div class="animate-fade-in-up">

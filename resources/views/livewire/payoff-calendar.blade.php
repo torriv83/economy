@@ -145,13 +145,6 @@
         </div>
     @endif
 
-    {{-- Ready to Assign from YNAB --}}
-    @if ($ynabEnabled)
-        <div class="mb-6">
-            <livewire:ynab.ready-to-assign />
-        </div>
-    @endif
-
     {{-- Calendar Section --}}
     <div class="premium-card rounded-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
         {{-- Calendar Header with Navigation --}}

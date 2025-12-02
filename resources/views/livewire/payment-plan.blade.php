@@ -10,13 +10,6 @@
         </div>
     </div>
 
-    {{-- Ready to Assign from YNAB --}}
-    @if (app(\App\Services\SettingsService::class)->isYnabEnabled())
-        <div class="mb-8">
-            <livewire:ynab.ready-to-assign />
-        </div>
-    @endif
-
     {{-- Debt Payoff Overview --}}
     <div class="space-y-4" x-data="{ showOverview: $persist(true).as('payoff-overview-expanded') }">
         <button

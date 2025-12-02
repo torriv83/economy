@@ -7,11 +7,19 @@ use Illuminate\Support\Facades\Http;
 
 describe('fetchBudgetSummary', function () {
     it('returns ready to assign amount from YNAB budget', function () {
+        $currentMonth = date('Y-m').'-01';
+
         Http::fake([
-            'api.ynab.com/v1/budgets/test-budget' => Http::response([
+            "api.ynab.com/v1/budgets/test-budget/months/{$currentMonth}" => Http::response([
                 'data' => [
-                    'budget' => [
+                    'month' => [
                         'to_be_budgeted' => 2500000, // 2500 kr in milliunits
+                    ],
+                ],
+            ], 200),
+            'api.ynab.com/v1/budgets/test-budget/settings' => Http::response([
+                'data' => [
+                    'settings' => [
                         'currency_format' => [
                             'iso_code' => 'NOK',
                             'decimal_digits' => 2,
@@ -33,12 +41,19 @@ describe('fetchBudgetSummary', function () {
     });
 
     it('returns zero when no money to be budgeted', function () {
+        $currentMonth = date('Y-m').'-01';
+
         Http::fake([
-            'api.ynab.com/v1/budgets/test-budget' => Http::response([
+            "api.ynab.com/v1/budgets/test-budget/months/{$currentMonth}" => Http::response([
                 'data' => [
-                    'budget' => [
+                    'month' => [
                         'to_be_budgeted' => 0,
                     ],
+                ],
+            ], 200),
+            'api.ynab.com/v1/budgets/test-budget/settings' => Http::response([
+                'data' => [
+                    'settings' => [],
                 ],
             ], 200),
         ]);
@@ -54,12 +69,19 @@ describe('fetchBudgetSummary', function () {
     });
 
     it('handles negative ready to assign (overbudgeted)', function () {
+        $currentMonth = date('Y-m').'-01';
+
         Http::fake([
-            'api.ynab.com/v1/budgets/test-budget' => Http::response([
+            "api.ynab.com/v1/budgets/test-budget/months/{$currentMonth}" => Http::response([
                 'data' => [
-                    'budget' => [
+                    'month' => [
                         'to_be_budgeted' => -500000, // -500 kr overbudgeted
                     ],
+                ],
+            ], 200),
+            'api.ynab.com/v1/budgets/test-budget/settings' => Http::response([
+                'data' => [
+                    'settings' => [],
                 ],
             ], 200),
         ]);
@@ -75,8 +97,10 @@ describe('fetchBudgetSummary', function () {
     });
 
     it('throws exception when API fails', function () {
+        $currentMonth = date('Y-m').'-01';
+
         Http::fake([
-            'api.ynab.com/v1/budgets/test-budget' => Http::response(null, 500),
+            "api.ynab.com/v1/budgets/test-budget/months/{$currentMonth}" => Http::response(null, 500),
         ]);
 
         $service = new YnabService(

@@ -10,16 +10,23 @@ use Illuminate\Support\Facades\Http;
 
 class YnabService
 {
-    /**
-     * Cache TTL in seconds (5 minutes).
-     * YNAB allows 200 requests/hour, so caching helps stay within limits.
-     */
-    private const CACHE_TTL = 300;
-
     public function __construct(
         private readonly string $token,
         private readonly string $budgetId
     ) {}
+
+    /**
+     * Get the cache TTL in seconds.
+     * Uses the user's background sync interval setting so cached data
+     * remains valid until the next sync. Falls back to 30 minutes.
+     */
+    private function getCacheTtl(): int
+    {
+        $settingsService = app(SettingsService::class);
+        $intervalMinutes = $settingsService->getYnabBackgroundSyncInterval();
+
+        return $intervalMinutes * 60;
+    }
 
     /**
      * Clear all cached YNAB data for this budget.
@@ -52,7 +59,7 @@ class YnabService
     /**
      * Fetch all debt accounts from YNAB.
      * Returns accounts of type: personalLoan, otherDebt, creditCard.
-     * Results are cached for 5 minutes to stay within YNAB rate limits.
+     * Results are cached based on user's sync interval setting.
      *
      * @return \Illuminate\Support\Collection<int, array<string, mixed>>
      *
@@ -62,7 +69,7 @@ class YnabService
     {
         $cacheKey = "ynab:debt_accounts:{$this->budgetId}";
 
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () {
+        return Cache::remember($cacheKey, $this->getCacheTtl(), function () {
             $response = Http::withToken($this->token)
                 ->get("https://api.ynab.com/v1/budgets/{$this->budgetId}/accounts")
                 ->throw()
@@ -215,7 +222,7 @@ class YnabService
 
     /**
      * Fetch budget summary including Ready to Assign amount.
-     * Results are cached for 5 minutes to stay within YNAB rate limits.
+     * Results are cached based on user's sync interval setting.
      *
      * @return array{ready_to_assign: float, currency_format: array<string, mixed>|null}
      *
@@ -225,27 +232,38 @@ class YnabService
     {
         $cacheKey = "ynab:budget_summary:{$this->budgetId}";
 
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () {
-            $response = Http::withToken($this->token)
-                ->get("https://api.ynab.com/v1/budgets/{$this->budgetId}")
+        return Cache::remember($cacheKey, $this->getCacheTtl(), function () {
+            // Use the current month endpoint for accurate "Ready to Assign" value
+            $currentMonth = date('Y-m').'-01';
+
+            $monthResponse = Http::withToken($this->token)
+                ->get("https://api.ynab.com/v1/budgets/{$this->budgetId}/months/{$currentMonth}")
                 ->throw()
                 ->json();
 
-            $budget = $response['data']['budget'] ?? [];
+            $month = $monthResponse['data']['month'] ?? [];
+
+            // Fetch budget for currency format
+            $budgetResponse = Http::withToken($this->token)
+                ->get("https://api.ynab.com/v1/budgets/{$this->budgetId}/settings")
+                ->throw()
+                ->json();
+
+            $settings = $budgetResponse['data']['settings'] ?? [];
 
             // to_be_budgeted is in milliunits
-            $readyToAssign = ($budget['to_be_budgeted'] ?? 0) / 1000;
+            $readyToAssign = (($month['to_be_budgeted'] ?? 0)) / 1000;
 
             return [
                 'ready_to_assign' => $readyToAssign,
-                'currency_format' => $budget['currency_format'] ?? null,
+                'currency_format' => $settings['currency_format'] ?? null,
             ];
         });
     }
 
     /**
      * Fetch all categories from YNAB with balances and goal info.
-     * Results are cached for 5 minutes to stay within YNAB rate limits.
+     * Results are cached based on user's sync interval setting.
      *
      * @return \Illuminate\Support\Collection<int, array<string, mixed>>
      *
@@ -255,7 +273,7 @@ class YnabService
     {
         $cacheKey = "ynab:categories:{$this->budgetId}";
 
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () {
+        return Cache::remember($cacheKey, $this->getCacheTtl(), function () {
             $response = Http::withToken($this->token)
                 ->get("https://api.ynab.com/v1/budgets/{$this->budgetId}/categories")
                 ->throw()

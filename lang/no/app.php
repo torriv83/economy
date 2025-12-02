@@ -431,6 +431,7 @@ return [
     'memo' => 'Notat',
     'close' => 'Lukk',
     'refresh' => 'Oppdater',
+    'click_to_refresh' => 'Klikk for å oppdatere',
     'ynab_sync' => 'YNAB-synkronisering',
     'ynab_all_synced' => 'Alt synkronisert!',
     'ynab_no_differences' => 'Ingen forskjeller funnet mellom YNAB og gjelden din',

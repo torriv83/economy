@@ -7,6 +7,7 @@ namespace App\Livewire\Ynab;
 use App\Services\SettingsService;
 use App\Services\YnabService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 
 class ReadyToAssign extends Component
@@ -20,6 +21,8 @@ class ReadyToAssign extends Component
     public bool $isConfigured = true;
 
     public bool $ynabEnabled = false;
+
+    public bool $compact = false;
 
     protected YnabService $ynabService;
 
@@ -70,6 +73,20 @@ class ReadyToAssign extends Component
 
     public function refresh(): void
     {
+        // Rate limit refreshes to prevent hitting YNAB API limits (200/hour)
+        $rateLimitKey = 'ynab:refresh_rate_limit:'.auth()->id();
+        $lastRefresh = Cache::get($rateLimitKey);
+
+        if ($lastRefresh && now()->diffInSeconds($lastRefresh) < 30) {
+            // Too soon - just reload from cache without clearing
+            $this->loadReadyToAssign();
+
+            return;
+        }
+
+        // Record this refresh attempt
+        Cache::put($rateLimitKey, now(), 60);
+
         // Clear YNAB cache to get fresh data
         $this->ynabService->clearCache();
         $this->loadReadyToAssign();

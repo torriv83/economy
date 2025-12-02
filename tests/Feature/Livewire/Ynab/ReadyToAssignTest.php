@@ -24,11 +24,20 @@ it('shows loading state initially then displays amount', function () {
 
     app()->singleton(YnabService::class, fn () => new YnabService('test-token', 'test-budget'));
 
+    $currentMonth = date('Y-m').'-01';
+
     Http::fake([
-        'api.ynab.com/v1/budgets/*' => Http::response([
+        "api.ynab.com/v1/budgets/test-budget/months/{$currentMonth}" => Http::response([
             'data' => [
-                'budget' => [
+                'month' => [
                     'to_be_budgeted' => 2500000, // 2500 kr
+                ],
+            ],
+        ], 200),
+        'api.ynab.com/v1/budgets/test-budget/settings' => Http::response([
+            'data' => [
+                'settings' => [
+                    'currency_format' => ['iso_code' => 'NOK'],
                 ],
             ],
         ], 200),
@@ -76,22 +85,31 @@ it('can refresh the data', function () {
 
     app()->singleton(YnabService::class, fn () => new YnabService('test-token', 'test-budget'));
 
+    $currentMonth = date('Y-m').'-01';
+
     Http::fake([
-        'api.ynab.com/v1/budgets/*' => Http::sequence()
+        "api.ynab.com/v1/budgets/test-budget/months/{$currentMonth}" => Http::sequence()
             ->push([
                 'data' => [
-                    'budget' => [
+                    'month' => [
                         'to_be_budgeted' => 1000000, // 1000 kr initially
                     ],
                 ],
             ], 200)
             ->push([
                 'data' => [
-                    'budget' => [
+                    'month' => [
                         'to_be_budgeted' => 2000000, // 2000 kr after refresh
                     ],
                 ],
             ], 200),
+        'api.ynab.com/v1/budgets/test-budget/settings' => Http::response([
+            'data' => [
+                'settings' => [
+                    'currency_format' => ['iso_code' => 'NOK'],
+                ],
+            ],
+        ], 200),
     ]);
 
     Livewire::test(ReadyToAssign::class)
@@ -107,11 +125,20 @@ it('handles zero ready to assign amount', function () {
 
     app()->singleton(YnabService::class, fn () => new YnabService('test-token', 'test-budget'));
 
+    $currentMonth = date('Y-m').'-01';
+
     Http::fake([
-        'api.ynab.com/v1/budgets/*' => Http::response([
+        "api.ynab.com/v1/budgets/test-budget/months/{$currentMonth}" => Http::response([
             'data' => [
-                'budget' => [
+                'month' => [
                     'to_be_budgeted' => 0,
+                ],
+            ],
+        ], 200),
+        'api.ynab.com/v1/budgets/test-budget/settings' => Http::response([
+            'data' => [
+                'settings' => [
+                    'currency_format' => ['iso_code' => 'NOK'],
                 ],
             ],
         ], 200),
@@ -129,11 +156,20 @@ it('handles negative ready to assign (overbudgeted)', function () {
 
     app()->singleton(YnabService::class, fn () => new YnabService('test-token', 'test-budget'));
 
+    $currentMonth = date('Y-m').'-01';
+
     Http::fake([
-        'api.ynab.com/v1/budgets/*' => Http::response([
+        "api.ynab.com/v1/budgets/test-budget/months/{$currentMonth}" => Http::response([
             'data' => [
-                'budget' => [
+                'month' => [
                     'to_be_budgeted' => -500000, // -500 kr overbudgeted
+                ],
+            ],
+        ], 200),
+        'api.ynab.com/v1/budgets/test-budget/settings' => Http::response([
+            'data' => [
+                'settings' => [
+                    'currency_format' => ['iso_code' => 'NOK'],
                 ],
             ],
         ], 200),
@@ -142,4 +178,65 @@ it('handles negative ready to assign (overbudgeted)', function () {
     Livewire::test(ReadyToAssign::class)
         ->assertSet('amount', -500.0)
         ->assertSee('-500 kr');
+});
+
+it('rate limits refresh to prevent API abuse', function () {
+    Setting::create(['key' => 'ynab.enabled', 'value' => 'true', 'type' => 'boolean', 'group' => 'ynab']);
+    Setting::create(['key' => 'ynab.token', 'value' => encrypt('test-token'), 'type' => 'encrypted', 'group' => 'ynab']);
+    Setting::create(['key' => 'ynab.budget_id', 'value' => 'test-budget', 'type' => 'string', 'group' => 'ynab']);
+
+    app()->singleton(YnabService::class, fn () => new YnabService('test-token', 'test-budget'));
+
+    $currentMonth = date('Y-m').'-01';
+
+    Http::fake([
+        "api.ynab.com/v1/budgets/test-budget/months/{$currentMonth}" => Http::sequence()
+            ->push([
+                'data' => [
+                    'month' => [
+                        'to_be_budgeted' => 1000000, // 1000 kr initially
+                    ],
+                ],
+            ], 200)
+            ->push([
+                'data' => [
+                    'month' => [
+                        'to_be_budgeted' => 2000000, // 2000 kr after first refresh
+                    ],
+                ],
+            ], 200)
+            ->push([
+                'data' => [
+                    'month' => [
+                        'to_be_budgeted' => 3000000, // 3000 kr - should NOT be fetched due to rate limit
+                    ],
+                ],
+            ], 200),
+        'api.ynab.com/v1/budgets/test-budget/settings' => Http::response([
+            'data' => [
+                'settings' => [
+                    'currency_format' => ['iso_code' => 'NOK'],
+                ],
+            ],
+        ], 200),
+    ]);
+
+    // Clear any existing rate limit
+    Cache::forget('ynab:refresh_rate_limit:');
+
+    $component = Livewire::test(ReadyToAssign::class)
+        ->assertSet('amount', 1000.0);
+
+    // First refresh should work (clears cache, gets fresh data)
+    $component->call('refresh')
+        ->assertSet('amount', 2000.0);
+
+    // Second refresh within 30 seconds should be rate limited
+    // and return cached data (still 2000, not 3000)
+    $component->call('refresh')
+        ->assertSet('amount', 2000.0);
+
+    // Verify only 2 API calls to the month endpoint were made (initial + first refresh)
+    // The second refresh should have been rate limited
+    Http::assertSentCount(4); // 2x month endpoint + 2x settings endpoint
 });
