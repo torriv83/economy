@@ -1,4 +1,4 @@
-<div>
+<div class="max-w-md">
     <div class="premium-card rounded-2xl border border-slate-200/50 dark:border-slate-700/50">
         {{-- Header --}}
         <div class="p-6 border-b border-slate-200/50 dark:border-slate-700/50">
@@ -16,22 +16,39 @@
         </div>
 
         <div class="p-6">
-            <div class="space-y-2">
-                @foreach ($shortcuts as $shortcut)
-                    <div class="flex items-center justify-between py-3 px-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
-                        <span class="text-sm text-slate-700 dark:text-slate-300 font-medium">{{ $shortcut['description'] }}</span>
-                        <div class="flex items-center gap-1.5">
-                            @if ($shortcut['key'] === 'L' || $shortcut['key'] === '?')
-                                <kbd class="inline-flex items-center justify-center min-w-[2.5rem] h-8 px-2.5 text-xs font-semibold font-mono bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">SHIFT</kbd>
-                                <span class="text-slate-400 dark:text-slate-500 text-xs font-medium">+</span>
-                                <kbd class="inline-flex items-center justify-center min-w-[2rem] h-8 px-2.5 text-xs font-semibold font-mono bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">{{ $shortcut['key'] }}</kbd>
-                            @else
-                                <kbd class="inline-flex items-center justify-center min-w-[2rem] h-8 px-2.5 text-xs font-semibold font-mono bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm group-hover:bg-emerald-50 group-hover:border-emerald-200 group-hover:text-emerald-700 dark:group-hover:bg-emerald-900/30 dark:group-hover:border-emerald-800 dark:group-hover:text-emerald-400 transition-colors">{{ strtoupper($shortcut['key']) }}</kbd>
-                            @endif
-                        </div>
-                    </div>
-                @endforeach
-            </div>
+            <table class="w-full">
+                <tbody class="divide-y divide-slate-200/50 dark:divide-slate-700/50">
+                    @foreach ($shortcuts as $shortcut)
+                        <tr
+                            class="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
+                            x-data
+                            x-on:click="
+                                const url = '{{ $shortcut['url'] }}';
+                                const view = {{ $shortcut['view'] ? "'" . $shortcut['view'] . "'" : 'null' }};
+                                if (window.location.pathname === url && view) {
+                                    Livewire.dispatch('setView', { view: view });
+                                } else {
+                                    window.pendingView = view;
+                                    Livewire.navigate(url);
+                                }
+                            "
+                        >
+                            <td class="py-3 pr-4 w-28">
+                                <div class="flex items-center gap-1.5">
+                                    @if ($shortcut['key'] === 'L' || $shortcut['key'] === '?')
+                                        <kbd class="inline-flex items-center justify-center h-7 px-2 text-xs font-semibold font-mono bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm group-hover:bg-emerald-50 group-hover:border-emerald-200 group-hover:text-emerald-700 dark:group-hover:bg-emerald-900/30 dark:group-hover:border-emerald-800 dark:group-hover:text-emerald-400 transition-colors">SHIFT</kbd>
+                                        <span class="text-slate-400 dark:text-slate-500 text-xs">+</span>
+                                        <kbd class="inline-flex items-center justify-center h-7 px-2 text-xs font-semibold font-mono bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm group-hover:bg-emerald-50 group-hover:border-emerald-200 group-hover:text-emerald-700 dark:group-hover:bg-emerald-900/30 dark:group-hover:border-emerald-800 dark:group-hover:text-emerald-400 transition-colors">{{ $shortcut['key'] }}</kbd>
+                                    @else
+                                        <kbd class="inline-flex items-center justify-center min-w-[1.75rem] h-7 px-2 text-xs font-semibold font-mono bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm group-hover:bg-emerald-50 group-hover:border-emerald-200 group-hover:text-emerald-700 dark:group-hover:bg-emerald-900/30 dark:group-hover:border-emerald-800 dark:group-hover:text-emerald-400 transition-colors">{{ strtoupper($shortcut['key']) }}</kbd>
+                                    @endif
+                                </div>
+                            </td>
+                            <td class="py-3 text-sm text-slate-700 dark:text-slate-300">{{ $shortcut['description'] }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
     </div>
 </div>

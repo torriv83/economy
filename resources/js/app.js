@@ -67,8 +67,11 @@ document.addEventListener('keydown', (e) => {
 
 // Dispatch setView event after navigation completes
 document.addEventListener('livewire:navigated', () => {
-    if (pendingView) {
-        Livewire.dispatch('setView', { view: pendingView });
+    // Check both local and window-level pending views (for click navigation)
+    const view = pendingView || window.pendingView;
+    if (view) {
+        Livewire.dispatch('setView', { view: view });
         pendingView = null;
+        window.pendingView = null;
     }
 });
