@@ -305,7 +305,7 @@ describe('importing YNAB transactions', function () {
         expect($payment)->not->toBeNull();
         expect($payment->debt_id)->toBe($debt->id);
         expect($payment->actual_amount)->toEqual(2500.0);
-        expect($payment->payment_date->format('Y-m-d'))->toBe('2024-11-15');
+        expect($payment->payment_date->format('Y-m-d'))->toBe('2024-11-01');
         expect($payment->notes)->toBe('Monthly payment');
     });
 

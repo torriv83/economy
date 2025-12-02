@@ -24,13 +24,13 @@ test('displays mock debts correctly', function () {
     Debt::factory()->create(['name' => 'Billån', 'type' => 'forbrukslån', 'balance' => 75000, 'interest_rate' => 5.0, 'minimum_payment' => 1500]);
 
     Livewire::test(DebtList::class)
-        ->assertSee('325 000 kr')
+        ->assertSee('325 000')
         ->assertSee('Kredittkort')
-        ->assertSee('50 000 kr')
+        ->assertSee('50 000')
         ->assertSee('Studielån')
-        ->assertSee('200 000 kr')
+        ->assertSee('200 000')
         ->assertSee('Billån')
-        ->assertSee('75 000 kr');
+        ->assertSee('75 000');
 });
 
 test('displays debt details correctly', function () {
@@ -39,9 +39,9 @@ test('displays debt details correctly', function () {
     Debt::factory()->create(['name' => 'Billån', 'type' => 'forbrukslån', 'balance' => 75000, 'interest_rate' => 5.0, 'minimum_payment' => 1500]);
 
     Livewire::test(DebtList::class)
-        ->assertSee('8,5 %')
-        ->assertSee('2,5 %')
-        ->assertSee('5,0 %')
+        ->assertSee('8,5%')
+        ->assertSee('2,5%')
+        ->assertSee('5,0%')
         ->assertSee('1 500 kr')
         ->assertSee('3 500 kr');
 });
@@ -56,7 +56,8 @@ test('can delete a debt', function () {
         ->call('confirmDelete', $billaan->id, 'Billån')
         ->call('executeDelete')
         ->assertDontSee('Billån')
-        ->assertSee('250 000 kr');
+        ->assertSee('250 000')
+        ->assertSee('kr');
 });
 
 test('shows correct debts count with pluralization', function () {

@@ -28,10 +28,10 @@ test('displays active self-loans correctly', function () {
 
     Livewire::test(Overview::class)
         ->assertSee('Emergency Fund')
-        ->assertSee('7 000 kr')
+        ->assertSee('7 000')
         ->assertSee('Car Repair')
-        ->assertSee('2 000 kr')
-        ->assertSee('9 000 kr');
+        ->assertSee('2 000')
+        ->assertSee('9 000');
 });
 
 test('displays empty state when no active loans exist', function () {

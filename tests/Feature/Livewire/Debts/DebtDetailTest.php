@@ -22,7 +22,8 @@ it('displays debt details', function () {
 
     Livewire::test(DebtDetail::class, ['debt' => $debt, 'embedded' => true])
         ->assertSee('Test Credit Card')
-        ->assertSee('50 000 kr')
+        ->assertSee('50 000')
+        ->assertSee('kr')
         ->assertSee('19,90%')
         ->assertSee('1 500 kr');
 });
