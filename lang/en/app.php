@@ -577,5 +577,32 @@ return [
     'ynab_enable_background_sync' => 'Enable background sync',
     'ynab_sync_interval' => 'Sync interval',
     'ynab_last_sync' => 'Last synced',
-    'minutes' => 'minutes',
+
+    // Security Buffer
+    'security_buffer' => 'Security Buffer',
+    'layer1_operational_buffer' => 'Operational Buffer',
+    'layer2_emergency_buffer' => 'Emergency Buffer',
+    'savings_accounts' => 'Savings accounts',
+    'assigned_next_month' => 'Assigned to next month',
+    'total_buffer' => 'Total Buffer',
+    'month_ahead' => 'One month ahead',
+    'months_of_security_count' => ':count months of security',
+    'of_target' => ':months mo of :target mo target',
+    'buffer_status_critical' => 'Critical',
+    'buffer_status_warning' => 'Below target',
+    'buffer_status_healthy' => 'Healthy',
+
+    // SelfLoan YNAB Connection
+    'link_to_ynab_optional' => 'Link to YNAB (optional)',
+    'no_ynab_connection' => 'No YNAB connection',
+    'link_to_ynab_account' => 'Link to YNAB account',
+    'link_to_ynab_category' => 'Link to YNAB category',
+    'select_account' => 'Select account...',
+    'select_category' => 'Select category...',
+    'ynab_connection_help' => 'Linking helps track if this loan affects your security buffer.',
+    'self_loan_created' => 'Self-loan created successfully.',
+    'linked_to_account' => 'Linked to account',
+    'linked_to_category' => 'Linked to category',
+    'linked_to_ynab' => 'Linked to YNAB',
+    'available_in_ynab' => 'Available',
 ];

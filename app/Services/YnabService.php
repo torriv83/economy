@@ -36,6 +36,8 @@ class YnabService
         Cache::forget("ynab:budget_summary:{$this->budgetId}");
         Cache::forget("ynab:categories:{$this->budgetId}");
         Cache::forget("ynab:debt_accounts:{$this->budgetId}");
+        Cache::forget("ynab:savings_accounts:{$this->budgetId}");
+        Cache::forget("ynab:assigned_next_month:{$this->budgetId}");
     }
 
     /**
@@ -332,5 +334,93 @@ class YnabService
             'is_overfunded' => $balance > 0 && $goalTarget > 0 && $balance > $goalTarget,
             'has_goal' => ($category['goal_type'] ?? null) !== null,
         ];
+    }
+
+    /**
+     * Fetch all savings accounts from YNAB.
+     * Results are cached based on user's sync interval setting.
+     *
+     * @return Collection<int, array{id: string, name: string, balance: float}>
+     *
+     * @throws \Illuminate\Http\Client\RequestException
+     */
+    public function fetchSavingsAccounts(): Collection
+    {
+        $cacheKey = "ynab:savings_accounts:{$this->budgetId}";
+
+        return Cache::remember($cacheKey, $this->getCacheTtl(), function () {
+            $response = Http::withToken($this->token)
+                ->get("https://api.ynab.com/v1/budgets/{$this->budgetId}/accounts")
+                ->throw()
+                ->json();
+
+            /** @var array<int, array<string, mixed>> $accountsData */
+            $accountsData = $response['data']['accounts'] ?? [];
+
+            /** @var Collection<int, array<string, mixed>> $accounts */
+            $accounts = collect($accountsData);
+
+            return $accounts
+                ->filter(function ($account) {
+                    return $account['type'] === 'savings' && ! $account['deleted'];
+                })
+                ->map(function ($account) {
+                    return [
+                        'id' => $account['id'],
+                        'name' => $account['name'],
+                        'balance' => $account['balance'] / 1000,
+                    ];
+                })
+                ->values();
+        });
+    }
+
+    /**
+     * Fetch total amount assigned to next month's budget.
+     * Results are cached based on user's sync interval setting.
+     *
+     *
+     * @throws \Illuminate\Http\Client\RequestException
+     */
+    public function fetchAssignedNextMonth(): float
+    {
+        $cacheKey = "ynab:assigned_next_month:{$this->budgetId}";
+
+        return (float) Cache::remember($cacheKey, $this->getCacheTtl(), function (): float {
+            $nextMonth = date('Y-m-01', strtotime('first day of next month'));
+
+            $response = Http::withToken($this->token)
+                ->get("https://api.ynab.com/v1/budgets/{$this->budgetId}/months/{$nextMonth}")
+                ->throw()
+                ->json();
+
+            $month = $response['data']['month'] ?? [];
+
+            // budgeted is in milliunits - convert to NOK
+            return (float) (($month['budgeted'] ?? 0) / 1000);
+        });
+    }
+
+    /**
+     * Fetch categories with goal_type === 'NEED'.
+     *
+     * @return Collection<int, array{id: string, name: string, budgeted: float}>
+     */
+    public function fetchNeedCategories(): Collection
+    {
+        $categories = $this->fetchCategories();
+
+        return $categories
+            ->filter(function ($category) {
+                return ($category['goal_type'] ?? null) === 'NEED';
+            })
+            ->map(function ($category): array {
+                return [
+                    'id' => (string) $category['id'],
+                    'name' => (string) $category['name'],
+                    'budgeted' => (float) $category['budgeted'],
+                ];
+            })
+            ->values();
     }
 }

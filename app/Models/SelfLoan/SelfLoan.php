@@ -16,6 +16,8 @@ class SelfLoan extends Model
         'description',
         'original_amount',
         'current_balance',
+        'ynab_account_id',
+        'ynab_category_id',
     ];
 
     protected function casts(): array
@@ -51,5 +53,29 @@ class SelfLoan extends Model
         }
 
         return round(($this->getTotalRepaidAmount() / $this->original_amount) * 100, 1);
+    }
+
+    /**
+     * Check if this loan is linked to a YNAB account.
+     */
+    public function isLinkedToYnabAccount(): bool
+    {
+        return $this->ynab_account_id !== null;
+    }
+
+    /**
+     * Check if this loan is linked to a YNAB category.
+     */
+    public function isLinkedToYnabCategory(): bool
+    {
+        return $this->ynab_category_id !== null;
+    }
+
+    /**
+     * Check if this loan has any YNAB connection.
+     */
+    public function hasYnabConnection(): bool
+    {
+        return $this->isLinkedToYnabAccount() || $this->isLinkedToYnabCategory();
     }
 }

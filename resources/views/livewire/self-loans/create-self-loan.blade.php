@@ -69,6 +69,69 @@
                         <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                     @enderror
                 </div>
+
+                {{-- YNAB Connection (only if YNAB is configured) --}}
+                @if ($this->isYnabConfigured)
+                    <div class="pt-4 border-t border-slate-200 dark:border-slate-700">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                            {{ __('app.link_to_ynab_optional') }}
+                        </label>
+
+                        <div class="space-y-3">
+                            {{-- No connection --}}
+                            <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/50 dark:has-[:checked]:bg-emerald-900/20">
+                                <input type="radio" wire:model.live="ynabConnectionType" value="none" class="text-emerald-500 focus:ring-emerald-500">
+                                <span class="text-sm text-slate-700 dark:text-slate-300">{{ __('app.no_ynab_connection') }}</span>
+                            </label>
+
+                            {{-- Account connection --}}
+                            <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/50 dark:has-[:checked]:bg-emerald-900/20">
+                                <input type="radio" wire:model.live="ynabConnectionType" value="account" class="text-emerald-500 focus:ring-emerald-500">
+                                <span class="text-sm text-slate-700 dark:text-slate-300">{{ __('app.link_to_ynab_account') }}</span>
+                            </label>
+
+                            @if ($ynabConnectionType === 'account')
+                                <div class="ml-7">
+                                    <select
+                                        wire:model="ynabAccountId"
+                                        class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-transparent transition-colors">
+                                        <option value="">{{ __('app.select_account') }}</option>
+                                        @foreach ($this->ynabAccounts as $account)
+                                            <option value="{{ $account['id'] }}">
+                                                {{ $account['name'] }} ({{ number_format($account['balance'], 0, ',', ' ') }} kr)
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
+
+                            {{-- Category connection --}}
+                            <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/50 dark:has-[:checked]:bg-emerald-900/20">
+                                <input type="radio" wire:model.live="ynabConnectionType" value="category" class="text-emerald-500 focus:ring-emerald-500">
+                                <span class="text-sm text-slate-700 dark:text-slate-300">{{ __('app.link_to_ynab_category') }}</span>
+                            </label>
+
+                            @if ($ynabConnectionType === 'category')
+                                <div class="ml-7">
+                                    <select
+                                        wire:model="ynabCategoryId"
+                                        class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-transparent transition-colors">
+                                        <option value="">{{ __('app.select_category') }}</option>
+                                        @foreach ($this->ynabCategories as $category)
+                                            <option value="{{ $category['id'] }}">
+                                                {{ $category['group_name'] }}: {{ $category['name'] }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
+                        </div>
+
+                        <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                            {{ __('app.ynab_connection_help') }}
+                        </p>
+                    </div>
+                @endif
             </div>
 
             <div class="mt-8">

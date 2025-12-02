@@ -31,6 +31,8 @@ class SelfLoanFactory extends Factory
             'description' => fake()->optional(0.6)->sentence(),
             'original_amount' => $originalAmount,
             'current_balance' => fake()->randomFloat(2, 0, $originalAmount),
+            'ynab_account_id' => null,
+            'ynab_category_id' => null,
         ];
     }
 
@@ -38,6 +40,26 @@ class SelfLoanFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'current_balance' => 0,
+        ]);
+    }
+
+    /**
+     * Configure the loan as linked to a YNAB account.
+     */
+    public function linkedToYnabAccount(?string $accountId = null): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'ynab_account_id' => $accountId ?? fake()->uuid(),
+        ]);
+    }
+
+    /**
+     * Configure the loan as linked to a YNAB category.
+     */
+    public function linkedToYnabCategory(?string $categoryId = null): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'ynab_category_id' => $categoryId ?? fake()->uuid(),
         ]);
     }
 }

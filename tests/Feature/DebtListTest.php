@@ -4,12 +4,22 @@ use App\Livewire\DebtList;
 use App\Models\Debt;
 use App\Services\DebtCacheService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    // Flush all cache to ensure complete test isolation in parallel mode
+    Cache::flush();
     DebtCacheService::clearCache();
+});
+
+afterEach(function () {
+    // Clean up after each test to prevent interference with other parallel tests
+    Cache::flush();
+    Mockery::close();
+    Cache::clearResolvedInstances();
 });
 
 test('debt list component renders successfully', function () {
@@ -83,10 +93,8 @@ test('calculates total debt correctly', function () {
 });
 
 test('shows empty state when no debts exist', function () {
-    app()->setLocale('en');
-
     Livewire::test(DebtList::class)
-        ->assertSee('No debts registered')
-        ->assertSee('Add first debt')
-        ->assertDontSee('Total Debt');
+        ->assertSee(__('app.no_debts'))
+        ->assertSee(__('app.add_first_debt'))
+        ->assertDontSee(__('app.total_debt'));
 });

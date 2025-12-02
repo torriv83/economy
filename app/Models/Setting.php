@@ -31,6 +31,8 @@ class Setting extends Model
 
     /**
      * Get the value cast to its proper type.
+     *
+     * @return Attribute<mixed, mixed>
      */
     protected function typedValue(): Attribute
     {

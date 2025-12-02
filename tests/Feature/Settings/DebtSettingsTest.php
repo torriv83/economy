@@ -4,9 +4,16 @@ declare(strict_types=1);
 
 use App\Livewire\Settings\DebtSettings;
 use App\Services\SettingsService;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Livewire;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+
+beforeEach(function () {
+    // Clear settings cache to ensure test isolation
+    // The SettingsService caches values, and RefreshDatabase doesn't clear the cache
+    Cache::flush();
+});
 
 it('renders with default values', function () {
     Livewire::test(DebtSettings::class)

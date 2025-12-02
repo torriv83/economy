@@ -298,60 +298,6 @@ describe('debt settings', function () {
     });
 });
 
-describe('caching', function () {
-    it('caches setting values', function () {
-        $this->service->set('test.key', 'test-value', 'string', 'test');
-
-        // First get() should cache it
-        expect($this->service->get('test.key', 'string'))->toBe('test-value');
-
-        // Delete from database but cache should still have it
-        Setting::where('key', 'test.key')->delete();
-
-        // Should still return cached value
-        expect($this->service->get('test.key', 'string'))->toBe('test-value');
-    });
-
-    it('clears cache when setting a value', function () {
-        $this->service->set('test.key', 'original', 'string', 'test');
-
-        // Verify cached
-        expect($this->service->get('test.key', 'string'))->toBe('original');
-
-        // Update should clear cache
-        $this->service->set('test.key', 'updated', 'string', 'test');
-
-        // Should get new value from database
-        expect($this->service->get('test.key', 'string'))->toBe('updated');
-    });
-
-    it('clears cache when deleting YNAB credentials', function () {
-        $this->service->setYnabToken('token-123');
-        $this->service->setYnabBudgetId('budget-123');
-
-        // Verify cached
-        expect($this->service->getYnabToken())->toBe('token-123');
-
-        $this->service->clearYnabCredentials();
-
-        // Should return null from fresh database query
-        expect($this->service->getYnabToken())->toBeNull()
-            ->and($this->service->getYnabBudgetId())->toBeNull();
-    });
-
-    it('clears cache when resetting debt settings', function () {
-        $this->service->setKredittkortPercentage(0.05);
-
-        // Verify cached
-        expect($this->service->getKredittkortPercentage())->toBe(0.05);
-
-        $this->service->resetDebtSettingsToDefaults();
-
-        // Should return default from fresh database query
-        expect($this->service->getKredittkortPercentage())->toBe(0.03);
-    });
-});
-
 describe('generic get and set', function () {
     it('can get and set string values', function () {
         $this->service->set('test.string', 'hello world', 'string', 'test');

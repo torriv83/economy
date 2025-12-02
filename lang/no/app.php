@@ -577,5 +577,32 @@ return [
     'ynab_enable_background_sync' => 'Aktiver bakgrunnssynkronisering',
     'ynab_sync_interval' => 'Synkroniseringsintervall',
     'ynab_last_sync' => 'Sist synkronisert',
-    'minutes' => 'minutter',
+
+    // Security Buffer
+    'security_buffer' => 'Sikkerhetsbuffer',
+    'layer1_operational_buffer' => 'Operasjonell buffer',
+    'layer2_emergency_buffer' => 'Nødbuffer',
+    'savings_accounts' => 'Sparekontoer',
+    'assigned_next_month' => 'Satt av til neste måned',
+    'total_buffer' => 'Total buffer',
+    'month_ahead' => 'En måned foran',
+    'months_of_security_count' => ':count måneder sikkerhet',
+    'of_target' => ':months mnd av :target mnd mål',
+    'buffer_status_critical' => 'Kritisk',
+    'buffer_status_warning' => 'Under mål',
+    'buffer_status_healthy' => 'God',
+
+    // SelfLoan YNAB Connection
+    'link_to_ynab_optional' => 'Koble til YNAB (valgfritt)',
+    'no_ynab_connection' => 'Ingen YNAB-kobling',
+    'link_to_ynab_account' => 'Koble til YNAB-konto',
+    'link_to_ynab_category' => 'Koble til YNAB-kategori',
+    'select_account' => 'Velg konto...',
+    'select_category' => 'Velg kategori...',
+    'ynab_connection_help' => 'Kobling hjelper med å spore om dette lånet påvirker sikkerhetsbufferen din.',
+    'self_loan_created' => 'Privat lån opprettet.',
+    'linked_to_account' => 'Koblet til konto',
+    'linked_to_category' => 'Koblet til kategori',
+    'linked_to_ynab' => 'Koblet til YNAB',
+    'available_in_ynab' => 'Tilgjengelig',
 ];

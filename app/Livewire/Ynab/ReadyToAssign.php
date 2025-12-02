@@ -78,9 +78,7 @@ class ReadyToAssign extends Component
         $lastRefresh = Cache::get($rateLimitKey);
 
         if ($lastRefresh && now()->diffInSeconds($lastRefresh) < 30) {
-            // Too soon - just reload from cache without clearing
-            $this->loadReadyToAssign();
-
+            // Too soon - do nothing, keep existing data
             return;
         }
 

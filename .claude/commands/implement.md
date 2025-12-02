@@ -8,6 +8,7 @@ description: Implement the discussed feature following all coding standards
 **Implement the feature/change we just discussed.**
 
 ---
+**Do not run tests until the last step!**
 
 ## [!] MANDATORY PRE-FLIGHT CHECK
 
@@ -84,6 +85,7 @@ Use TodoWrite to create a task list:
 - Agent 1: Create backend (models, migrations)
 - Agent 2: Create frontend (Livewire, Blade)
 - Agent 3: Write tests
+**Always use apporpriate subagents for the task**
 
 ### Step 3: Follow Existing Patterns
 - Check sibling files for conventions

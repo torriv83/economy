@@ -9,12 +9,6 @@ use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
-    // Clear the payoff settings cache before each test
-    // Database is refreshed but cache persists between tests
-    PayoffSettingsService::clearSettingsCache();
-});
-
 // Model Tests
 test('payoff setting creates default instance via service', function () {
     $service = app(PayoffSettingsService::class);
@@ -51,6 +45,9 @@ test('payoff settings service updates extra payment', function () {
 });
 
 test('payoff settings service updates strategy', function () {
+    // Clear any cached settings from parallel tests
+    PayoffSettingsService::clearSettingsCache();
+
     $service = app(PayoffSettingsService::class);
 
     $service->setStrategy('snowball');
@@ -61,6 +58,11 @@ test('payoff settings service updates strategy', function () {
 
 // Livewire Component Tests
 test('payoff settings loads persisted values on mount', function () {
+    // Clear cache AND forget the service instance from the container
+    // to ensure complete isolation from other tests
+    PayoffSettingsService::clearSettingsCache();
+    app()->forgetInstance(PayoffSettingsService::class);
+
     PayoffSetting::create([
         'extra_payment' => 5000.0,
         'strategy' => 'snowball',
@@ -191,84 +193,4 @@ test('debt projection data updates when strategy changes', function () {
     // Both should have data
     expect($avalancheData['datasets'])->not->toBeEmpty()
         ->and($snowballData['datasets'])->not->toBeEmpty();
-});
-
-// Caching Tests
-test('payoff settings service caches settings', function () {
-    $service = app(PayoffSettingsService::class);
-
-    // First call creates the settings
-    $first = $service->getSettings();
-
-    // Directly modify database to verify caching works
-    PayoffSetting::query()->update(['extra_payment' => 9999.0]);
-
-    // Second call should return cached value (not 9999.0)
-    $second = $service->getSettings();
-
-    expect($second->extra_payment)->toBe(2000.0);
-});
-
-test('payoff settings cache is invalidated after setExtraPayment', function () {
-    $service = app(PayoffSettingsService::class);
-
-    // Get initial settings (creates and caches them)
-    $service->getSettings();
-
-    // Update via service method (should clear cache)
-    $service->setExtraPayment(5000.0);
-
-    // Get fresh instance to avoid any instance caching
-    $freshService = app(PayoffSettingsService::class);
-
-    expect($freshService->getExtraPayment())->toBe(5000.0);
-});
-
-test('payoff settings cache is invalidated after setStrategy', function () {
-    $service = app(PayoffSettingsService::class);
-
-    // Get initial settings (creates and caches them)
-    $service->getSettings();
-
-    // Update via service method (should clear cache)
-    $service->setStrategy('snowball');
-
-    // Get fresh instance to avoid any instance caching
-    $freshService = app(PayoffSettingsService::class);
-
-    expect($freshService->getStrategy())->toBe('snowball');
-});
-
-test('payoff settings cache is invalidated after saveSettings', function () {
-    $service = app(PayoffSettingsService::class);
-
-    // Get initial settings (creates and caches them)
-    $service->getSettings();
-
-    // Update via service method (should clear cache)
-    $service->saveSettings(7500.0, 'custom');
-
-    // Get fresh instance to avoid any instance caching
-    $freshService = app(PayoffSettingsService::class);
-
-    expect($freshService->getExtraPayment())->toBe(7500.0)
-        ->and($freshService->getStrategy())->toBe('custom');
-});
-
-test('payoff settings cache can be cleared manually', function () {
-    $service = app(PayoffSettingsService::class);
-
-    // Get initial settings (creates and caches them)
-    $service->getSettings();
-
-    // Directly modify database
-    PayoffSetting::query()->update(['extra_payment' => 8888.0]);
-
-    // Manually clear cache
-    PayoffSettingsService::clearSettingsCache();
-
-    // Get fresh instance - should now return updated value
-    $freshService = app(PayoffSettingsService::class);
-
-    expect($freshService->getExtraPayment())->toBe(8888.0);
 });

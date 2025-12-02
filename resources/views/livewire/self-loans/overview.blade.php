@@ -87,7 +87,7 @@
                         @endif
 
                         {{-- Loan Details --}}
-                        <div class="space-y-3 mb-6">
+                        <div class="space-y-3 mb-3">
                             <div class="flex justify-between items-baseline">
                                 <span class="text-sm text-slate-500 dark:text-slate-400">{{ __('app.balance') }}</span>
                                 <span class="font-display font-bold text-xl text-slate-900 dark:text-white">
@@ -106,6 +106,22 @@
                                     {{ $loan['created_at'] }}
                                 </span>
                             </div>
+                            @if ($loan['ynab_account_name'] || $loan['ynab_category_name'])
+                                <div class="flex justify-between items-baseline">
+                                    <span class="text-xs text-slate-400 dark:text-slate-500">{{ __('app.linked_to_ynab') }}</span>
+                                    <span class="text-xs text-blue-600 dark:text-blue-400">
+                                        {{ $loan['ynab_account_name'] ?? $loan['ynab_category_name'] }}
+                                    </span>
+                                </div>
+                                @if ($loan['ynab_available'] !== null)
+                                    <div class="flex justify-between items-baseline">
+                                        <span class="text-xs text-slate-400 dark:text-slate-500">{{ __('app.available_in_ynab') }}</span>
+                                        <span class="text-xs text-emerald-600 dark:text-emerald-400">
+                                            {{ number_format($loan['ynab_available'], 0, ',', ' ') }} kr
+                                        </span>
+                                    </div>
+                                @endif
+                            @endif
                         </div>
 
                         {{-- Actions --}}
@@ -148,6 +164,110 @@
                 </p>
             </button>
         </div>
+
+        {{-- Security Buffer Card --}}
+        @if ($this->bufferStatus)
+            <div class="mt-8 premium-card rounded-2xl border border-slate-200/50 dark:border-slate-700/50 p-6">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 dark:from-blue-500/20 dark:to-indigo-500/20 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="font-display font-semibold text-lg text-slate-900 dark:text-white">
+                            {{ __('app.security_buffer') }}
+                        </h2>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">
+                            {{ __('app.months_of_security_count', ['count' => $this->bufferStatus['months_of_security']]) }}
+                        </p>
+                    </div>
+                    {{-- Status Badge --}}
+                    <div class="ml-auto">
+                        @if ($this->bufferStatus['status'] === 'healthy')
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                {{ __('app.buffer_status_healthy') }}
+                            </span>
+                        @elseif ($this->bufferStatus['status'] === 'warning')
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                {{ __('app.buffer_status_warning') }}
+                            </span>
+                        @else
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">
+                                {{ __('app.buffer_status_critical') }}
+                            </span>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    {{-- Layer 1: Operational Buffer --}}
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                {{ __('app.layer1_operational_buffer') }}
+                            </span>
+                            <span class="text-sm font-semibold text-slate-900 dark:text-white">
+                                {{ number_format($this->bufferStatus['layer1']['amount'], 0, ',', ' ') }} kr
+                            </span>
+                        </div>
+                        <div class="relative h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                            <div
+                                class="absolute inset-y-0 left-0 {{ $this->bufferStatus['layer1']['is_month_ahead'] ? 'bg-emerald-500' : 'bg-amber-500' }} rounded-full transition-all duration-500"
+                                style="width: {{ min($this->bufferStatus['layer1']['percentage'], 100) }}%"
+                            ></div>
+                        </div>
+                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                            {{ __('app.assigned_next_month') }} -
+                            @if ($this->bufferStatus['layer1']['is_month_ahead'])
+                                <span class="text-emerald-600 dark:text-emerald-400">{{ __('app.month_ahead') }}</span>
+                            @else
+                                {{ $this->bufferStatus['layer1']['percentage'] }}%
+                            @endif
+                        </p>
+                    </div>
+
+                    {{-- Layer 2: Emergency Buffer --}}
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                {{ __('app.layer2_emergency_buffer') }}
+                            </span>
+                            <span class="text-sm font-semibold text-slate-900 dark:text-white">
+                                {{ number_format($this->bufferStatus['layer2']['amount'], 0, ',', ' ') }} kr
+                            </span>
+                        </div>
+                        <div class="relative h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                            @php
+                                $layer2Percentage = $this->bufferStatus['layer2']['target_months'] > 0
+                                    ? min(100, ($this->bufferStatus['layer2']['months'] / $this->bufferStatus['layer2']['target_months']) * 100)
+                                    : 0;
+                            @endphp
+                            <div
+                                class="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500"
+                                style="width: {{ $layer2Percentage }}%"
+                            ></div>
+                        </div>
+                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                            {{ __('app.savings_accounts') }} -
+                            {{ __('app.of_target', ['months' => $this->bufferStatus['layer2']['months'], 'target' => $this->bufferStatus['layer2']['target_months']]) }}
+                        </p>
+                    </div>
+
+                    {{-- Total --}}
+                    <div class="pt-4 border-t border-slate-200/50 dark:border-slate-700/50">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                {{ __('app.total_buffer') }}
+                            </span>
+                            <span class="font-display font-bold text-xl text-slate-900 dark:text-white">
+                                {{ number_format($this->bufferStatus['total_buffer'], 0, ',', ' ') }} kr
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
     @else
         {{-- Empty State --}}
         <div class="premium-card rounded-2xl border border-slate-200/50 dark:border-slate-700/50 p-12 text-center">
@@ -284,6 +404,69 @@
                         'required' => true,
                         'error' => $errors->first('editOriginalAmount'),
                     ])
+
+                    {{-- YNAB Connection --}}
+                    @if ($this->isYnabConfigured)
+                        <div class="pt-4 border-t border-slate-200 dark:border-slate-700">
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                                {{ __('app.link_to_ynab_optional') }}
+                            </label>
+
+                            <div class="space-y-3">
+                                {{-- No connection --}}
+                                <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/50 dark:has-[:checked]:bg-emerald-900/20">
+                                    <input type="radio" wire:model.live="editYnabConnectionType" value="none" class="text-emerald-500 focus:ring-emerald-500">
+                                    <span class="text-sm text-slate-700 dark:text-slate-300">{{ __('app.no_ynab_connection') }}</span>
+                                </label>
+
+                                {{-- Account connection --}}
+                                <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/50 dark:has-[:checked]:bg-emerald-900/20">
+                                    <input type="radio" wire:model.live="editYnabConnectionType" value="account" class="text-emerald-500 focus:ring-emerald-500">
+                                    <span class="text-sm text-slate-700 dark:text-slate-300">{{ __('app.link_to_ynab_account') }}</span>
+                                </label>
+
+                                @if ($editYnabConnectionType === 'account')
+                                    <div class="ml-7">
+                                        <select
+                                            wire:model="editYnabAccountId"
+                                            class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-transparent transition-colors">
+                                            <option value="">{{ __('app.select_account') }}</option>
+                                            @foreach ($this->ynabAccounts as $account)
+                                                <option value="{{ $account['id'] }}">
+                                                    {{ $account['name'] }} ({{ number_format($account['balance'], 0, ',', ' ') }} kr)
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                @endif
+
+                                {{-- Category connection --}}
+                                <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/50 dark:has-[:checked]:bg-emerald-900/20">
+                                    <input type="radio" wire:model.live="editYnabConnectionType" value="category" class="text-emerald-500 focus:ring-emerald-500">
+                                    <span class="text-sm text-slate-700 dark:text-slate-300">{{ __('app.link_to_ynab_category') }}</span>
+                                </label>
+
+                                @if ($editYnabConnectionType === 'category')
+                                    <div class="ml-7">
+                                        <select
+                                            wire:model="editYnabCategoryId"
+                                            class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-transparent transition-colors">
+                                            <option value="">{{ __('app.select_category') }}</option>
+                                            @foreach ($this->ynabCategories as $category)
+                                                <option value="{{ $category['id'] }}">
+                                                    {{ $category['group_name'] }}: {{ $category['name'] }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                                {{ __('app.ynab_connection_help') }}
+                            </p>
+                        </div>
+                    @endif
                 </div>
             </x-modal.form>
         </x-modal>

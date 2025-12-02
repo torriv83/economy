@@ -5,7 +5,8 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
 
 beforeEach(function () {
-    // Set locale to English for consistent test expectations
+    // Store original locale and set to English for consistent test expectations
+    $this->originalLocale = App::getLocale();
     App::setLocale('en');
 
     // Create an anonymous class that exposes the trait methods publicly for testing
@@ -38,6 +39,11 @@ beforeEach(function () {
             return $this->executeWithFeedback($action, $successKey, $errorKey, $successReplace, $errorReplace);
         }
     };
+});
+
+afterEach(function () {
+    // Restore original locale to prevent interference with other tests
+    App::setLocale($this->originalLocale);
 });
 
 it('flashes success messages with translation', function () {
