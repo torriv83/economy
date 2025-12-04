@@ -38,6 +38,12 @@ class YnabService
         Cache::forget("ynab:debt_accounts:{$this->budgetId}");
         Cache::forget("ynab:savings_accounts:{$this->budgetId}");
         Cache::forget("ynab:assigned_next_month:{$this->budgetId}");
+
+        // Clear month-specific category caches
+        $currentMonth = date('Y-m-01');
+        $nextMonth = date('Y-m-01', strtotime('first day of next month'));
+        Cache::forget("ynab:categories_month:{$this->budgetId}:{$currentMonth}");
+        Cache::forget("ynab:categories_month:{$this->budgetId}:{$nextMonth}");
     }
 
     /**
@@ -320,6 +326,9 @@ class YnabService
         $goalTarget = ($category['goal_target'] ?? 0) / 1000;
         $goalUnderFunded = ($category['goal_under_funded'] ?? 0) / 1000;
 
+        // goal_cadence: 1 = monthly, 13 = yearly
+        $goalCadence = $category['goal_cadence'] ?? null;
+
         return [
             'id' => $category['id'],
             'name' => $category['name'],
@@ -331,6 +340,8 @@ class YnabService
             'goal_target' => $goalTarget,
             'goal_under_funded' => $goalUnderFunded,
             'goal_percentage_complete' => $category['goal_percentage_complete'] ?? null,
+            'goal_day' => $category['goal_day'] ?? null,
+            'goal_cadence' => $goalCadence,
             'is_overfunded' => $balance > 0 && $goalTarget > 0 && $balance > $goalTarget,
             'has_goal' => ($category['goal_type'] ?? null) !== null,
         ];
@@ -404,7 +415,7 @@ class YnabService
     /**
      * Fetch categories with goal_type === 'NEED'.
      *
-     * @return Collection<int, array{id: string, name: string, budgeted: float}>
+     * @return Collection<int, array{id: string, name: string, budgeted: float, goal_day: int|null}>
      */
     public function fetchNeedCategories(): Collection
     {
@@ -415,12 +426,165 @@ class YnabService
                 return ($category['goal_type'] ?? null) === 'NEED';
             })
             ->map(function ($category): array {
+                $goalDay = $category['goal_day'] ?? null;
+
                 return [
                     'id' => (string) $category['id'],
                     'name' => (string) $category['name'],
                     'budgeted' => (float) $category['budgeted'],
+                    'goal_day' => $goalDay !== null ? (int) $goalDay : null,
                 ];
             })
             ->values();
+    }
+
+    /**
+     * Fetch expenses for the pay period (20th of month to 19th of next month).
+     * Uses goal_day to determine if categories fall within the pay period.
+     *
+     * @param  int  $payDay  Day of the month when user gets paid (default 20)
+     * @return float Sum of budgeted amounts for categories in the pay period
+     *
+     * @throws \Illuminate\Http\Client\RequestException
+     */
+    public function fetchPayPeriodExpenses(int $payDay = 20): float
+    {
+        $needCategories = $this->fetchNeedCategories();
+
+        $payPeriodTotal = 0.0;
+
+        foreach ($needCategories as $category) {
+            $goalDay = $category['goal_day'] ?? null;
+
+            if ($goalDay !== null) {
+                // Check if goal_day falls in pay period (payDay-31 or 1 to payDay-1 of next month)
+                if ($goalDay >= $payDay || $goalDay <= $payDay - 1) {
+                    $payPeriodTotal += $category['budgeted'];
+                }
+            } else {
+                // If no goal_day, include the budgeted amount as fallback
+                $payPeriodTotal += $category['budgeted'];
+            }
+        }
+
+        return $payPeriodTotal;
+    }
+
+    /**
+     * Fetch categories for a specific month from YNAB.
+     *
+     * @param  string  $month  Month in format 'YYYY-MM-01'
+     * @return Collection<int, array<string, mixed>>
+     *
+     * @throws \Illuminate\Http\Client\RequestException
+     */
+    public function fetchCategoriesForMonth(string $month): Collection
+    {
+        $cacheKey = "ynab:categories_month:{$this->budgetId}:{$month}";
+
+        return Cache::remember($cacheKey, $this->getCacheTtl(), function () use ($month) {
+            $response = Http::withToken($this->token)
+                ->get("https://api.ynab.com/v1/budgets/{$this->budgetId}/months/{$month}")
+                ->throw()
+                ->json();
+
+            $monthData = $response['data']['month'] ?? [];
+            $categories = collect();
+
+            foreach ($monthData['categories'] ?? [] as $category) {
+                if ($category['hidden'] || $category['deleted']) {
+                    continue;
+                }
+
+                $categories->push($this->mapYnabCategory($category, $category['category_group_name'] ?? ''));
+            }
+
+            return $categories;
+        });
+    }
+
+    /**
+     * Calculate the pay period shortfall (how much is missing to be "one month ahead").
+     *
+     * Pay period is from payDay of current month to payDay-1 of next month.
+     * Example: payDay=20 means Dec 20 - Jan 19.
+     *
+     * Returns categories with goal_type=NEED that fall in this period and are underfunded.
+     *
+     * @param  int  $payDay  Day of the month when user gets paid (default 20)
+     * @return array{shortfall: float, monthly_essential: float, funded: float}
+     *
+     * @throws \Illuminate\Http\Client\RequestException
+     */
+    public function fetchPayPeriodShortfall(int $payDay = 20): array
+    {
+        $currentMonth = date('Y-m-01');
+        $nextMonth = date('Y-m-01', strtotime('first day of next month'));
+
+        // Fetch categories for both months
+        $currentMonthCategories = $this->fetchCategoriesForMonth($currentMonth);
+        $nextMonthCategories = $this->fetchCategoriesForMonth($nextMonth);
+
+        $totalNeeded = 0.0;
+        $totalUnderfunded = 0.0;
+
+        // Current month: NEED categories with goal_day >= payDay (e.g. 20-31)
+        foreach ($currentMonthCategories as $category) {
+            if (($category['goal_type'] ?? null) !== 'NEED') {
+                continue;
+            }
+
+            $goalDay = $category['goal_day'] ?? null;
+
+            // Include if goal_day >= payDay, or if no goal_day (monthly expense)
+            if ($goalDay === null || $goalDay >= $payDay) {
+                $totalNeeded += $this->getMonthlyAmountForCategory($category);
+                $totalUnderfunded += $category['goal_under_funded'] ?? 0;
+            }
+        }
+
+        // Next month: NEED categories with goal_day < payDay (e.g. 1-19)
+        foreach ($nextMonthCategories as $category) {
+            if (($category['goal_type'] ?? null) !== 'NEED') {
+                continue;
+            }
+
+            $goalDay = $category['goal_day'] ?? null;
+
+            // Include if goal_day < payDay (but not null - those were counted in current month)
+            if ($goalDay !== null && $goalDay < $payDay) {
+                $totalNeeded += $this->getMonthlyAmountForCategory($category);
+                $totalUnderfunded += $category['goal_under_funded'] ?? 0;
+            }
+        }
+
+        return [
+            'shortfall' => $totalUnderfunded,
+            'monthly_essential' => $totalNeeded,
+            'funded' => $totalNeeded - $totalUnderfunded,
+        ];
+    }
+
+    /**
+     * Get the monthly amount for a category based on its goal cadence.
+     *
+     * For yearly goals (goal_cadence = 13), use 'budgeted' (monthly contribution).
+     * For monthly goals (goal_cadence = 1), use 'goal_target' (full monthly amount).
+     *
+     * @param  array<string, mixed>  $category
+     */
+    private function getMonthlyAmountForCategory(array $category): float
+    {
+        $goalCadence = $category['goal_cadence'] ?? null;
+
+        // Yearly goals (cadence = 13): use budgeted amount (monthly contribution)
+        if ($goalCadence === 13) {
+            return (float) ($category['budgeted'] ?? 0);
+        }
+
+        // Monthly goals (cadence = 1) or no cadence: use goal_target or budgeted as fallback
+        return $category['goal_target'] > 0
+            ? (float) $category['goal_target']
+            : (float) ($category['budgeted'] ?? 0);
     }
 }

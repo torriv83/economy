@@ -458,6 +458,30 @@ $pages->assertNoJavascriptErrors()->assertNoConsoleLogs();
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⛔ CRITICAL: ASK BEFORE IMPLEMENTING ⛔
+
+**NEVER implement code changes without explicit user approval.**
+
+Before writing ANY code:
+1. Explain what you THINK the solution should be
+2. Ask the user: "Skal jeg implementere dette?" (Should I implement this?)
+3. WAIT for the user to say yes/ja before touching any files
+
+This applies to:
+- New features
+- Bug fixes
+- Refactoring
+- Logic changes
+- ANY code modification
+
+The ONLY exceptions:
+- Pure translation text changes (no logic)
+- The user explicitly said "gjør det" / "implementer det" / "do it"
+
+**If in doubt: ASK FIRST.**
+
+---
+
 ## Project Overview
 
 This is a **personal debt management application** designed to help you track your debts and determine optimal repayment strategies. The application allows you to input your debts, view them in an organized overview, and analyze different payoff methods (Snowball and Avalanche strategies).

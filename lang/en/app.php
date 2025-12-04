@@ -580,10 +580,10 @@ return [
 
     // Security Buffer
     'security_buffer' => 'Security Buffer',
-    'layer1_operational_buffer' => 'Operational Buffer',
+    'layer1_operational_buffer' => 'One Month Ahead',
     'layer2_emergency_buffer' => 'Emergency Buffer',
     'savings_accounts' => 'Savings accounts',
-    'assigned_next_month' => 'Assigned to next month',
+    'assigned_next_month' => 'Funded for pay period',
     'total_buffer' => 'Total Buffer',
     'month_ahead' => 'One month ahead',
     'months_of_security_count' => ':count months of security',
@@ -605,4 +605,62 @@ return [
     'linked_to_category' => 'Linked to category',
     'linked_to_ynab' => 'Linked to YNAB',
     'available_in_ynab' => 'Available',
+
+    // Buffer Recommendations (Phase 2)
+    'buffer' => [
+        // Layer 1 Recommendations
+        'layer1_success_title' => 'One Month Ahead!',
+        'layer1_success_description' => 'You\'re one month ahead - great financial foundation!',
+        'layer1_action_title' => 'Get One Month Ahead',
+        'layer1_action_description' => 'Transfer :transfer_amount kr from savings to checking account to fund next month\'s budget. You\'ll still have :remaining_months months in emergency buffer.',
+        'layer1_partial_description' => 'You need :shortfall kr to be one month ahead, but only have :transfer_amount kr available. Transfer what you can - you\'ll still need :still_needed kr.',
+        'layer1_no_savings_description' => 'You need :shortfall kr to be one month ahead, but have no funds in savings to transfer.',
+
+        // Buffer Status
+        'buffer_good_title' => 'Emergency Buffer Healthy',
+        'buffer_good_description' => 'Your emergency buffer of :months months exceeds the recommended 2 months.',
+        'buffer_build_title' => 'Build Emergency Buffer',
+        'buffer_build_description' => 'You have :current_months months saved. Build to :target_months months by saving :shortfall kr more.',
+
+        // High Interest Debt
+        'high_interest_debt_title' => 'High Interest Debt Detected',
+        'high_interest_debt_description' => 'Transfer :suggested_amount kr from savings to :debt_name (:interest_rate% interest) to save :interest_saved kr in interest. You have :available_savings kr available in savings.',
+
+        // Low Interest Debt
+        'low_interest_debt_title' => 'Build Buffer First',
+        'low_interest_debt_description' => ':debt_name has low interest (:interest_rate%). Focus on building your buffer from :current_buffer_months to :target_buffer_months months first.',
+
+        // Good Buffer with Debt
+        'good_buffer_debt_title' => 'Accelerate Debt Payoff',
+        'good_buffer_debt_description' => 'Your buffer is solid. Transfer :suggested_amount kr to :debt_name - save :interest_saved kr in interest and pay off :months_saved months earlier.',
+
+        // Balanced Scenario
+        'balanced_title' => 'Balanced Approach',
+        'balanced_description' => 'With :debt_name at :interest_rate% and :current_buffer_months months buffer, consider splitting: 50% to buffer, 50% to debt.',
+
+        // Scenario Comparison
+        'scenario_buffer' => 'Add to buffer',
+        'scenario_debt' => 'Pay :debt_name',
+        'scenario_buffer_impact' => '+:days days of security (:old_months → :new_months months)',
+        'scenario_debt_impact' => 'Save :interest_saved kr in interest, paid off :months_saved months earlier',
+
+        // Recommendations
+        'recommendation_critical_buffer' => 'Buffer too low - prioritize security',
+        'recommendation_high_interest' => 'High interest gives best return',
+        'recommendation_build_buffer' => 'Build buffer to recommended level first',
+        'recommendation_pay_debt' => 'Buffer is healthy - accelerate debt payoff',
+        'recommendation_maintain_buffer' => 'Maintain your emergency buffer',
+
+        // UI Elements
+        'recommendations_title' => 'Recommendations',
+        'recommendations_description' => 'Smart financial advice based on your buffer and debt situation',
+        'scenario_comparison_title' => 'What should I do with :amount extra?',
+        'compare_options' => 'Got extra money? See your options',
+        'hide_options' => 'Hide Options',
+        'recommended' => 'Recommended',
+        'view_details' => 'View Details',
+        'days_security' => ':days days of security',
+        'months_earlier' => ':months months earlier',
+        'interest_savings' => ':amount kr saved',
+    ],
 ];

@@ -8,6 +8,7 @@ use App\Livewire\Concerns\HasConsistentFlashMessages;
 use App\Livewire\Concerns\HasDeleteConfirmation;
 use App\Models\SelfLoan\SelfLoan;
 use App\Models\SelfLoan\SelfLoanRepayment;
+use App\Services\BufferRecommendationService;
 use App\Services\SettingsService;
 use App\Services\YnabService;
 use App\Support\DateFormatter;
@@ -23,6 +24,8 @@ class Overview extends Component
     private YnabService $ynabService;
 
     private SettingsService $settingsService;
+
+    private BufferRecommendationService $recommendationService;
 
     public int $selectedLoanId = 0;
 
@@ -56,10 +59,18 @@ class Overview extends Component
 
     public bool $showEditModal = false;
 
-    public function boot(YnabService $ynabService, SettingsService $settingsService): void
-    {
+    public bool $showScenarioComparison = false;
+
+    public float $scenarioAmount = 5000;
+
+    public function boot(
+        YnabService $ynabService,
+        SettingsService $settingsService,
+        BufferRecommendationService $recommendationService
+    ): void {
         $this->ynabService = $ynabService;
         $this->settingsService = $settingsService;
+        $this->recommendationService = $recommendationService;
     }
 
     /**
@@ -108,7 +119,7 @@ class Overview extends Component
      */
     public function getYnabAccountsProperty(): array
     {
-        if (! $this->isYnabConfigured) {
+        if (! $this->getIsYnabConfiguredProperty()) {
             return [];
         }
 
@@ -124,7 +135,7 @@ class Overview extends Component
      */
     public function getYnabCategoriesProperty(): array
     {
-        if (! $this->isYnabConfigured) {
+        if (! $this->getIsYnabConfiguredProperty()) {
             return [];
         }
 
@@ -157,18 +168,20 @@ class Overview extends Component
 
         try {
             $savingsAccounts = $this->ynabService->fetchSavingsAccounts();
-            $assignedNextMonth = $this->ynabService->fetchAssignedNextMonth();
-            $needCategories = $this->ynabService->fetchNeedCategories();
+            $payPeriodData = $this->ynabService->fetchPayPeriodShortfall(20);
 
-            $monthlyEssential = $needCategories->sum('budgeted');
+            $monthlyEssential = $payPeriodData['monthly_essential'];
             $savingsTotal = $savingsAccounts->sum('balance');
 
             // Layer 1: Operational buffer (one month ahead)
-            $layer1Amount = $assignedNextMonth;
+            // "funded" = what's already assigned to pay period categories
+            $layer1Amount = $payPeriodData['funded'];
             $layer1Percentage = $monthlyEssential > 0
                 ? min(100, ($layer1Amount / $monthlyEssential) * 100)
                 : 0;
-            $isMonthAhead = $layer1Percentage >= 100;
+            // One month ahead = funded + savings >= monthly essential
+            // (savings can cover what's not yet assigned in YNAB)
+            $isMonthAhead = $monthlyEssential > 0 && ($layer1Amount + $savingsTotal) >= $monthlyEssential;
 
             // Layer 2: Emergency buffer (savings accounts)
             $layer2Amount = $savingsTotal;
@@ -210,6 +223,59 @@ class Overview extends Component
         }
 
         return 'healthy';
+    }
+
+    /**
+     * Get buffer recommendations.
+     *
+     * @return array<int, array{priority: int, type: string, icon: string, status: string, title: string, description: string, params: array<string, mixed>, action?: array<string, mixed>}>
+     */
+    public function getRecommendationsProperty(): array
+    {
+        $bufferStatus = $this->getBufferStatusProperty();
+        if ($bufferStatus === null) {
+            return [];
+        }
+
+        try {
+            return $this->recommendationService->getRecommendations($bufferStatus);
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Get scenario comparison data.
+     *
+     * @return array{amount: float, options: array<int, array<string, mixed>>, recommendation: array{target: string, reason: string}}|null
+     */
+    public function getScenarioComparisonProperty(): ?array
+    {
+        if (! $this->showScenarioComparison) {
+            return null;
+        }
+
+        $bufferStatus = $this->getBufferStatusProperty();
+        if ($bufferStatus === null) {
+            return null;
+        }
+
+        try {
+            return $this->recommendationService->compareScenarios($this->scenarioAmount, $bufferStatus);
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    public function toggleScenarioComparison(): void
+    {
+        $this->showScenarioComparison = ! $this->showScenarioComparison;
+    }
+
+    public function updateScenarioAmount(): void
+    {
+        // Triggered by wire:model.live on the input
+        // The property is already updated, so we just need to let the computed property recalculate
     }
 
     public function openRepaymentModal(int $loanId): void

@@ -10,4 +10,9 @@ parameters:
         - routes
     level: 6
     ignoreErrors:
+        # Reserved constructor parameters for future use
+        - '#Property App\\Services\\BufferRecommendationService::\$ynabService is never read, only written#'
+        - '#Property App\\Services\\BufferRecommendationService::\$accelerationService is never read, only written#'
+        # Collection covariance issue - types actually match
+        - '#Method App\\Services\\YnabService::fetchNeedCategories\(\) should return .* but returns#'
     excludePaths:

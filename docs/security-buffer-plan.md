@@ -20,10 +20,27 @@
 - [x] Vis kobling i Overview-listen
 - [x] Tester: `CreateSelfLoanYnabTest.php`
 
-### Fase 2: Anbefalinger (krever gjeldsdelen)
-- [ ] Anbefalingslogikk
-- [ ] Integrasjon med AccelerationService
-- [ ] Scenario-sammenlikning UI
+### Fase 2: Anbefalinger og beslutningsstøtte ✅
+**Anbefalingslogikk** ✅
+- [x] `BufferRecommendationService` - Smart anbefalingslogikk
+- [x] Lag 1 anbefalinger (operasjonell buffer)
+- [x] Lag 2 & Gjeld dynamisk avveining
+- [x] Høy rente (≥15%): Prioriter gjeldsnedbetalning
+- [x] Lav rente (<5%): Prioriter bufferbygging
+- [x] Balansert scenario (5-15%): Info om begge alternativer
+- [x] Tester: `BufferRecommendationServiceTest.php` (16 tester)
+
+**Integrasjon med DebtCalculationService** ✅
+- [x] `calculateDebtImpact()` - Beregn rentesparing og måneder spart
+- [x] Sammenligning av gjeldsnedbetalingsscenarioer
+
+**Scenario-sammenlikning UI** ✅
+- [x] `Overview::getRecommendationsProperty()` - Computed property
+- [x] `Overview::getScenarioComparisonProperty()` - Computed property
+- [x] `Overview::toggleScenarioComparison()` - Toggle-handling
+- [x] Anbefalingskort i `overview.blade.php`
+- [x] Scenario-sammenligning panel med konfigurerbart beløp
+- [x] Oversettelser i `en/app.php` og `no/app.php`
 
 ### Fase 3-6: Fremtidige faser
 - [ ] Fase 3: Buffer på andre sider

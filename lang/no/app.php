@@ -580,10 +580,10 @@ return [
 
     // Security Buffer
     'security_buffer' => 'Sikkerhetsbuffer',
-    'layer1_operational_buffer' => 'Operasjonell buffer',
+    'layer1_operational_buffer' => 'En måned foran',
     'layer2_emergency_buffer' => 'Nødbuffer',
     'savings_accounts' => 'Sparekontoer',
-    'assigned_next_month' => 'Satt av til neste måned',
+    'assigned_next_month' => 'Finansiert for lønningsperioden',
     'total_buffer' => 'Total buffer',
     'month_ahead' => 'En måned foran',
     'months_of_security_count' => ':count måneder sikkerhet',
@@ -605,4 +605,62 @@ return [
     'linked_to_category' => 'Koblet til kategori',
     'linked_to_ynab' => 'Koblet til YNAB',
     'available_in_ynab' => 'Tilgjengelig',
+
+    // Buffer Recommendations (Phase 2)
+    'buffer' => [
+        // Layer 1 Recommendations
+        'layer1_success_title' => 'En måned foran!',
+        'layer1_success_description' => 'Du er en måned foran - flott økonomisk fundament!',
+        'layer1_action_title' => 'Bli en måned foran',
+        'layer1_action_description' => 'Overfør :transfer_amount kr fra sparing til brukskonto for å finansiere neste måneds budsjett. Du har fortsatt :remaining_months måneder i nødbuffer.',
+        'layer1_partial_description' => 'Du trenger :shortfall kr for å være en måned foran, men har kun :transfer_amount kr tilgjengelig. Overfør det du kan - du mangler fortsatt :still_needed kr.',
+        'layer1_no_savings_description' => 'Du trenger :shortfall kr for å være en måned foran, men har ingen midler i sparekontoen å overføre.',
+
+        // Buffer Status
+        'buffer_good_title' => 'Nødbuffer sunn',
+        'buffer_good_description' => 'Nødbufferen din på :months måneder overstiger anbefalte 2 måneder.',
+        'buffer_build_title' => 'Bygg nødbuffer',
+        'buffer_build_description' => 'Du har :current_months måneder spart. Bygg til :target_months måneder ved å spare :shortfall kr mer.',
+
+        // High Interest Debt
+        'high_interest_debt_title' => 'Høyrentegjeld oppdaget',
+        'high_interest_debt_description' => 'Overfør :suggested_amount kr fra sparing til :debt_name (:interest_rate% rente) for å spare :interest_saved kr i renter. Du har :available_savings kr tilgjengelig i sparing.',
+
+        // Low Interest Debt
+        'low_interest_debt_title' => 'Bygg buffer først',
+        'low_interest_debt_description' => ':debt_name har lav rente (:interest_rate%). Fokuser på å bygge bufferen fra :current_buffer_months til :target_buffer_months måneder først.',
+
+        // Good Buffer with Debt
+        'good_buffer_debt_title' => 'Akselerer gjeldsnedbetalingen',
+        'good_buffer_debt_description' => 'Bufferen din er solid. Overfør :suggested_amount kr til :debt_name - spar :interest_saved kr i renter og betal ned :months_saved måneder tidligere.',
+
+        // Balanced Scenario
+        'balanced_title' => 'Balansert tilnærming',
+        'balanced_description' => 'Med :debt_name på :interest_rate% og :current_buffer_months måneder buffer, vurder å dele: 50% til buffer, 50% til gjeld.',
+
+        // Scenario Comparison
+        'scenario_buffer' => 'Legg til buffer',
+        'scenario_debt' => 'Betal :debt_name',
+        'scenario_buffer_impact' => '+:days dager sikkerhet (:old_months → :new_months mnd)',
+        'scenario_debt_impact' => 'Spar :interest_saved kr i renter, nedbetalt :months_saved måneder tidligere',
+
+        // Recommendations
+        'recommendation_critical_buffer' => 'Buffer for lav - prioriter sikkerhet',
+        'recommendation_high_interest' => 'Høy rente gir best avkastning',
+        'recommendation_build_buffer' => 'Bygg buffer til anbefalt nivå først',
+        'recommendation_pay_debt' => 'Buffer er sunn - akselerer gjeldsnedbetalingen',
+        'recommendation_maintain_buffer' => 'Oppretthold nødbufferen din',
+
+        // UI Elements
+        'recommendations_title' => 'Anbefalinger',
+        'recommendations_description' => 'Smarte økonomiske råd basert på buffer- og gjeldssituasjonen din',
+        'scenario_comparison_title' => 'Hva bør jeg gjøre med :amount ekstra?',
+        'compare_options' => 'Fått ekstra penger? Se alternativer',
+        'hide_options' => 'Skjul alternativer',
+        'recommended' => 'Anbefalt',
+        'view_details' => 'Vis detaljer',
+        'days_security' => ':days dager sikkerhet',
+        'months_earlier' => ':months måneder tidligere',
+        'interest_savings' => ':amount kr spart',
+    ],
 ];

@@ -21,11 +21,11 @@ it('shows buffer status when YNAB is configured', function () {
         $mock->shouldReceive('fetchSavingsAccounts')->andReturn(collect([
             ['id' => 'acc-1', 'name' => 'Savings', 'balance' => 30000],
         ]));
-        $mock->shouldReceive('fetchAssignedNextMonth')->andReturn(20000.0);
-        $mock->shouldReceive('fetchNeedCategories')->andReturn(collect([
-            ['id' => 'cat-1', 'name' => 'Rent', 'budgeted' => 10000],
-            ['id' => 'cat-2', 'name' => 'Food', 'budgeted' => 5000],
-        ]));
+        $mock->shouldReceive('fetchPayPeriodShortfall')->with(20)->andReturn([
+            'shortfall' => 0.0,
+            'monthly_essential' => 15000.0,
+            'funded' => 15000.0,
+        ]);
         $mock->shouldReceive('fetchCategories')->andReturn(collect([]));
     });
 
@@ -59,10 +59,11 @@ it('calculates layer 1 operational buffer correctly', function () {
 
     $this->mock(YnabService::class, function ($mock) {
         $mock->shouldReceive('fetchSavingsAccounts')->andReturn(collect([]));
-        $mock->shouldReceive('fetchAssignedNextMonth')->andReturn(15000.0);
-        $mock->shouldReceive('fetchNeedCategories')->andReturn(collect([
-            ['id' => 'cat-1', 'name' => 'Needs', 'budgeted' => 15000],
-        ]));
+        $mock->shouldReceive('fetchPayPeriodShortfall')->with(20)->andReturn([
+            'shortfall' => 0.0,
+            'monthly_essential' => 15000.0,
+            'funded' => 15000.0,
+        ]);
         $mock->shouldReceive('fetchCategories')->andReturn(collect([]));
     });
 
@@ -86,10 +87,11 @@ it('shows month ahead checkmark when layer 1 is 100%', function () {
 
     $this->mock(YnabService::class, function ($mock) {
         $mock->shouldReceive('fetchSavingsAccounts')->andReturn(collect([]));
-        $mock->shouldReceive('fetchAssignedNextMonth')->andReturn(20000.0);
-        $mock->shouldReceive('fetchNeedCategories')->andReturn(collect([
-            ['id' => 'cat-1', 'name' => 'Needs', 'budgeted' => 15000],
-        ]));
+        $mock->shouldReceive('fetchPayPeriodShortfall')->with(20)->andReturn([
+            'shortfall' => 0.0,
+            'monthly_essential' => 15000.0,
+            'funded' => 15000.0,
+        ]);
         $mock->shouldReceive('fetchCategories')->andReturn(collect([]));
     });
 
@@ -111,10 +113,11 @@ it('calculates layer 2 emergency buffer in months correctly', function () {
         $mock->shouldReceive('fetchSavingsAccounts')->andReturn(collect([
             ['id' => 'acc-1', 'name' => 'Savings', 'balance' => 30000],
         ]));
-        $mock->shouldReceive('fetchAssignedNextMonth')->andReturn(0.0);
-        $mock->shouldReceive('fetchNeedCategories')->andReturn(collect([
-            ['id' => 'cat-1', 'name' => 'Needs', 'budgeted' => 15000],
-        ]));
+        $mock->shouldReceive('fetchPayPeriodShortfall')->with(20)->andReturn([
+            'shortfall' => 15000.0,
+            'monthly_essential' => 15000.0,
+            'funded' => 0.0,
+        ]);
         $mock->shouldReceive('fetchCategories')->andReturn(collect([]));
     });
 
@@ -139,10 +142,11 @@ it('calculates total buffer correctly from layer 1 plus layer 2', function () {
         $mock->shouldReceive('fetchSavingsAccounts')->andReturn(collect([
             ['id' => 'acc-1', 'name' => 'Savings', 'balance' => 30000],
         ]));
-        $mock->shouldReceive('fetchAssignedNextMonth')->andReturn(15000.0);
-        $mock->shouldReceive('fetchNeedCategories')->andReturn(collect([
-            ['id' => 'cat-1', 'name' => 'Needs', 'budgeted' => 15000],
-        ]));
+        $mock->shouldReceive('fetchPayPeriodShortfall')->with(20)->andReturn([
+            'shortfall' => 0.0,
+            'monthly_essential' => 15000.0,
+            'funded' => 15000.0,
+        ]);
         $mock->shouldReceive('fetchCategories')->andReturn(collect([]));
     });
 
@@ -167,10 +171,11 @@ it('shows critical status when total buffer is less than 1 month', function () {
         $mock->shouldReceive('fetchSavingsAccounts')->andReturn(collect([
             ['id' => 'acc-1', 'name' => 'Savings', 'balance' => 5000],
         ]));
-        $mock->shouldReceive('fetchAssignedNextMonth')->andReturn(5000.0);
-        $mock->shouldReceive('fetchNeedCategories')->andReturn(collect([
-            ['id' => 'cat-1', 'name' => 'Needs', 'budgeted' => 15000],
-        ]));
+        $mock->shouldReceive('fetchPayPeriodShortfall')->with(20)->andReturn([
+            'shortfall' => 10000.0,
+            'monthly_essential' => 15000.0,
+            'funded' => 5000.0,
+        ]);
         $mock->shouldReceive('fetchCategories')->andReturn(collect([]));
     });
 
@@ -194,10 +199,11 @@ it('shows warning status when total buffer is 1-2 months', function () {
         $mock->shouldReceive('fetchSavingsAccounts')->andReturn(collect([
             ['id' => 'acc-1', 'name' => 'Savings', 'balance' => 10000],
         ]));
-        $mock->shouldReceive('fetchAssignedNextMonth')->andReturn(10000.0);
-        $mock->shouldReceive('fetchNeedCategories')->andReturn(collect([
-            ['id' => 'cat-1', 'name' => 'Needs', 'budgeted' => 15000],
-        ]));
+        $mock->shouldReceive('fetchPayPeriodShortfall')->with(20)->andReturn([
+            'shortfall' => 5000.0,
+            'monthly_essential' => 15000.0,
+            'funded' => 10000.0,
+        ]);
         $mock->shouldReceive('fetchCategories')->andReturn(collect([]));
     });
 
@@ -221,10 +227,11 @@ it('shows healthy status when total buffer is 2+ months', function () {
         $mock->shouldReceive('fetchSavingsAccounts')->andReturn(collect([
             ['id' => 'acc-1', 'name' => 'Savings', 'balance' => 30000],
         ]));
-        $mock->shouldReceive('fetchAssignedNextMonth')->andReturn(15000.0);
-        $mock->shouldReceive('fetchNeedCategories')->andReturn(collect([
-            ['id' => 'cat-1', 'name' => 'Needs', 'budgeted' => 15000],
-        ]));
+        $mock->shouldReceive('fetchPayPeriodShortfall')->with(20)->andReturn([
+            'shortfall' => 0.0,
+            'monthly_essential' => 15000.0,
+            'funded' => 15000.0,
+        ]);
         $mock->shouldReceive('fetchCategories')->andReturn(collect([]));
     });
 
