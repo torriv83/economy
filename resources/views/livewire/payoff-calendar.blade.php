@@ -511,7 +511,7 @@
             <p class="text-slate-600 dark:text-slate-400 mb-6">
                 {{ __('app.add_debts_to_see_calendar') }}
             </p>
-            <a href="{{ route('debts.create') }}" class="btn-momentum inline-flex items-center px-6 py-3 rounded-xl font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">
+            <a href="{{ route('debts') }}" wire:navigate class="btn-momentum inline-flex items-center px-6 py-3 rounded-xl font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">
                 {{ __('app.add_first_debt') }}
             </a>
         </div>
