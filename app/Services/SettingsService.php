@@ -15,6 +15,14 @@ class SettingsService
 
     private const DEFAULT_FORBRUKSLAN_PAYOFF_MONTHS = 60;
 
+    private const DEFAULT_HIGH_INTEREST_THRESHOLD = 15.0;
+
+    private const DEFAULT_LOW_INTEREST_THRESHOLD = 5.0;
+
+    private const DEFAULT_BUFFER_TARGET_MONTHS = 2;
+
+    private const DEFAULT_MIN_INTEREST_SAVINGS = 1000.0;
+
     private const CACHE_KEY = 'app_settings';
 
     private const CACHE_TTL_HOURS = 1;
@@ -156,7 +164,7 @@ class SettingsService
      */
     public function isYnabSyncDue(): bool
     {
-        if (! $this->isYnabBackgroundSyncEnabled() || ! $this->isYnabConfigured()) {
+        if (!$this->isYnabBackgroundSyncEnabled() || !$this->isYnabConfigured()) {
             return false;
         }
 
@@ -221,6 +229,79 @@ class SettingsService
     }
 
     /**
+     * Get the high interest threshold setting.
+     */
+    public function getHighInterestThreshold(): float
+    {
+        return $this->get('recommendations.high_interest_threshold', 'float') ?? self::DEFAULT_HIGH_INTEREST_THRESHOLD;
+    }
+
+    /**
+     * Set the high interest threshold setting.
+     */
+    public function setHighInterestThreshold(float $threshold): void
+    {
+        $this->set('recommendations.high_interest_threshold', $threshold, 'float', 'recommendations');
+    }
+
+    /**
+     * Get the low interest threshold setting.
+     */
+    public function getLowInterestThreshold(): float
+    {
+        return $this->get('recommendations.low_interest_threshold', 'float') ?? self::DEFAULT_LOW_INTEREST_THRESHOLD;
+    }
+
+    /**
+     * Set the low interest threshold setting.
+     */
+    public function setLowInterestThreshold(float $threshold): void
+    {
+        $this->set('recommendations.low_interest_threshold', $threshold, 'float', 'recommendations');
+    }
+
+    /**
+     * Get the buffer target months setting.
+     */
+    public function getBufferTargetMonths(): int
+    {
+        return $this->get('recommendations.buffer_target_months', 'integer') ?? self::DEFAULT_BUFFER_TARGET_MONTHS;
+    }
+
+    /**
+     * Set the buffer target months setting.
+     */
+    public function setBufferTargetMonths(int $months): void
+    {
+        $this->set('recommendations.buffer_target_months', $months, 'integer', 'recommendations');
+    }
+
+    /**
+     * Get the minimum interest savings threshold setting.
+     */
+    public function getMinInterestSavings(): float
+    {
+        return $this->get('recommendations.min_interest_savings', 'float') ?? self::DEFAULT_MIN_INTEREST_SAVINGS;
+    }
+
+    /**
+     * Set the minimum interest savings threshold setting.
+     */
+    public function setMinInterestSavings(float $amount): void
+    {
+        $this->set('recommendations.min_interest_savings', $amount, 'float', 'recommendations');
+    }
+
+    /**
+     * Reset all recommendation settings to their default values.
+     */
+    public function resetRecommendationSettingsToDefaults(): void
+    {
+        Setting::where('group', 'recommendations')->delete();
+        $this->clearCache();
+    }
+
+    /**
      * Reset all debt settings to their default values.
      */
     public function resetDebtSettingsToDefaults(): void
@@ -234,7 +315,7 @@ class SettingsService
      */
     public function get(string $key, string $type = 'string'): mixed
     {
-        $cacheKey = self::CACHE_KEY.'.'.$key;
+        $cacheKey = self::CACHE_KEY . '.' . $key;
 
         $value = Cache::remember(
             $cacheKey,
@@ -282,7 +363,7 @@ class SettingsService
      */
     protected function clearCacheForKey(string $key): void
     {
-        $cacheKey = self::CACHE_KEY.'.'.$key;
+        $cacheKey = self::CACHE_KEY . '.' . $key;
         Cache::forget($cacheKey);
     }
 

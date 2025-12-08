@@ -10,21 +10,10 @@ use Illuminate\Support\Collection;
 class BufferRecommendationService
 {
     /**
-     * Interest rate thresholds for recommendation logic.
-     */
-    private const HIGH_INTEREST_THRESHOLD = 15.0;
-
-    private const LOW_INTEREST_THRESHOLD = 5.0;
-
-    /**
      * Minimum buffer level considered acceptable (in months).
+     * This is kept as a constant as it represents a critical safety threshold.
      */
     private const MINIMUM_ACCEPTABLE_BUFFER_MONTHS = 1.0;
-
-    /**
-     * Recommended emergency buffer target (in months).
-     */
-    private const RECOMMENDED_BUFFER_MONTHS = 2.0;
 
     /**
      * @param  YnabService  $ynabService  Reserved for future YNAB-direct operations
@@ -35,7 +24,8 @@ class BufferRecommendationService
         private readonly AccelerationService $accelerationService,
         private readonly DebtCalculationService $calculationService,
         private readonly SettingsService $settingsService
-    ) {}
+    ) {
+    }
 
     /**
      * Get smart financial recommendations based on buffer status and debt situation.
@@ -45,7 +35,7 @@ class BufferRecommendationService
      */
     public function getRecommendations(array $bufferStatus): array
     {
-        if (! $this->settingsService->isYnabConfigured()) {
+        if (!$this->settingsService->isYnabConfigured()) {
             return [];
         }
 
@@ -142,8 +132,8 @@ class BufferRecommendationService
         $bufferMonths = $bufferStatus['layer2']['months'];
         $bufferLevel = $this->categorizeBufferLevel($bufferMonths);
 
-        // Scenario A: High debt interest (20%+ credit cards)
-        if ($highestInterestDebt !== null && $highestInterestDebt->interest_rate >= self::HIGH_INTEREST_THRESHOLD) {
+        // Scenario A: High debt interest
+        if ($highestInterestDebt !== null && $highestInterestDebt->interest_rate >= $this->settingsService->getHighInterestThreshold()) {
             $recommendations[] = $this->getHighInterestDebtRecommendation(
                 $highestInterestDebt,
                 $bufferStatus,
@@ -153,8 +143,8 @@ class BufferRecommendationService
             return $recommendations;
         }
 
-        // Scenario B: Low debt interest (5% car loan)
-        if ($highestInterestDebt !== null && $highestInterestDebt->interest_rate < self::LOW_INTEREST_THRESHOLD) {
+        // Scenario B: Low debt interest
+        if ($highestInterestDebt !== null && $highestInterestDebt->interest_rate < $this->settingsService->getLowInterestThreshold()) {
             $recommendations[] = $this->getLowInterestDebtRecommendation(
                 $highestInterestDebt,
                 $bufferStatus,
@@ -165,7 +155,7 @@ class BufferRecommendationService
         }
 
         // Scenario C: Good buffer + debt
-        if ($bufferMonths >= self::RECOMMENDED_BUFFER_MONTHS && $highestInterestDebt !== null) {
+        if ($bufferMonths >= $this->settingsService->getBufferTargetMonths() && $highestInterestDebt !== null) {
             $recommendations[] = $this->getGoodBufferWithDebtRecommendation(
                 $highestInterestDebt,
                 $bufferStatus
@@ -197,35 +187,39 @@ class BufferRecommendationService
     {
         $bufferMonths = $bufferStatus['layer2']['months'];
 
-        if ($bufferMonths >= self::RECOMMENDED_BUFFER_MONTHS) {
-            return [[
-                'priority' => 2,
-                'type' => 'buffer',
-                'icon' => 'shield-check',
-                'status' => 'success',
-                'title' => 'buffer.buffer_good_title',
-                'description' => 'buffer.buffer_good_description',
-                'params' => [
-                    'months' => round($bufferMonths, 1),
-                ],
-            ]];
+        if ($bufferMonths >= $this->settingsService->getBufferTargetMonths()) {
+            return [
+                [
+                    'priority' => 2,
+                    'type' => 'buffer',
+                    'icon' => 'shield-check',
+                    'status' => 'success',
+                    'title' => 'buffer.buffer_good_title',
+                    'description' => 'buffer.buffer_good_description',
+                    'params' => [
+                        'months' => round($bufferMonths, 1),
+                    ],
+                ]
+            ];
         }
 
-        $shortfall = ($bufferStatus['monthly_essential'] * self::RECOMMENDED_BUFFER_MONTHS) - $bufferStatus['layer2']['amount'];
+        $shortfall = ($bufferStatus['monthly_essential'] * $this->settingsService->getBufferTargetMonths()) - $bufferStatus['layer2']['amount'];
 
-        return [[
-            'priority' => 2,
-            'type' => 'buffer',
-            'icon' => 'shield',
-            'status' => 'action',
-            'title' => 'buffer.buffer_build_title',
-            'description' => 'buffer.buffer_build_description',
-            'params' => [
-                'current_months' => round($bufferMonths, 1),
-                'target_months' => self::RECOMMENDED_BUFFER_MONTHS,
-                'shortfall' => round($shortfall, 2),
-            ],
-        ]];
+        return [
+            [
+                'priority' => 2,
+                'type' => 'buffer',
+                'icon' => 'shield',
+                'status' => 'action',
+                'title' => 'buffer.buffer_build_title',
+                'description' => 'buffer.buffer_build_description',
+                'params' => [
+                    'current_months' => round($bufferMonths, 1),
+                    'target_months' => $this->settingsService->getBufferTargetMonths(),
+                    'shortfall' => round($shortfall, 2),
+                ],
+            ]
+        ];
     }
 
     /**
@@ -287,7 +281,7 @@ class BufferRecommendationService
                 'debt_name' => $debt->name,
                 'interest_rate' => round($debt->interest_rate, 1),
                 'current_buffer_months' => round($bufferStatus['layer2']['months'], 1),
-                'target_buffer_months' => self::RECOMMENDED_BUFFER_MONTHS,
+                'target_buffer_months' => $this->settingsService->getBufferTargetMonths(),
             ],
         ];
     }
@@ -300,7 +294,7 @@ class BufferRecommendationService
      */
     private function getGoodBufferWithDebtRecommendation(Debt $debt, array $bufferStatus): array
     {
-        $excessBuffer = $bufferStatus['layer2']['amount'] - ($bufferStatus['monthly_essential'] * self::RECOMMENDED_BUFFER_MONTHS);
+        $excessBuffer = $bufferStatus['layer2']['amount'] - ($bufferStatus['monthly_essential'] * $this->settingsService->getBufferTargetMonths());
         $suggestedAmount = max(1000, min($excessBuffer, $debt->balance));
         $impact = $this->calculateDebtImpact($debt, $suggestedAmount);
 
@@ -335,7 +329,7 @@ class BufferRecommendationService
     private function getBalancedRecommendation(Debt $debt, array $bufferStatus): array
     {
         $bufferMonths = $bufferStatus['layer2']['months'];
-        $bufferShortfall = ($bufferStatus['monthly_essential'] * self::RECOMMENDED_BUFFER_MONTHS) - $bufferStatus['layer2']['amount'];
+        $bufferShortfall = ($bufferStatus['monthly_essential'] * $this->settingsService->getBufferTargetMonths()) - $bufferStatus['layer2']['amount'];
 
         return [
             'priority' => 2,
@@ -434,7 +428,7 @@ class BufferRecommendationService
         }
 
         // If we have high-interest debt (saves significant money), recommend that
-        if ($bestDebtOption !== null && $highestInterestSaved > 1000) {
+        if ($bestDebtOption !== null && $highestInterestSaved > $this->settingsService->getMinInterestSavings()) {
             return [
                 'target' => 'debt',
                 'reason' => 'buffer.recommendation_high_interest',
@@ -442,7 +436,7 @@ class BufferRecommendationService
         }
 
         // If buffer is below recommended, prioritize buffer
-        if ($bufferMonths < self::RECOMMENDED_BUFFER_MONTHS) {
+        if ($bufferMonths < $this->settingsService->getBufferTargetMonths()) {
             return [
                 'target' => 'buffer',
                 'reason' => 'buffer.recommendation_build_buffer',
@@ -564,7 +558,7 @@ class BufferRecommendationService
             }
         }
 
-        if (! $debtAppearsInSchedule && $startingBalance !== null) {
+        if (!$debtAppearsInSchedule && $startingBalance !== null) {
             return 0;
         }
 
@@ -579,7 +573,7 @@ class BufferRecommendationService
         if ($bufferMonths < self::MINIMUM_ACCEPTABLE_BUFFER_MONTHS) {
             return 'low';
         }
-        if ($bufferMonths < self::RECOMMENDED_BUFFER_MONTHS) {
+        if ($bufferMonths < $this->settingsService->getBufferTargetMonths()) {
             return 'medium';
         }
 
@@ -599,7 +593,7 @@ class BufferRecommendationService
         return match ($bufferLevel) {
             'low' => min(1000, $layer2Amount * 0.1), // 10% of buffer or 1000, whichever is less
             'medium' => min(2000, $layer2Amount * 0.2), // 20% of buffer or 2000, whichever is less
-            'high' => min(5000, $layer2Amount - ($monthlyEssential * self::RECOMMENDED_BUFFER_MONTHS)), // Excess above recommended
+            'high' => min(5000, $layer2Amount - ($monthlyEssential * $this->settingsService->getBufferTargetMonths())), // Excess above recommended
             default => 1000,
         };
     }

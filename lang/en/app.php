@@ -534,6 +534,37 @@ return [
     'validation_forbrukslan_months_min' => 'Consumer loan payoff period must be at least 1 month.',
     'validation_forbrukslan_months_max' => 'Consumer loan payoff period cannot exceed 120 months.',
 
+    // Recommendation Settings
+    'recommendation_settings' => 'Recommendation Settings',
+    'recommendation_settings_description' => 'Configure thresholds for buffer and debt recommendations',
+    'recommendation_thresholds_info_title' => 'About These Settings',
+    'recommendation_thresholds_info_description' => 'These thresholds control when the app recommends building your buffer vs paying down debt. Adjust them to match your financial strategy and risk tolerance.',
+    'high_interest_threshold' => 'High Interest Threshold',
+    'high_interest_threshold_help' => 'Interest rates at or above this percentage are considered high priority for debt payoff',
+    'low_interest_threshold' => 'Low Interest Threshold',
+    'low_interest_threshold_help' => 'Interest rates below this percentage suggest building buffer first',
+    'buffer_target_months' => 'Emergency Buffer Target',
+    'buffer_target_months_help' => 'Recommended months of expenses to keep in emergency savings',
+    'min_interest_savings' => 'Minimum Interest Savings Threshold',
+    'min_interest_savings_help' => 'Only recommend debt payment if it saves at least this much in interest',
+
+    // Recommendation Settings Validation
+    'validation_high_interest_required' => 'High interest threshold is required.',
+    'validation_high_interest_numeric' => 'High interest threshold must be a number.',
+    'validation_high_interest_min' => 'High interest threshold must be at least 0%.',
+    'validation_high_interest_max' => 'High interest threshold cannot exceed 100%.',
+    'validation_low_interest_required' => 'Low interest threshold is required.',
+    'validation_low_interest_numeric' => 'Low interest threshold must be a number.',
+    'validation_low_interest_min' => 'Low interest threshold must be at least 0%.',
+    'validation_low_interest_max' => 'Low interest threshold cannot exceed 100%.',
+    'validation_buffer_target_required' => 'Emergency buffer target is required.',
+    'validation_buffer_target_integer' => 'Emergency buffer target must be a whole number.',
+    'validation_buffer_target_min' => 'Emergency buffer target must be at least 1 month.',
+    'validation_buffer_target_max' => 'Emergency buffer target cannot exceed 12 months.',
+    'validation_min_interest_savings_required' => 'Minimum interest savings threshold is required.',
+    'validation_min_interest_savings_numeric' => 'Minimum interest savings threshold must be a number.',
+    'validation_min_interest_savings_min' => 'Minimum interest savings threshold cannot be negative.',
+
     // YNAB Settings
     'ynab_settings' => 'YNAB Integration',
     'ynab_settings_description' => 'Connect your YNAB account to automatically sync debt data',

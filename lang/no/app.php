@@ -534,6 +534,37 @@ return [
     'validation_forbrukslan_months_min' => 'Nedbetalingstid for forbrukslån må være minst 1 måned.',
     'validation_forbrukslan_months_max' => 'Nedbetalingstid for forbrukslån kan ikke være mer enn 120 måneder.',
 
+    // Recommendation Settings
+    'recommendation_settings' => 'Anbefalingsinnstillinger',
+    'recommendation_settings_description' => 'Konfigurer terskler for buffer- og gjeldsanbefalinger',
+    'recommendation_thresholds_info_title' => 'Om disse innstillingene',
+    'recommendation_thresholds_info_description' => 'Disse tersklene styrer når appen anbefaler å bygge buffer vs nedbetale gjeld. Juster dem for å matche din økonomiske strategi og risikotoleranse.',
+    'high_interest_threshold' => 'Høy rentegrense',
+    'high_interest_threshold_help' => 'Renter på eller over denne prosenten regnes som høy prioritet for gjeldsnedbetaling',
+    'low_interest_threshold' => 'Lav rentegrense',
+    'low_interest_threshold_help' => 'Renter under denne prosenten antyder at buffer bør bygges først',
+    'buffer_target_months' => 'Nødbuffer-mål',
+    'buffer_target_months_help' => 'Anbefalt antall måneder med utgifter å holde i nødsparing',
+    'min_interest_savings' => 'Minimum rentesparing-terskel',
+    'min_interest_savings_help' => 'Anbefal kun gjeldsnedbetaling hvis det sparer minst så mye i renter',
+
+    // Recommendation Settings Validation
+    'validation_high_interest_required' => 'Høy rentegrense er påkrevd.',
+    'validation_high_interest_numeric' => 'Høy rentegrense må være et tall.',
+    'validation_high_interest_min' => 'Høy rentegrense må være minst 0%.',
+    'validation_high_interest_max' => 'Høy rentegrense kan ikke overstige 100%.',
+    'validation_low_interest_required' => 'Lav rentegrense er påkrevd.',
+    'validation_low_interest_numeric' => 'Lav rentegrense må være et tall.',
+    'validation_low_interest_min' => 'Lav rentegrense må være minst 0%.',
+    'validation_low_interest_max' => 'Lav rentegrense kan ikke overstige 100%.',
+    'validation_buffer_target_required' => 'Nødbuffer-mål er påkrevd.',
+    'validation_buffer_target_integer' => 'Nødbuffer-mål må være et helt tall.',
+    'validation_buffer_target_min' => 'Nødbuffer-mål må være minst 1 måned.',
+    'validation_buffer_target_max' => 'Nødbuffer-mål kan ikke overstige 12 måneder.',
+    'validation_min_interest_savings_required' => 'Minimum rentesparing-terskel er påkrevd.',
+    'validation_min_interest_savings_numeric' => 'Minimum rentesparing-terskel må være et tall.',
+    'validation_min_interest_savings_min' => 'Minimum rentesparing-terskel kan ikke være negativ.',
+
     // YNAB Settings
     'ynab_settings' => 'YNAB-integrasjon',
     'ynab_settings_description' => 'Koble til YNAB-kontoen din for automatisk synkronisering av gjeldsdata',
