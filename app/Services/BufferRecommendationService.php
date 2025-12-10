@@ -24,8 +24,7 @@ class BufferRecommendationService
         private readonly AccelerationService $accelerationService,
         private readonly DebtCalculationService $calculationService,
         private readonly SettingsService $settingsService
-    ) {
-    }
+    ) {}
 
     /**
      * Get smart financial recommendations based on buffer status and debt situation.
@@ -35,7 +34,7 @@ class BufferRecommendationService
      */
     public function getRecommendations(array $bufferStatus): array
     {
-        if (!$this->settingsService->isYnabConfigured()) {
+        if (! $this->settingsService->isYnabConfigured()) {
             return [];
         }
 
@@ -199,7 +198,7 @@ class BufferRecommendationService
                     'params' => [
                         'months' => round($bufferMonths, 1),
                     ],
-                ]
+                ],
             ];
         }
 
@@ -218,7 +217,7 @@ class BufferRecommendationService
                     'target_months' => $this->settingsService->getBufferTargetMonths(),
                     'shortfall' => round($shortfall, 2),
                 ],
-            ]
+            ],
         ];
     }
 
@@ -558,7 +557,7 @@ class BufferRecommendationService
             }
         }
 
-        if (!$debtAppearsInSchedule && $startingBalance !== null) {
+        if (! $debtAppearsInSchedule && $startingBalance !== null) {
             return 0;
         }
 

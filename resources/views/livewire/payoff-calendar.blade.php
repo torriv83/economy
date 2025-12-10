@@ -414,10 +414,9 @@
                                             <div
                                                 @if (!$isPaid)
                                                     wire:click="openPaymentModal({{ $debt['debt_id'] }}, @js($debt['name']), {{ $debt['amount'] }}, {{ $debt['month_number'] }}, @js($debt['payment_month']))"
-                                                    class="cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700/50 rounded-lg px-2 py-1 -mx-2 transition-colors"
                                                     title="{{ __('app.tap_to_register_payment') }}"
                                                 @endif
-                                                class="flex items-center justify-between gap-2 {{ $textColor }}"
+                                                class="flex items-center justify-between gap-2 {{ $textColor }} {{ !$isPaid ? 'cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700/50 rounded-lg px-2 py-1 -mx-2 transition-colors' : '' }}"
                                             >
                                                 <div class="flex items-center gap-2 min-w-0">
                                                     @if ($isPaid)

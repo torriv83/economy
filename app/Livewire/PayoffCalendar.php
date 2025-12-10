@@ -479,6 +479,10 @@ class PayoffCalendar extends Component
         $currentMonthDate = Carbon::create($this->currentYear, $this->currentMonth, 1);
         $isPastMonth = $currentMonthDate->lt(now()->startOfMonth());
 
+        // Calculate historical offset for correct month_number
+        $historicalPayments = $this->paymentService->getHistoricalPayments();
+        $historicalMonthOffset = count($historicalPayments);
+
         // Group actual payments by debt_id and payment_month for quick lookup
         $actualPaymentsByDebtAndMonth = $actualPayments->groupBy(function ($payment) {
             return $payment->debt_id.'_'.$payment->payment_month;
@@ -589,7 +593,7 @@ class PayoffCalendar extends Component
                             'isPriority' => $payment['isPriority'],
                             'isPaid' => false,
                             'isOverdue' => $isOverdue,
-                            'month_number' => $monthData['month'] ?? 1,
+                            'month_number' => ($monthData['month'] ?? 1) + $historicalMonthOffset,
                             'payment_month' => $currentMonthKey,
                         ];
                     }

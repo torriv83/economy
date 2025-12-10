@@ -25,6 +25,16 @@ beforeEach(function () {
         ->with('payoff_settings.strategy', 'string')
         ->andReturn('avalanche');
 
+    // Mock threshold and target methods used by BufferRecommendationService
+    $this->settingsService->shouldReceive('getHighInterestThreshold')
+        ->andReturn(20.0);
+    $this->settingsService->shouldReceive('getLowInterestThreshold')
+        ->andReturn(5.0);
+    $this->settingsService->shouldReceive('getBufferTargetMonths')
+        ->andReturn(2);
+    $this->settingsService->shouldReceive('getMinInterestSavings')
+        ->andReturn(100.0);
+
     // Create real instances of services that need database interaction
     $this->calculationService = app(DebtCalculationService::class);
     $this->accelerationService = Mockery::mock(AccelerationService::class);

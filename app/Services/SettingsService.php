@@ -164,7 +164,7 @@ class SettingsService
      */
     public function isYnabSyncDue(): bool
     {
-        if (!$this->isYnabBackgroundSyncEnabled() || !$this->isYnabConfigured()) {
+        if (! $this->isYnabBackgroundSyncEnabled() || ! $this->isYnabConfigured()) {
             return false;
         }
 
@@ -315,7 +315,7 @@ class SettingsService
      */
     public function get(string $key, string $type = 'string'): mixed
     {
-        $cacheKey = self::CACHE_KEY . '.' . $key;
+        $cacheKey = self::CACHE_KEY.'.'.$key;
 
         $value = Cache::remember(
             $cacheKey,
@@ -363,7 +363,7 @@ class SettingsService
      */
     protected function clearCacheForKey(string $key): void
     {
-        $cacheKey = self::CACHE_KEY . '.' . $key;
+        $cacheKey = self::CACHE_KEY.'.'.$key;
         Cache::forget($cacheKey);
     }
 
