@@ -33,13 +33,7 @@
         },
         "chrome-devtools": {
             "command": "cmd",
-            "args": [
-                "/c",
-                "npx",
-                "-y",
-                "chrome-devtools-mcp@latest",
-                "--headless=true"
-            ]
+            "args": ["/c", "npx", "chrome-devtools-mcp@latest", "--isolated", "--headless", "--acceptInsecureCerts"]
         }
     }
 }

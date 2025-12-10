@@ -4,8 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title ?? __('app.app_name') . ' - Debt Management' }}</title>
+    <meta name="description" content="{{ __('app.app_description', ['default' => 'Track your debts and plan your path to financial freedom']) }}">
+
+    {{-- Favicon --}}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="alternate icon" href="/favicon.ico">
+
+    {{-- PWA --}}
+    <link rel="manifest" href="/build/manifest.webmanifest">
+    <meta name="theme-color" content="#10b981">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
