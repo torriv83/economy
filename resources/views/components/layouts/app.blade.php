@@ -183,20 +183,23 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
+                    @php
+                        $debtsView = request()->query('view', 'overview');
+                    @endphp
                     <div x-show="debtsOpen" x-collapse class="pl-4 space-y-1 mt-1">
-                        <a href="{{ route('debts') }}" wire:navigate.hover @click="mobileMenuOpen = false; Livewire.dispatch('setView', { view: 'overview' })" class="block px-4 py-2 text-sm rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                        <a href="{{ route('debts', ['view' => 'overview']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-4 py-2 text-sm rounded-lg {{ request()->routeIs('debts') && $debtsView === 'overview' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
                             {{ __('app.overview') }}
                         </a>
-                        <a href="{{ route('debts') }}" wire:navigate.hover @click="mobileMenuOpen = false; Livewire.dispatch('setView', { view: 'create' })" class="block px-4 py-2 text-sm rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                        <a href="{{ route('debts', ['view' => 'create']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-4 py-2 text-sm rounded-lg {{ request()->routeIs('debts') && $debtsView === 'create' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
                             {{ __('app.add_debt') }}
                         </a>
-                        <a href="{{ route('debts') }}" wire:navigate.hover @click="mobileMenuOpen = false; Livewire.dispatch('setView', { view: 'progress' })" class="block px-4 py-2 text-sm rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                        <a href="{{ route('debts', ['view' => 'progress']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-4 py-2 text-sm rounded-lg {{ request()->routeIs('debts') && $debtsView === 'progress' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
                             {{ __('app.progress') }}
                         </a>
-                        <a href="{{ route('debts') }}" wire:navigate.hover @click="mobileMenuOpen = false; Livewire.dispatch('setView', { view: 'insights' })" class="block px-4 py-2 text-sm rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                        <a href="{{ route('debts', ['view' => 'insights']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-4 py-2 text-sm rounded-lg {{ request()->routeIs('debts') && $debtsView === 'insights' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
                             {{ __('app.insights') }}
                         </a>
-                        <a href="{{ route('debts') }}" wire:navigate.hover @click="mobileMenuOpen = false; Livewire.dispatch('setView', { view: 'reconciliations' })" class="block px-4 py-2 text-sm rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                        <a href="{{ route('debts', ['view' => 'reconciliations']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-4 py-2 text-sm rounded-lg {{ request()->routeIs('debts') && $debtsView === 'reconciliations' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
                             {{ __('app.reconciliation_history') }}
                         </a>
                     </div>
