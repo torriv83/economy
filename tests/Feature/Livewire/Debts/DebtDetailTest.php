@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Livewire\Debts\DebtDetail;
 use App\Models\Debt;
 use App\Models\Payment;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 
@@ -105,6 +106,7 @@ it('calculates total paid from payments', function () {
 });
 
 it('can be accessed via DebtLayout', function () {
+    $this->actingAs(User::factory()->create());
     $debt = Debt::factory()->create(['name' => 'Accessible Debt']);
 
     $this->get(route('debts', ['view' => 'detail', 'debtId' => $debt->id]))

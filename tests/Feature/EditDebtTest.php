@@ -3,12 +3,14 @@
 use App\Livewire\Debts\DebtLayout;
 use App\Livewire\EditDebt;
 use App\Models\Debt;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
 test('edit debt page renders successfully via DebtLayout', function () {
+    $this->actingAs(User::factory()->create());
     $debt = Debt::factory()->create();
 
     $response = $this->get(route('debts', ['view' => 'edit', 'debtId' => $debt->id]));
@@ -135,6 +137,7 @@ test('validates minimum payment is numeric and meets requirements', function () 
 });
 
 test('edit button uses SPA mode with parent editDebt call', function () {
+    $this->actingAs(User::factory()->create());
     $debt = Debt::factory()->create(['name' => 'Test Debt']);
 
     $response = $this->get('/');

@@ -2,12 +2,15 @@
 
 use App\Livewire\SelfLoans\Overview;
 use App\Models\SelfLoan\SelfLoan;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
 test('self loan overview component renders successfully', function () {
+    $this->actingAs(User::factory()->create());
+
     $response = $this->get('/self-loans');
 
     $response->assertSuccessful();

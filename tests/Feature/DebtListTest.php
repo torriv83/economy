@@ -2,6 +2,7 @@
 
 use App\Livewire\DebtList;
 use App\Models\Debt;
+use App\Models\User;
 use App\Services\DebtCacheService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -23,6 +24,8 @@ afterEach(function () {
 });
 
 test('debt list component renders successfully', function () {
+    $this->actingAs(User::factory()->create());
+
     $response = $this->get('/');
 
     $response->assertSuccessful();
