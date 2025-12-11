@@ -131,7 +131,7 @@ class DebtList extends Component
 
     public function getTotalDebtProperty(): float
     {
-        return Debt::sum('balance');
+        return (float) Debt::sum('balance');
     }
 
     public function getDebtsCountProperty(): int
