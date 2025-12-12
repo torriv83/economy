@@ -196,6 +196,9 @@
                         <a href="{{ route('debts', ['view' => 'progress']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-4 py-2 text-sm rounded-lg {{ request()->routeIs('debts') && $debtsView === 'progress' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
                             {{ __('app.progress') }}
                         </a>
+                        <a href="{{ route('debts', ['view' => 'recommendations']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-4 py-2 text-sm rounded-lg {{ request()->routeIs('debts') && $debtsView === 'recommendations' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
+                            {{ __('app.recommendations') }}
+                        </a>
                         <a href="{{ route('debts', ['view' => 'insights']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-4 py-2 text-sm rounded-lg {{ request()->routeIs('debts') && $debtsView === 'insights' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
                             {{ __('app.insights') }}
                         </a>

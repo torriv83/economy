@@ -54,6 +54,8 @@ return [
     'import_all' => 'Import All',
     'important' => 'Important:',
     'insights' => 'Insights',
+    'recommendations' => 'Recommendations',
+    'recommendations_description' => 'Smart financial advice based on your buffer and debt situation',
     'if_you_add' => 'If you add',
     'in_app' => 'In app:',
     'in_ynab' => 'In YNAB:',
@@ -444,6 +446,15 @@ return [
     'balance_mismatch' => 'Balance Mismatch',
     'link_to_ynab' => 'Link to YNAB',
     'select_fields_to_update' => 'Select fields to update from YNAB:',
+
+    // Recommendations
+    'ynab_required_for_recommendations' => 'YNAB Required for Recommendations',
+    'ynab_required_for_recommendations_description' => 'Connect to YNAB to get personalized financial recommendations based on your buffer and debt.',
+    'configure_ynab' => 'Configure YNAB',
+    'loading_recommendations' => 'Loading recommendations...',
+    'loading_recommendations_description' => 'Fetching data from YNAB to generate recommendations.',
+    'no_recommendations_available' => 'No Recommendations Available',
+    'no_recommendations_available_description' => 'Everything looks good! We have no specific recommendations for you right now.',
 
     // Keyboard Shortcuts
     'keyboard_shortcuts' => 'Keyboard Shortcuts',

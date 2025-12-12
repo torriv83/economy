@@ -54,6 +54,8 @@ return [
     'import_all' => 'Importer alle',
     'important' => 'Viktig:',
     'insights' => 'Innsikt',
+    'recommendations' => 'Anbefalinger',
+    'recommendations_description' => 'Smarte økonomiske råd basert på buffer- og gjeldssituasjonen din',
     'if_you_add' => 'Hvis du legger til',
     'in_app' => 'I appen:',
     'in_ynab' => 'I YNAB:',
@@ -444,6 +446,15 @@ return [
     'balance_mismatch' => 'Saldoavvik',
     'link_to_ynab' => 'Koble til YNAB',
     'select_fields_to_update' => 'Velg felt som skal oppdateres fra YNAB:',
+
+    // Recommendations
+    'ynab_required_for_recommendations' => 'YNAB kreves for anbefalinger',
+    'ynab_required_for_recommendations_description' => 'Koble til YNAB for å få personlige økonomiske anbefalinger basert på bufferen og gjelden din.',
+    'configure_ynab' => 'Konfigurer YNAB',
+    'loading_recommendations' => 'Laster anbefalinger...',
+    'loading_recommendations_description' => 'Henter data fra YNAB for å generere anbefalinger.',
+    'no_recommendations_available' => 'Ingen anbefalinger tilgjengelig',
+    'no_recommendations_available_description' => 'Alt ser bra ut! Vi har ingen spesifikke anbefalinger for deg akkurat nå.',
 
     // Keyboard Shortcuts
     'keyboard_shortcuts' => 'Tastatursnarveier',
