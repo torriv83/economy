@@ -15,6 +15,8 @@ class DebtObserver
     public function created(Debt $debt): void
     {
         DebtCacheService::clearCache();
+        ProgressCacheService::clearCache();
+        \App\Services\DebtCalculationService::clearAllCalculationCaches();
     }
 
     /**
@@ -23,6 +25,8 @@ class DebtObserver
     public function updated(Debt $debt): void
     {
         DebtCacheService::clearCache();
+        ProgressCacheService::clearCache();
+        \App\Services\DebtCalculationService::clearAllCalculationCaches();
     }
 
     /**
@@ -31,6 +35,8 @@ class DebtObserver
     public function deleted(Debt $debt): void
     {
         DebtCacheService::clearCache();
+        ProgressCacheService::clearCache();
+        \App\Services\DebtCalculationService::clearAllCalculationCaches();
     }
 
     /**
@@ -39,6 +45,8 @@ class DebtObserver
     public function restored(Debt $debt): void
     {
         DebtCacheService::clearCache();
+        ProgressCacheService::clearCache();
+        \App\Services\DebtCalculationService::clearAllCalculationCaches();
     }
 
     /**
@@ -47,5 +55,7 @@ class DebtObserver
     public function forceDeleted(Debt $debt): void
     {
         DebtCacheService::clearCache();
+        ProgressCacheService::clearCache();
+        \App\Services\DebtCalculationService::clearAllCalculationCaches();
     }
 }

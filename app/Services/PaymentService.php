@@ -398,6 +398,10 @@ class PaymentService
         // Update last verified timestamp
         $debt->update(['last_verified_at' => $reconciliationDate]);
 
+        // Clear relevant caches
+        \App\Services\DebtCacheService::clearCache();
+        \App\Services\ProgressCacheService::clearCache();
+
         return $payment;
     }
 
