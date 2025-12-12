@@ -85,16 +85,16 @@ class PaymentService
             // Balance = original_balance - SUM(principal_paid)
             // Note: Using MAX instead of GREATEST for SQLite compatibility
             DB::update('
-                UPDATE debts
-                SET balance = MAX(
-                    original_balance - COALESCE(
-                        (SELECT SUM(principal_paid) FROM payments WHERE debt_id = ?),
+                UPDATE `debts`
+                SET `balance` = GREATEST(
+                    `original_balance` - COALESCE(
+                        (SELECT SUM(`principal_paid`) FROM `payments` WHERE `debt_id` = ?),
                         0
                     ),
                     0
                 ),
-                updated_at = ?
-                WHERE id = ?
+                `updated_at` = ?
+                WHERE `id` = ?
             ', [$debtId, $now, $debtId]);
         }
     }
