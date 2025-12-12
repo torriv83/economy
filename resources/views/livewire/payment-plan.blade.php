@@ -483,7 +483,7 @@
                                                     type="number"
                                                     wire:model.live.debounce.500ms="editingPayments.{{ $key }}"
                                                     wire:blur="updatePaymentAmount({{ $month['month'] }}, {{ $debtId }})"
-                                                    class="w-24 px-2 py-1 text-sm text-right {{ $isReconciliation ? 'bg-amber-50 dark:bg-amber-900/10 border-amber-300 dark:border-amber-700' : 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300 dark:border-emerald-700' }} border rounded-lg focus:ring-2 focus:ring-emerald-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                    class="w-24 px-2 py-1 text-sm text-right {{ $isReconciliation ? 'bg-amber-50 dark:bg-amber-900/10 border-amber-300 dark:border-amber-700' : 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300 dark:border-emerald-700' }} border rounded-lg focus:ring-2 focus:ring-emerald-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none dark:text-white"
                                                 >
                                                 <span class="text-xs text-slate-500">kr</span>
                                             </div>
