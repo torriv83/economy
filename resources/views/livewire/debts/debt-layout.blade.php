@@ -14,6 +14,12 @@
             icon='<path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />'
         />
         <x-sidebar-item
+            action="showPay"
+            :label="__('app.pay_debt')"
+            :active="$currentView === 'pay'"
+            icon='<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />'
+        />
+        <x-sidebar-item
             action="showProgress"
             :label="__('app.progress')"
             :active="$currentView === 'progress'"
@@ -49,6 +55,7 @@
                 'edit' => __('app.edit_debt'),
                 'insights' => __('app.interest_insights'),
                 'reconciliations' => __('app.reconciliation_history'),
+                'pay' => __('app.pay_debt'),
                 default => ''
             }"
             :subtitle="match($currentView) {
@@ -58,6 +65,7 @@
                 'edit' => __('app.edit_debt_description'),
                 'insights' => __('app.interest_insights_description'),
                 'reconciliations' => __('app.reconciliation_history_description'),
+                'pay' => __('app.pay_debt_description'),
                 default => ''
             }"
         />
@@ -81,6 +89,8 @@
             <livewire:interest-insights />
         @elseif ($currentView === 'reconciliations')
             <livewire:reconciliation-history />
+        @elseif ($currentView === 'pay')
+            <livewire:pay-debt />
         @endif
     </div>
 </div>
