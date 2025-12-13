@@ -33,10 +33,11 @@ Route::middleware('auth')->group(function () {
 });
 
 // Public routes
-Route::get('/locale/{locale}', function (string $locale) {
-    if (in_array($locale, ['en', 'no'])) {
-        session(['locale' => $locale]);
-    }
+Route::get('/locale/{locale}', function (
+    string $locale, 
+    \App\Services\SettingsService $settings
+) {
+    $settings->setLocale($locale);
 
     return redirect()->back();
 })->name('locale.switch');

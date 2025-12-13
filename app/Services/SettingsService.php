@@ -368,6 +368,29 @@ class SettingsService
     }
 
     /**
+     * Get the application locale setting.
+     */
+    public function getLocale(): string
+    {
+        return $this->get('user.locale', 'string') 
+            ?? session('locale') 
+            ?? config('app.locale');
+    }
+
+    /**
+     * Set the application locale setting.
+     */
+    public function setLocale(string $locale): void
+    {
+        if (!in_array($locale, ['en', 'no'])) {
+            return;
+        }
+        
+        $this->set('user.locale', $locale, 'string', 'user');
+        session(['locale' => $locale]);
+    }
+
+    /**
      * Clear all settings cache.
      */
     public function clearCache(): void
