@@ -6,6 +6,7 @@ namespace App\Observers;
 
 use App\Models\Debt;
 use App\Services\DebtCacheService;
+use App\Services\ProgressCacheService;
 
 class DebtObserver
 {

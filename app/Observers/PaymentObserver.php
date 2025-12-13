@@ -6,6 +6,7 @@ namespace App\Observers;
 
 use App\Models\Payment;
 use App\Services\DebtCacheService;
+use App\Services\ProgressCacheService;
 
 class PaymentObserver
 {
