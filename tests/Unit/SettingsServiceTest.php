@@ -298,6 +298,72 @@ describe('debt settings', function () {
     });
 });
 
+describe('locale settings', function () {
+    it('returns database value when set', function () {
+        $this->service->set('user.locale', 'no', 'string', 'user');
+
+        expect($this->service->getLocale())->toBe('no');
+    });
+
+    it('returns session value as fallback when database value not set', function () {
+        session(['locale' => 'no']);
+
+        expect($this->service->getLocale())->toBe('no');
+    });
+
+    it('returns config value as final fallback', function () {
+        config(['app.locale' => 'en']);
+
+        expect($this->service->getLocale())->toBe('en');
+    });
+
+    it('prioritizes database over session', function () {
+        $this->service->set('user.locale', 'en', 'string', 'user');
+        session(['locale' => 'no']);
+
+        expect($this->service->getLocale())->toBe('en');
+    });
+
+    it('can set locale to english', function () {
+        $this->service->setLocale('en');
+
+        expect($this->service->getLocale())->toBe('en');
+        expect(session('locale'))->toBe('en');
+
+        $setting = Setting::where('key', 'user.locale')->first();
+        expect($setting)->not->toBeNull()
+            ->and($setting->value)->toBe('en')
+            ->and($setting->type)->toBe('string')
+            ->and($setting->group)->toBe('user');
+    });
+
+    it('can set locale to norwegian', function () {
+        $this->service->setLocale('no');
+
+        expect($this->service->getLocale())->toBe('no');
+        expect(session('locale'))->toBe('no');
+
+        $setting = Setting::where('key', 'user.locale')->first();
+        expect($setting)->not->toBeNull()
+            ->and($setting->value)->toBe('no');
+    });
+
+    it('ignores invalid locale values', function () {
+        config(['app.locale' => 'en']);
+        $this->service->setLocale('invalid');
+
+        expect(Setting::where('key', 'user.locale')->exists())->toBeFalse();
+        expect(session('locale'))->toBeNull();
+    });
+
+    it('ignores empty locale values', function () {
+        config(['app.locale' => 'en']);
+        $this->service->setLocale('');
+
+        expect(Setting::where('key', 'user.locale')->exists())->toBeFalse();
+    });
+});
+
 describe('generic get and set', function () {
     it('can get and set string values', function () {
         $this->service->set('test.string', 'hello world', 'string', 'test');

@@ -23,10 +23,7 @@ class YnabSyncService
             'minimum_payment' => $ynabDebt['minimum_payment'] ?? 0,
             'ynab_account_id' => $ynabDebt['ynab_id'],
         ]);
-        
-        \App\Services\DebtCacheService::clearCache();
-        \App\Services\ProgressCacheService::clearCache();
-        
+
         return $debt;
     }
 
@@ -45,10 +42,6 @@ class YnabSyncService
         foreach ($ynabDebts as $ynabDebt) {
             $this->importDebt($ynabDebt);
         }
-
-        // Clear caches after bulk import
-        \App\Services\DebtCacheService::clearCache();
-        \App\Services\ProgressCacheService::clearCache();
 
         return count($ynabDebts);
     }
@@ -80,9 +73,5 @@ class YnabSyncService
         }
 
         $debt->update($updateData);
-        
-        // Clear caches after linking/updating
-        \App\Services\DebtCacheService::clearCache();
-        \App\Services\ProgressCacheService::clearCache();
     }
 }

@@ -83,19 +83,23 @@ class PaymentService
         foreach ($debtIds as $debtId) {
             // Update balance using principal_paid (which accounts for interest)
             // Balance = original_balance - SUM(principal_paid)
-            // Note: Using MAX instead of GREATEST for SQLite compatibility
+            // Note: Using CASE WHEN instead of GREATEST for SQLite/MySQL compatibility
             DB::update('
                 UPDATE `debts`
-                SET `balance` = GREATEST(
-                    `original_balance` - COALESCE(
+                SET `balance` = CASE
+                    WHEN `original_balance` - COALESCE(
                         (SELECT SUM(`principal_paid`) FROM `payments` WHERE `debt_id` = ?),
                         0
-                    ),
-                    0
-                ),
+                    ) > 0
+                    THEN `original_balance` - COALESCE(
+                        (SELECT SUM(`principal_paid`) FROM `payments` WHERE `debt_id` = ?),
+                        0
+                    )
+                    ELSE 0
+                END,
                 `updated_at` = ?
                 WHERE `id` = ?
-            ', [$debtId, $now, $debtId]);
+            ', [$debtId, $debtId, $now, $debtId]);
         }
     }
 
