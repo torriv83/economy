@@ -56,6 +56,10 @@ class Overview extends Component
 
     public bool $showEditModal = false;
 
+    public bool $showTransactionsModal = false;
+
+    public int $transactionsLoanId = 0;
+
     public bool $isLoading = true;
 
     public function loadData(): void
@@ -153,6 +157,55 @@ class Overview extends Component
         $loan = SelfLoan::find($this->selectedLoanId);
 
         return $loan !== null ? $loan->current_balance : 0;
+    }
+
+    /**
+     * @return array{loan: array{id: int, name: string}|null, transactions: array<int, array{id: int, amount: float, notes: string|null, paid_at: string, is_withdrawal: bool}>}
+     */
+    public function getTransactionsDataProperty(): array
+    {
+        if ($this->transactionsLoanId === 0) {
+            return ['loan' => null, 'transactions' => []];
+        }
+
+        $loan = SelfLoan::find($this->transactionsLoanId);
+
+        if ($loan === null) {
+            return ['loan' => null, 'transactions' => []];
+        }
+
+        $transactions = $loan->repayments()
+            ->orderBy('paid_at', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(fn (SelfLoanRepayment $repayment) => [
+                'id' => $repayment->id,
+                'amount' => abs($repayment->amount),
+                'notes' => $repayment->notes,
+                'paid_at' => $repayment->paid_at->locale('nb')->translatedFormat('d. M Y'),
+                'is_withdrawal' => $repayment->amount < 0,
+            ])
+            ->toArray();
+
+        return [
+            'loan' => [
+                'id' => $loan->id,
+                'name' => $loan->name,
+            ],
+            'transactions' => $transactions,
+        ];
+    }
+
+    public function openTransactionsModal(int $loanId): void
+    {
+        $this->transactionsLoanId = $loanId;
+        $this->showTransactionsModal = true;
+    }
+
+    public function closeTransactionsModal(): void
+    {
+        $this->showTransactionsModal = false;
+        $this->transactionsLoanId = 0;
     }
 
     public function openRepaymentModal(int $loanId): void

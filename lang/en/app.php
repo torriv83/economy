@@ -401,6 +401,10 @@ return [
     'repayment_updated' => 'Repayment updated.',
     'repayment_deleted' => 'Repayment deleted.',
     'repayment_date' => 'Repayment Date',
+    'transactions' => 'Transactions',
+    'withdrawal' => 'Withdrawal',
+    'repayment_label' => 'Repayment',
+    'no_transactions_yet' => 'No transactions yet',
 
     // Self-Loan Validation & Messages
     'up_to_amount' => 'Up to kr :amount',

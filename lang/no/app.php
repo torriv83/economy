@@ -401,6 +401,10 @@ return [
     'repayment_updated' => 'Nedbetaling oppdatert.',
     'repayment_deleted' => 'Nedbetaling slettet.',
     'repayment_date' => 'Nedbetalingsdato',
+    'transactions' => 'Transaksjoner',
+    'withdrawal' => 'Uttak',
+    'repayment_label' => 'Nedbetaling',
+    'no_transactions_yet' => 'Ingen transaksjoner ennå',
 
     // Self-Loan Validation & Messages
     'up_to_amount' => 'Opp til kr :amount',

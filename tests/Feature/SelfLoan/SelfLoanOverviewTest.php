@@ -41,7 +41,7 @@ test('displays active self-loans correctly', function () {
 test('displays empty state when no active loans exist', function () {
     Livewire::test(Overview::class)
         ->call('loadData')
-        ->assertSee(__('app.no_active_self_loans'));
+        ->assertSee(__('app.no_self_loans_message'));
 });
 
 test('calculates total borrowed correctly', function () {
@@ -312,4 +312,80 @@ test('can close edit modal without saving', function () {
 
     $loan->refresh();
     expect($loan->name)->toBe('Original Name');
+});
+
+test('can open transactions modal for a loan', function () {
+    $loan = SelfLoan::factory()->create([
+        'name' => 'Test Loan',
+    ]);
+
+    Livewire::test(Overview::class)
+        ->call('openTransactionsModal', $loan->id)
+        ->assertSet('showTransactionsModal', true)
+        ->assertSet('transactionsLoanId', $loan->id);
+});
+
+test('can close transactions modal', function () {
+    $loan = SelfLoan::factory()->create();
+
+    Livewire::test(Overview::class)
+        ->call('openTransactionsModal', $loan->id)
+        ->call('closeTransactionsModal')
+        ->assertSet('showTransactionsModal', false)
+        ->assertSet('transactionsLoanId', 0);
+});
+
+test('transactions modal shows loan transactions', function () {
+    $loan = SelfLoan::factory()->create([
+        'name' => 'Test Loan',
+        'original_amount' => 10000,
+        'current_balance' => 8000,
+    ]);
+
+    $loan->repayments()->create([
+        'amount' => 2000,
+        'notes' => 'First payment',
+        'paid_at' => now()->subDays(5),
+    ]);
+
+    $component = Livewire::test(Overview::class)
+        ->call('openTransactionsModal', $loan->id);
+
+    $transactionsData = $component->get('transactionsData');
+
+    expect($transactionsData['loan']['name'])->toBe('Test Loan');
+    expect($transactionsData['transactions'])->toHaveCount(1);
+    expect($transactionsData['transactions'][0]['amount'])->toBe(2000.0);
+    expect($transactionsData['transactions'][0]['is_withdrawal'])->toBeFalse();
+});
+
+test('transactions modal shows withdrawals correctly', function () {
+    $loan = SelfLoan::factory()->create([
+        'name' => 'Test Loan',
+        'original_amount' => 10000,
+        'current_balance' => 10000,
+    ]);
+
+    $loan->repayments()->create([
+        'amount' => -3000, // Withdrawal is negative
+        'notes' => 'Additional withdrawal',
+        'paid_at' => now(),
+    ]);
+
+    $component = Livewire::test(Overview::class)
+        ->call('openTransactionsModal', $loan->id);
+
+    $transactionsData = $component->get('transactionsData');
+
+    expect($transactionsData['transactions'][0]['amount'])->toBe(3000.0);
+    expect($transactionsData['transactions'][0]['is_withdrawal'])->toBeTrue();
+});
+
+test('transactions modal shows empty state when no transactions', function () {
+    $loan = SelfLoan::factory()->create();
+
+    Livewire::test(Overview::class)
+        ->call('loadData')
+        ->call('openTransactionsModal', $loan->id)
+        ->assertSee(__('app.no_transactions_yet'));
 });

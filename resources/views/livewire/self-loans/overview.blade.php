@@ -74,7 +74,11 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach ($this->selfLoans as $loan)
                 <div wire:key="loan-{{ $loan['id'] }}" class="premium-card rounded-2xl border border-slate-200/50 dark:border-slate-700/50 card-interactive overflow-hidden">
-                    <div class="p-6">
+                    {{-- Clickable area for transactions --}}
+                    <button
+                        wire:click="openTransactionsModal({{ $loan['id'] }})"
+                        class="w-full p-6 pb-0 text-left cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-emerald-500"
+                    >
                         {{-- Loan Name with Edit Icon --}}
                         <div class="mb-4 flex items-start justify-between">
                             <div class="flex-1">
@@ -82,14 +86,16 @@
                                     {{ $loan['name'] }}
                                 </h3>
                             </div>
-                            <button
-                                wire:click="openEditModal({{ $loan['id'] }})"
+                            <span
+                                wire:click.stop="openEditModal({{ $loan['id'] }})"
                                 class="ml-2 p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
-                                title="{{ __('app.edit') }}">
+                                title="{{ __('app.edit') }}"
+                                role="button"
+                                tabindex="0">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                                 </svg>
-                            </button>
+                            </span>
                         </div>
                         @if ($loan['description'])
                             <p class="text-sm text-slate-500 dark:text-slate-400 mt-1 mb-4">
@@ -157,8 +163,10 @@
                                 @endif
                             @endif
                         </div>
+                    </button>
 
-                        {{-- Actions --}}
+                    {{-- Actions --}}
+                    <div class="p-6 pt-0">
                         <div class="grid grid-cols-2 gap-3 pt-4 border-t border-slate-200/50 dark:border-slate-700/50">
                             <button
                                 wire:click="openRepaymentModal({{ $loan['id'] }})"
@@ -401,6 +409,86 @@
                     @endif
                 </div>
             </x-modal.form>
+        </x-modal>
+    @endif
+
+    {{-- Transactions Modal --}}
+    @if ($showTransactionsModal)
+        <x-modal wire:model="showTransactionsModal" max-width="md">
+            <div class="p-6">
+                {{-- Header --}}
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="font-display font-semibold text-lg text-slate-900 dark:text-white">
+                        {{ __('app.transactions') }}
+                        @if ($this->transactionsData['loan'])
+                            <span class="text-slate-500 dark:text-slate-400 font-normal">– {{ $this->transactionsData['loan']['name'] }}</span>
+                        @endif
+                    </h3>
+                    <button
+                        wire:click="closeTransactionsModal"
+                        class="p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                {{-- Transactions List --}}
+                @if (count($this->transactionsData['transactions']) > 0)
+                    <div class="space-y-3 max-h-96 overflow-y-auto">
+                        @foreach ($this->transactionsData['transactions'] as $transaction)
+                            <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                                <div class="flex items-center gap-3">
+                                    {{-- Icon --}}
+                                    @if ($transaction['is_withdrawal'])
+                                        <div class="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center">
+                                            <svg class="w-4 h-4 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19V5M5 12l7-7 7 7" />
+                                            </svg>
+                                        </div>
+                                    @else
+                                        <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                                            <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14M5 12l7 7 7-7" />
+                                            </svg>
+                                        </div>
+                                    @endif
+
+                                    {{-- Details --}}
+                                    <div>
+                                        <p class="text-sm font-medium text-slate-900 dark:text-white">
+                                            {{ $transaction['is_withdrawal'] ? __('app.withdrawal') : __('app.repayment_label') }}
+                                        </p>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400">
+                                            {{ $transaction['paid_at'] }}
+                                            @if ($transaction['notes'])
+                                                <span class="mx-1">·</span>
+                                                <span class="italic">{{ $transaction['notes'] }}</span>
+                                            @endif
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {{-- Amount --}}
+                                <span class="font-medium {{ $transaction['is_withdrawal'] ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400' }}">
+                                    {{ $transaction['is_withdrawal'] ? '+' : '-' }}{{ number_format($transaction['amount'], 0, ',', ' ') }} kr
+                                </span>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center py-8">
+                        <div class="w-12 h-12 mx-auto mb-4 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                        </div>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">
+                            {{ __('app.no_transactions_yet') }}
+                        </p>
+                    </div>
+                @endif
+            </div>
         </x-modal>
     @endif
 
