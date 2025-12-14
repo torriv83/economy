@@ -35,6 +35,8 @@ class PayoffCalendar extends Component
 
     protected YnabTransactionService $ynabTransactionService;
 
+    protected YnabService $ynabService;
+
     // Modal state
     public bool $showPaymentModal = false;
 
@@ -69,11 +71,12 @@ class PayoffCalendar extends Component
 
     public bool $ynabEnabled = false;
 
-    public function boot(DebtCalculationService $service, PaymentService $paymentService, YnabTransactionService $ynabTransactionService): void
+    public function boot(DebtCalculationService $service, PaymentService $paymentService, YnabTransactionService $ynabTransactionService, YnabService $ynabService): void
     {
         $this->calculationService = $service;
         $this->paymentService = $paymentService;
         $this->ynabTransactionService = $ynabTransactionService;
+        $this->ynabService = $ynabService;
     }
 
     public function mount(float $extraPayment = 2000, string $strategy = 'avalanche'): void
@@ -220,17 +223,12 @@ class PayoffCalendar extends Component
         $this->ynabComparisonResults = [];
         $this->ynabDebtSummary = [];
 
-        $token = config('services.ynab.token');
-        $budgetId = config('services.ynab.budget_id');
-
-        if (! $token || ! $budgetId) {
+        if (! $this->ynabService->isConfigured()) {
             $this->ynabError = __('app.ynab_not_configured');
             $this->isCheckingYnab = false;
 
             return;
         }
-
-        $ynabService = new YnabService($token, $budgetId);
 
         // Get debts with YNAB account ID
         $debtsWithYnab = $this->getDebts()->filter(fn ($debt) => $debt->ynab_account_id !== null);
@@ -261,7 +259,7 @@ class PayoffCalendar extends Component
                     : $monthStart;
 
                 // Fetch transactions from YNAB
-                $ynabTransactions = $ynabService->fetchPaymentTransactions(
+                $ynabTransactions = $this->ynabService->fetchPaymentTransactions(
                     $debt->ynab_account_id,
                     $sinceDate
                 );

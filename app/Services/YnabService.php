@@ -16,6 +16,14 @@ class YnabService
     ) {}
 
     /**
+     * Check if YNAB is properly configured with token and budget ID.
+     */
+    public function isConfigured(): bool
+    {
+        return $this->token !== '' && $this->budgetId !== '';
+    }
+
+    /**
      * Get the cache TTL in seconds.
      * Uses the user's background sync interval setting so cached data
      * remains valid until the next sync. Falls back to 30 minutes.
