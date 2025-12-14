@@ -99,7 +99,7 @@ class Overview extends Component
 
     public function getTotalBorrowedProperty(): float
     {
-        return SelfLoan::where('current_balance', '>', 0)->sum('current_balance');
+        return (float) SelfLoan::where('current_balance', '>', 0)->sum('current_balance');
     }
 
     public function getLoansCountProperty(): int
