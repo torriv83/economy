@@ -63,6 +63,9 @@
                     <a href="{{ route('debts') }}" wire:navigate.hover class="nav-link px-4 py-2 rounded-lg font-medium text-sm transition-colors {{ request()->routeIs('home', 'debts', 'debts.edit') ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800' }} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2">
                         {{ __('app.debts') }}
                     </a>
+                    <a href="{{ route('insights') }}" wire:navigate.hover class="nav-link px-4 py-2 rounded-lg font-medium text-sm transition-colors {{ request()->routeIs('insights') ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800' }} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2">
+                        {{ __('app.insights_menu') }}
+                    </a>
                     <a href="{{ route('payoff') }}" wire:navigate.hover class="nav-link px-4 py-2 rounded-lg font-medium text-sm transition-colors {{ request()->routeIs('payoff') ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800' }} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2">
                         {{ __('app.payoff_planning') }}
                     </a>

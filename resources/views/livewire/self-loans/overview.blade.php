@@ -200,22 +200,22 @@
         </div>
 
     @else
-        {{-- Empty State --}}
-        <div class="premium-card rounded-2xl border border-slate-200/50 dark:border-slate-700/50 p-12 text-center">
-            <div class="max-w-sm mx-auto">
-                <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 dark:from-emerald-500/20 dark:to-cyan-500/20 flex items-center justify-center mx-auto mb-6">
-                    <svg class="w-10 h-10 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
-                    </svg>
-                </div>
-                <h2 class="font-display font-semibold text-xl text-slate-900 dark:text-white mb-2">
-                    {{ __('app.no_active_self_loans') }}
-                </h2>
-                <p class="text-slate-500 dark:text-slate-400 mb-6">
-                    {{ __('app.no_self_loans_message') }}
-                </p>
+        {{-- Empty State - Create Self-Loan Placeholder --}}
+        <button
+            wire:click="$parent.showCreate"
+            class="w-full premium-card rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-all p-12 flex flex-col items-center justify-center group focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 cursor-pointer">
+            <div class="w-20 h-20 bg-slate-100 dark:bg-slate-800 group-hover:bg-gradient-to-br group-hover:from-emerald-500/10 group-hover:to-cyan-500/10 dark:group-hover:from-emerald-500/20 dark:group-hover:to-cyan-500/20 rounded-2xl flex items-center justify-center mb-6 transition-colors">
+                <svg class="w-10 h-10 text-slate-400 dark:text-slate-500 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
             </div>
-        </div>
+            <h2 class="font-display font-semibold text-xl text-slate-600 dark:text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors mb-2">
+                {{ __('app.create_self_loan') }}
+            </h2>
+            <p class="text-slate-500 dark:text-slate-500 text-center">
+                {{ __('app.no_self_loans_message') }}
+            </p>
+        </button>
     @endif
     @endif
 

@@ -6,7 +6,7 @@ use App\Models\Debt;
 use App\Services\DebtCacheService;
 use App\Services\DebtCalculationService;
 use App\Services\PaymentService;
-use App\Services\SettingsService;
+use App\Services\PayoffSettingsService;
 use Livewire\Component;
 
 /**
@@ -27,18 +27,18 @@ class PayDebt extends Component
 
     protected DebtCacheService $debtCacheService;
 
-    protected SettingsService $settingsService;
+    protected PayoffSettingsService $payoffSettingsService;
 
     public function boot(
         DebtCalculationService $calculationService,
         PaymentService $paymentService,
         DebtCacheService $debtCacheService,
-        SettingsService $settingsService
+        PayoffSettingsService $payoffSettingsService
     ): void {
         $this->calculationService = $calculationService;
         $this->paymentService = $paymentService;
         $this->debtCacheService = $debtCacheService;
-        $this->settingsService = $settingsService;
+        $this->payoffSettingsService = $payoffSettingsService;
     }
 
     /**
@@ -54,8 +54,8 @@ class PayDebt extends Component
             return null;
         }
 
-        $extraPayment = $this->settingsService->get('extra_payment', '2000') ?? '2000';
-        $strategy = $this->settingsService->get('strategy', 'avalanche') ?? 'avalanche';
+        $extraPayment = $this->payoffSettingsService->getExtraPayment();
+        $strategy = $this->payoffSettingsService->getStrategy();
 
         $historicalPayments = $this->paymentService->getHistoricalPayments();
         $highestHistoricalMonth = count($historicalPayments);
