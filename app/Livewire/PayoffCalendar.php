@@ -331,10 +331,10 @@ class PayoffCalendar extends Component
         session()->flash('ynab_import_success', __('app.ynab_payment_imported'));
     }
 
-    public function updatePaymentFromYnab(string $ynabTransactionId, int $localPaymentId, float $ynabAmount): void
+    public function updatePaymentFromYnab(string $ynabTransactionId, int $localPaymentId, float $ynabAmount, string $ynabDate): void
     {
         $payment = Payment::findOrFail($localPaymentId);
-        $this->ynabTransactionService->updatePaymentFromTransaction($payment, $ynabTransactionId, $ynabAmount);
+        $this->ynabTransactionService->updatePaymentFromTransaction($payment, $ynabTransactionId, $ynabAmount, $ynabDate);
 
         // Refresh the comparison results
         $this->checkYnabTransactions();

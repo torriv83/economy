@@ -426,6 +426,7 @@ return [
     'import_transaction' => 'Import',
     'link_transaction' => 'Link and update',
     'update_amount' => 'Update amount',
+    'sync_from_ynab' => 'Sync from YNAB',
     'ynab_payment_imported' => 'Payment imported from YNAB',
     'ynab_payment_updated' => 'Payment updated with YNAB data',
     'ynab_payment_linked' => 'Payment linked to YNAB transaction',

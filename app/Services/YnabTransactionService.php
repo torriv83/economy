@@ -61,12 +61,18 @@ class YnabTransactionService
     /**
      * Update a local payment with YNAB transaction data.
      */
-    public function updatePaymentFromTransaction(Payment $payment, string $ynabTransactionId, float $amount): void
+    public function updatePaymentFromTransaction(Payment $payment, string $ynabTransactionId, float $amount, ?string $date = null): void
     {
-        $payment->update([
+        $data = [
             'actual_amount' => $amount,
             'ynab_transaction_id' => $ynabTransactionId,
-        ]);
+        ];
+
+        if ($date !== null) {
+            $data['payment_date'] = Carbon::parse($date);
+        }
+
+        $payment->update($data);
     }
 
     /**
@@ -98,9 +104,9 @@ class YnabTransactionService
             // Check if already linked by ynab_transaction_id
             if ($localPayments->has($ynabTx['id'])) {
                 $localPayment = $localPayments->get($ynabTx['id']);
-                $status = abs($localPayment->actual_amount - $ynabTx['amount']) < 0.01
-                    ? 'matched'
-                    : 'mismatch';
+                $amountMatches = abs($localPayment->actual_amount - $ynabTx['amount']) < 0.01;
+                $dateMatches = $localPayment->payment_date->format('Y-m-d') === $ynabTx['date'];
+                $status = ($amountMatches && $dateMatches) ? 'matched' : 'mismatch';
 
                 $comparedTransactions[] = [
                     'id' => $ynabTx['id'],
@@ -111,6 +117,7 @@ class YnabTransactionService
                     'status' => $status,
                     'local_payment_id' => $localPayment->id,
                     'local_amount' => $localPayment->actual_amount,
+                    'local_date' => $localPayment->payment_date->format('Y-m-d'),
                 ];
             } else {
                 // Try fuzzy matching by month and similar amount

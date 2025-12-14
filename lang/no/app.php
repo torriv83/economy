@@ -426,6 +426,7 @@ return [
     'import_transaction' => 'Importer',
     'link_transaction' => 'Koble og oppdater',
     'update_amount' => 'Oppdater beløp',
+    'sync_from_ynab' => 'Synkroniser fra YNAB',
     'ynab_payment_imported' => 'Betaling importert fra YNAB',
     'ynab_payment_updated' => 'Betaling oppdatert med YNAB-data',
     'ynab_payment_linked' => 'Betaling koblet til YNAB-transaksjon',

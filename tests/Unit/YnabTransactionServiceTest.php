@@ -75,16 +75,37 @@ test('can update payment with YNAB transaction data', function () {
         ->and($payment->ynab_transaction_id)->toBe('ynab-tx-003');
 });
 
+test('can update payment with YNAB transaction data including date', function () {
+    $debt = Debt::factory()->create();
+    $payment = Payment::factory()->create([
+        'debt_id' => $debt->id,
+        'actual_amount' => 400.00,
+        'payment_date' => '2024-06-10',
+        'ynab_transaction_id' => null,
+    ]);
+
+    $service = new YnabTransactionService;
+
+    $service->updatePaymentFromTransaction($payment, 'ynab-tx-004', 450.00, '2024-06-15');
+
+    $payment->refresh();
+
+    expect($payment->actual_amount)->toBe(450.00)
+        ->and($payment->ynab_transaction_id)->toBe('ynab-tx-004')
+        ->and($payment->payment_date->format('Y-m-d'))->toBe('2024-06-15');
+});
+
 test('compare transactions identifies matched transactions', function () {
     $debt = Debt::factory()->create([
         'name' => 'Test Debt',
         'ynab_account_id' => 'ynab-123',
     ]);
 
-    // Create a local payment linked to YNAB
+    // Create a local payment linked to YNAB with matching date
     Payment::factory()->create([
         'debt_id' => $debt->id,
         'actual_amount' => 500.00,
+        'payment_date' => '2024-06-15',
         'ynab_transaction_id' => 'ynab-tx-matched',
         'is_reconciliation_adjustment' => false,
     ]);
@@ -162,6 +183,40 @@ test('compare transactions identifies mismatched amounts', function () {
         ->and($results[0]['status'])->toBe('mismatch')
         ->and($results[0]['local_amount'])->toBe(500.00)
         ->and($results[0]['amount'])->toBe(550.00);
+});
+
+test('compare transactions identifies mismatched dates', function () {
+    $debt = Debt::factory()->create([
+        'name' => 'Test Debt',
+        'ynab_account_id' => 'ynab-123',
+    ]);
+
+    // Create a local payment with same amount but different date
+    Payment::factory()->create([
+        'debt_id' => $debt->id,
+        'actual_amount' => 500.00,
+        'payment_date' => '2024-06-13',
+        'ynab_transaction_id' => 'ynab-tx-date-mismatch',
+        'is_reconciliation_adjustment' => false,
+    ]);
+
+    $ynabTransactions = collect([
+        [
+            'id' => 'ynab-tx-date-mismatch',
+            'date' => '2024-06-15', // Different date, same amount
+            'amount' => 500.00,
+            'payee_name' => 'Bank',
+            'memo' => null,
+        ],
+    ]);
+
+    $service = new YnabTransactionService;
+    $results = $service->compareTransactionsForDebt($debt, $ynabTransactions);
+
+    expect($results)->toHaveCount(1)
+        ->and($results[0]['status'])->toBe('mismatch')
+        ->and($results[0]['local_amount'])->toBe(500.00)
+        ->and($results[0]['local_date'])->toBe('2024-06-13');
 });
 
 test('import transaction calculates month_number as integer', function () {

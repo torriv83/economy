@@ -728,7 +728,7 @@
                                                     @if (($tx['status'] === 'mismatch' || $tx['status'] === 'linkable') && $tx['local_amount'])
                                                         <div class="text-sm text-slate-600 dark:text-slate-400 mt-1">
                                                             {{ __('app.local_amount') }}: {{ number_format($tx['local_amount'], 0, ',', ' ') }} kr
-                                                            @if ($tx['status'] === 'linkable' && isset($tx['local_date']))
+                                                            @if (isset($tx['local_date']))
                                                                 ({{ \Carbon\Carbon::parse($tx['local_date'])->format('d.m.Y') }})
                                                             @endif
                                                         </div>
@@ -758,11 +758,11 @@
                                                         </button>
                                                     @elseif ($tx['status'] === 'mismatch')
                                                         <button
-                                                            wire:click="updatePaymentFromYnab('{{ $tx['id'] }}', {{ $tx['local_payment_id'] }}, {{ $tx['amount'] }})"
+                                                            wire:click="updatePaymentFromYnab('{{ $tx['id'] }}', {{ $tx['local_payment_id'] }}, {{ $tx['amount'] }}, '{{ $tx['date'] }}')"
                                                             type="button"
                                                             class="cursor-pointer px-3 py-1.5 text-sm font-medium rounded-lg bg-cyan-500 text-white hover:bg-cyan-600 transition-colors"
                                                         >
-                                                            {{ __('app.update_amount') }}
+                                                            {{ __('app.sync_from_ynab') }}
                                                         </button>
                                                     @endif
                                                 </div>
