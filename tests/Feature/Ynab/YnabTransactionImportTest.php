@@ -11,10 +11,13 @@ use Illuminate\Support\Facades\Route;
 use Livewire\Livewire;
 
 beforeEach(function () {
-    config([
-        'services.ynab.token' => 'test-token',
-        'services.ynab.budget_id' => 'test-budget-id',
-    ]);
+    // Bind YnabService with test credentials
+    app()->singleton(YnabService::class, function () {
+        return new YnabService(
+            token: 'test-token',
+            budgetId: 'test-budget-id'
+        );
+    });
 
     // Define route needed by the calendar view
     Route::get('/debts/create', fn () => '')->name('debts.create');
@@ -53,14 +56,11 @@ describe('YNAB modal', function () {
     });
 
     test('shows error when YNAB not configured', function () {
-        config(['services.ynab.token' => null]);
-        config(['services.ynab.budget_id' => null]);
-
-        // Re-bind the service with empty strings to avoid constructor error
+        // Re-bind the service with empty credentials
         app()->singleton(YnabService::class, function () {
             return new YnabService(
-                token: config('services.ynab.token') ?? '',
-                budgetId: config('services.ynab.budget_id') ?? ''
+                token: '',
+                budgetId: ''
             );
         });
 
@@ -268,6 +268,63 @@ describe('YNAB transaction comparison', function () {
 
         expect($results[0]['ynab_transactions'])->toHaveCount(1);
         expect($results[0]['ynab_transactions'][0]['id'])->toBe('tx-active');
+    });
+
+    test('filters out YNAB balance adjustments and reconciliation entries', function () {
+        $debt = Debt::factory()->create([
+            'ynab_account_id' => 'ynab-account-123',
+        ]);
+
+        Http::fake([
+            'api.ynab.com/v1/budgets/test-budget-id/accounts/ynab-account-123/transactions*' => Http::response([
+                'data' => [
+                    'transactions' => [
+                        [
+                            'id' => 'tx-payment',
+                            'date' => '2024-11-15',
+                            'amount' => 2500000,
+                            'payee_name' => 'Bank Payment',
+                            'memo' => 'Monthly payment',
+                            'deleted' => false,
+                        ],
+                        [
+                            'id' => 'tx-balance-adj',
+                            'date' => '2024-12-01',
+                            'amount' => 586290,
+                            'payee_name' => 'Balance Adjustment',
+                            'memo' => 'Entered automatically by YNAB',
+                            'deleted' => false,
+                        ],
+                        [
+                            'id' => 'tx-reconciliation',
+                            'date' => '2024-12-01',
+                            'amount' => 99000,
+                            'payee_name' => 'Reconciliation Balance Adjustment',
+                            'memo' => null,
+                            'deleted' => false,
+                        ],
+                        [
+                            'id' => 'tx-starting',
+                            'date' => '2024-01-01',
+                            'amount' => 5000000,
+                            'payee_name' => 'Starting Balance',
+                            'memo' => null,
+                            'deleted' => false,
+                        ],
+                    ],
+                ],
+            ]),
+        ]);
+
+        $component = Livewire::test(PayoffCalendar::class)
+            ->call('openYnabModal');
+
+        $results = $component->get('ynabComparisonResults');
+
+        // Should only have the real payment, not the adjustments
+        expect($results[0]['ynab_transactions'])->toHaveCount(1);
+        expect($results[0]['ynab_transactions'][0]['id'])->toBe('tx-payment');
+        expect($results[0]['ynab_transactions'][0]['payee_name'])->toBe('Bank Payment');
     });
 });
 

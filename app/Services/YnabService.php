@@ -204,11 +204,25 @@ class YnabService
         $transactions = collect($transactionsData);
 
         // Filter to only include payments (positive amounts reduce debt in YNAB)
-        // and exclude deleted transactions
+        // and exclude deleted transactions and YNAB system adjustments
         /** @var \Illuminate\Support\Collection<int, array<string, mixed>> */
         return $transactions
             ->filter(function ($transaction) {
-                return $transaction['amount'] > 0 && ! $transaction['deleted'];
+                if ($transaction['amount'] <= 0 || $transaction['deleted']) {
+                    return false;
+                }
+
+                // Exclude YNAB balance adjustments and starting balances
+                $payeeName = $transaction['payee_name'] ?? '';
+                $excludePatterns = ['Balance Adjustment', 'Starting Balance', 'Reconciliation'];
+
+                foreach ($excludePatterns as $pattern) {
+                    if (stripos($payeeName, $pattern) !== false) {
+                        return false;
+                    }
+                }
+
+                return true;
             })
             ->map(function ($transaction) {
                 return $this->mapYnabTransaction($transaction);
