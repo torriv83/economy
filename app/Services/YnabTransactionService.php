@@ -124,9 +124,9 @@ class YnabTransactionService
                 $potentialMatch = $this->findFuzzyMatch($localPaymentsByMonth, $transactionMonth, $ynabTx['amount']);
 
                 if ($potentialMatch) {
-                    $status = abs($potentialMatch->actual_amount - $ynabTx['amount']) < 0.01
-                        ? 'matched'
-                        : 'mismatch';
+                    $amountMatches = abs($potentialMatch->actual_amount - $ynabTx['amount']) < 0.01;
+                    $dateMatches = $potentialMatch->payment_date->format('Y-m-d') === $ynabTx['date'];
+                    $status = ($amountMatches && $dateMatches) ? 'matched' : 'mismatch';
 
                     $comparedTransactions[] = [
                         'id' => $ynabTx['id'],
@@ -137,6 +137,7 @@ class YnabTransactionService
                         'status' => $status,
                         'local_payment_id' => $potentialMatch->id,
                         'local_amount' => $potentialMatch->actual_amount,
+                        'local_date' => $potentialMatch->payment_date->format('Y-m-d'),
                     ];
                 } else {
                     // Check if there's any payment in the same month (different amount)

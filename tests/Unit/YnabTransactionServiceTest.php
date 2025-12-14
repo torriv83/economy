@@ -302,6 +302,39 @@ test('fuzzy matching finds unlinked payments in same month', function () {
     $results = $service->compareTransactionsForDebt($debt, $ynabTransactions);
 
     expect($results)->toHaveCount(1)
+        ->and($results[0]['status'])->toBe('mismatch') // Different dates: 2024-06-10 vs 2024-06-15
+        ->and($results[0]['local_payment_id'])->not->toBeNull()
+        ->and($results[0]['local_date'])->toBe('2024-06-10');
+});
+
+it('fuzzy matching returns matched when amount and date both match', function () {
+    $debt = Debt::factory()->create([
+        'ynab_account_id' => 'test-account',
+    ]);
+
+    Payment::factory()->create([
+        'debt_id' => $debt->id,
+        'actual_amount' => 500.00,
+        'payment_date' => '2024-06-15',
+        'ynab_transaction_id' => null,
+        'is_reconciliation_adjustment' => false,
+    ]);
+
+    $ynabTransactions = collect([
+        [
+            'id' => 'ynab-tx-exact',
+            'date' => '2024-06-15',
+            'amount' => 500.00,
+            'payee_name' => 'Bank',
+            'memo' => null,
+        ],
+    ]);
+
+    $service = new YnabTransactionService;
+    $results = $service->compareTransactionsForDebt($debt, $ynabTransactions);
+
+    expect($results)->toHaveCount(1)
         ->and($results[0]['status'])->toBe('matched')
-        ->and($results[0]['local_payment_id'])->not->toBeNull();
+        ->and($results[0]['local_payment_id'])->not->toBeNull()
+        ->and($results[0]['local_date'])->toBe('2024-06-15');
 });
