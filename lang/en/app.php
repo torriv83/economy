@@ -421,7 +421,7 @@ return [
     'ynab_transactions_for' => 'YNAB transactions for :name',
     'transaction_matched' => 'Matched',
     'transaction_missing' => 'Not registered',
-    'transaction_mismatch' => 'Amount mismatch',
+    'transaction_mismatch' => 'Amount/date mismatch',
     'transaction_linkable' => 'Can be linked',
     'import_transaction' => 'Import',
     'link_transaction' => 'Link and update',

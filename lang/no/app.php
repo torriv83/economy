@@ -421,7 +421,7 @@ return [
     'ynab_transactions_for' => 'YNAB-transaksjoner for :name',
     'transaction_matched' => 'Registrert',
     'transaction_missing' => 'Ikke registrert',
-    'transaction_mismatch' => 'Avvik i beløp',
+    'transaction_mismatch' => 'Avvik i beløp/dato',
     'transaction_linkable' => 'Kan kobles',
     'import_transaction' => 'Importer',
     'link_transaction' => 'Koble og oppdater',
