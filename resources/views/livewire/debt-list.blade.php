@@ -1,4 +1,4 @@
-<div x-data="{
+<div wire:init="loadData" x-data="{
     order: @js(collect($this->debts)->pluck('id')->toArray()),
     updatePosition(item, position) {
         const itemId = parseInt(item);
@@ -12,6 +12,35 @@
         $wire.updateOrder(this.order);
     }
 }">
+    @if ($isLoading)
+        {{-- Skeleton Loader --}}
+        <div class="animate-pulse space-y-6">
+            {{-- Header skeleton --}}
+            <div class="flex items-center justify-between mb-8">
+                <div class="space-y-2">
+                    <div class="h-8 w-48 bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
+                    <div class="h-4 w-64 bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
+                </div>
+                <div class="flex gap-3">
+                    <div class="h-10 w-32 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                    <div class="h-10 w-32 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                </div>
+            </div>
+
+            {{-- Stats cards skeleton --}}
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+                <div class="h-32 bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
+                <div class="h-32 bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
+            </div>
+
+            {{-- Debt cards skeleton --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div class="h-72 bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
+                <div class="h-72 bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
+                <div class="h-72 bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
+            </div>
+        </div>
+    @else
     {{-- Page Header with Actions --}}
     <x-page-header :title="__('app.debts_overview')" :subtitle="__('app.debts_overview_description')">
         <x-slot:actions>
@@ -773,5 +802,6 @@
                 <livewire:reconciliation-history :debt-id="$viewingReconciliationHistoryForDebtId" :key="'history-'.$viewingReconciliationHistoryForDebtId" />
             </x-modal.body>
         </x-modal>
+    @endif
     @endif
 </div>

@@ -37,6 +37,7 @@ test('displays mock debts correctly', function () {
     Debt::factory()->create(['name' => 'Billån', 'type' => 'forbrukslån', 'balance' => 75000, 'interest_rate' => 5.0, 'minimum_payment' => 1500]);
 
     Livewire::test(DebtList::class)
+        ->call('loadData')
         ->assertSee('325 000')
         ->assertSee('Kredittkort')
         ->assertSee('50 000')
@@ -52,6 +53,7 @@ test('displays debt details correctly', function () {
     Debt::factory()->create(['name' => 'Billån', 'type' => 'forbrukslån', 'balance' => 75000, 'interest_rate' => 5.0, 'minimum_payment' => 1500]);
 
     Livewire::test(DebtList::class)
+        ->call('loadData')
         ->assertSee('8,5%')
         ->assertSee('2,5%')
         ->assertSee('5,0%')
@@ -65,6 +67,7 @@ test('can delete a debt', function () {
     $billaan = Debt::factory()->create(['name' => 'Billån', 'type' => 'forbrukslån', 'balance' => 75000, 'interest_rate' => 5.0, 'minimum_payment' => 1500]);
 
     Livewire::test(DebtList::class)
+        ->call('loadData')
         ->assertSee('Billån')
         ->call('confirmDelete', $billaan->id, 'Billån')
         ->call('executeDelete')
@@ -78,7 +81,8 @@ test('shows correct debts count with pluralization', function () {
     Debt::factory()->create(['name' => 'Studielån', 'type' => 'forbrukslån', 'balance' => 200000, 'interest_rate' => 2.5, 'minimum_payment' => 3500]);
     Debt::factory()->create(['name' => 'Billån', 'type' => 'forbrukslån', 'balance' => 75000, 'interest_rate' => 5.0, 'minimum_payment' => 1500]);
 
-    $component = Livewire::test(DebtList::class);
+    $component = Livewire::test(DebtList::class)
+        ->call('loadData');
 
     expect($component->get('debtsCount'))->toBe(3);
     $component->assertSee('debt');
@@ -97,6 +101,7 @@ test('calculates total debt correctly', function () {
 
 test('shows empty state when no debts exist', function () {
     Livewire::test(DebtList::class)
+        ->call('loadData')
         ->assertSee(__('app.no_debts'))
         ->assertSee(__('app.add_first_debt'))
         ->assertDontSee(__('app.total_debt'));

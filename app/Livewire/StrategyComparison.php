@@ -18,11 +18,18 @@ class StrategyComparison extends Component
 {
     public float $extraPayment = 2000;
 
+    public bool $isLoading = true;
+
     protected DebtCalculationService $calculationService;
 
     public function boot(DebtCalculationService $service): void
     {
         $this->calculationService = $service;
+    }
+
+    public function loadData(): void
+    {
+        $this->isLoading = false;
     }
 
     /**

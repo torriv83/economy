@@ -1,4 +1,11 @@
-<div>
+<div wire:init="loadData">
+    @if ($isLoading)
+        {{-- Skeleton Loading State --}}
+        <div class="animate-pulse space-y-6">
+            <div class="h-12 bg-slate-200 dark:bg-slate-700 rounded-xl w-1/4"></div>
+            <div class="h-96 bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
+        </div>
+    @else
     {{-- Success Message --}}
     @if (session('payment_recorded'))
         <div class="mb-6 premium-card rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-200 px-4 py-3 flex items-center gap-2">
@@ -783,5 +790,6 @@
                 </x-modal.button-secondary>
             </x-modal.footer>
         </x-modal>
+    @endif
     @endif
 </div>

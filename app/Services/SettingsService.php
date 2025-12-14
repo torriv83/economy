@@ -25,7 +25,7 @@ class SettingsService
 
     private const CACHE_KEY = 'app_settings';
 
-    private const CACHE_TTL_HOURS = 1;
+    private const CACHE_TTL_HOURS = 24;
 
     /**
      * Check if YNAB integration is enabled.
@@ -100,13 +100,14 @@ class SettingsService
     }
 
     /**
-     * Clear all YNAB credentials.
+     * Clear all YNAB credentials and server knowledge.
      */
     public function clearYnabCredentials(): void
     {
-        Setting::whereIn('key', ['ynab.token', 'ynab.budget_id'])->delete();
+        Setting::whereIn('key', ['ynab.token', 'ynab.budget_id', 'ynab.server_knowledge'])->delete();
         $this->clearCacheForKey('ynab.token');
         $this->clearCacheForKey('ynab.budget_id');
+        $this->clearCacheForKey('ynab.server_knowledge');
     }
 
     /**
@@ -178,6 +179,31 @@ class SettingsService
         $nextSyncAt = (new \DateTimeImmutable)->setTimestamp($lastSync->getTimestamp() + ($intervalMinutes * 60));
 
         return new \DateTimeImmutable >= $nextSyncAt;
+    }
+
+    /**
+     * Get the YNAB server knowledge for delta sync.
+     */
+    public function getYnabServerKnowledge(): ?int
+    {
+        return $this->get('ynab.server_knowledge', 'integer');
+    }
+
+    /**
+     * Set the YNAB server knowledge for delta sync.
+     */
+    public function setYnabServerKnowledge(int $knowledge): void
+    {
+        $this->set('ynab.server_knowledge', $knowledge, 'integer', 'ynab');
+    }
+
+    /**
+     * Clear the YNAB server knowledge (used when disconnecting).
+     */
+    public function clearYnabServerKnowledge(): void
+    {
+        Setting::where('key', 'ynab.server_knowledge')->delete();
+        $this->clearCacheForKey('ynab.server_knowledge');
     }
 
     /**
@@ -372,8 +398,8 @@ class SettingsService
      */
     public function getLocale(): string
     {
-        return $this->get('user.locale', 'string') 
-            ?? session('locale') 
+        return $this->get('user.locale', 'string')
+            ?? session('locale')
             ?? config('app.locale');
     }
 
@@ -382,10 +408,10 @@ class SettingsService
      */
     public function setLocale(string $locale): void
     {
-        if (!in_array($locale, ['en', 'no'])) {
+        if (! in_array($locale, ['en', 'no'])) {
             return;
         }
-        
+
         $this->set('user.locale', $locale, 'string', 'user');
         session(['locale' => $locale]);
     }

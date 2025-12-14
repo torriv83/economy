@@ -14,6 +14,8 @@ use Livewire\Component;
  */
 class PaymentPlan extends Component
 {
+    public bool $isLoading = true;
+
     public float $extraPayment;
 
     public string $strategy;
@@ -49,6 +51,11 @@ class PaymentPlan extends Component
     {
         $this->extraPayment = $extraPayment;
         $this->strategy = $strategy;
+    }
+
+    public function loadData(): void
+    {
+        $this->isLoading = false;
     }
 
     /**

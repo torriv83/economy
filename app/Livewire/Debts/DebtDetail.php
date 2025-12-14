@@ -18,6 +18,8 @@ class DebtDetail extends Component
 
     public bool $embedded = false;
 
+    public bool $isLoading = true;
+
     public ?float $whatIfAmount = 500.0;
 
     public string $whatIfType = 'monthly'; // 'monthly' or 'one_time'
@@ -239,6 +241,11 @@ class DebtDetail extends Component
             'forbrukslån' => 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
             default => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
         };
+    }
+
+    public function loadData(): void
+    {
+        $this->isLoading = false;
     }
 
     public function render(): View

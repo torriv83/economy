@@ -1,5 +1,67 @@
-<div>
-    @if (!$this->isYnabConfigured)
+<div wire:init="loadData">
+    @if ($isLoading)
+        {{-- Loading Skeleton --}}
+        <div class="animate-pulse space-y-6">
+            {{-- Security buffer card skeleton --}}
+            <div class="premium-card rounded-2xl border border-slate-200/50 dark:border-slate-700/50 p-6">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                    <div class="flex-1">
+                        <div class="h-5 w-32 bg-slate-200 dark:bg-slate-700 rounded mb-1"></div>
+                        <div class="h-4 w-48 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                    </div>
+                    <div class="h-6 w-16 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+                </div>
+                <div class="space-y-6">
+                    {{-- Layer 1 --}}
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="h-4 w-36 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                            <div class="h-4 w-20 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                        </div>
+                        <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+                    </div>
+                    {{-- Layer 2 --}}
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="h-4 w-36 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                            <div class="h-4 w-20 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                        </div>
+                        <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+                    </div>
+                    {{-- Total --}}
+                    <div class="pt-4 border-t border-slate-200/50 dark:border-slate-700/50">
+                        <div class="flex items-center justify-between">
+                            <div class="h-4 w-24 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                            <div class="h-6 w-28 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Recommendations card skeleton --}}
+            <div class="premium-card rounded-2xl border border-slate-200/50 dark:border-slate-700/50 p-6">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                    <div class="flex-1">
+                        <div class="h-5 w-28 bg-slate-200 dark:bg-slate-700 rounded mb-1"></div>
+                        <div class="h-4 w-56 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    @for ($i = 0; $i < 2; $i++)
+                        <div class="flex items-start gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <div class="w-10 h-10 bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
+                            <div class="flex-1">
+                                <div class="h-4 w-40 bg-slate-200 dark:bg-slate-700 rounded mb-2"></div>
+                                <div class="h-4 w-full bg-slate-200 dark:bg-slate-700 rounded"></div>
+                            </div>
+                        </div>
+                    @endfor
+                </div>
+            </div>
+        </div>
+    @elseif (!$this->isYnabConfigured)
         {{-- YNAB Not Configured State --}}
         <div class="premium-card rounded-2xl border border-slate-200/50 dark:border-slate-700/50 p-12 text-center">
             <div class="max-w-sm mx-auto">

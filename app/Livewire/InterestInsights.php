@@ -13,6 +13,8 @@ use Livewire\Component;
 
 class InterestInsights extends Component
 {
+    public bool $isLoading = true;
+
     public string $period = 'month';
 
     protected InterestInsightsService $insightsService;
@@ -23,6 +25,11 @@ class InterestInsights extends Component
     {
         $this->insightsService = $insightsService;
         $this->settingsService = $settingsService;
+    }
+
+    public function loadData(): void
+    {
+        $this->isLoading = false;
     }
 
     public function setPeriod(string $period): void

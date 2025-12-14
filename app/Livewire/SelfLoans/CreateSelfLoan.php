@@ -16,6 +16,8 @@ use Livewire\Component;
  */
 class CreateSelfLoan extends Component
 {
+    public bool $isLoading = true;
+
     public string $name = '';
 
     public string $description = '';
@@ -27,6 +29,11 @@ class CreateSelfLoan extends Component
     public string $ynabAccountId = '';
 
     public string $ynabCategoryId = '';
+
+    public function loadData(): void
+    {
+        $this->isLoading = false;
+    }
 
     public function getIsYnabConfiguredProperty(): bool
     {

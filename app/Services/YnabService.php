@@ -37,6 +37,44 @@ class YnabService
     }
 
     /**
+     * Check if YNAB data has changed since last sync using server_knowledge.
+     * Returns true if data has changed, false if unchanged.
+     *
+     * @throws \Illuminate\Http\Client\RequestException
+     */
+    public function hasDataChanged(): bool
+    {
+        $settingsService = app(SettingsService::class);
+        $lastKnowledge = $settingsService->getYnabServerKnowledge();
+
+        // Fetch budget with delta parameter if we have previous knowledge
+        $url = "https://api.ynab.com/v1/budgets/{$this->budgetId}";
+        if ($lastKnowledge !== null) {
+            $url .= "?last_knowledge_of_server={$lastKnowledge}";
+        }
+
+        $response = Http::withToken($this->token)
+            ->get($url)
+            ->throw()
+            ->json();
+
+        $newKnowledge = $response['data']['server_knowledge'] ?? null;
+
+        if ($newKnowledge === null) {
+            return true; // Can't determine, assume changed
+        }
+
+        // If this is first sync or knowledge has changed
+        if ($lastKnowledge === null || $newKnowledge !== $lastKnowledge) {
+            $settingsService->setYnabServerKnowledge($newKnowledge);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Clear all cached YNAB data for this budget.
      */
     public function clearCache(): void

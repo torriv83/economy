@@ -56,6 +56,13 @@ class Overview extends Component
 
     public bool $showEditModal = false;
 
+    public bool $isLoading = true;
+
+    public function loadData(): void
+    {
+        $this->isLoading = false;
+    }
+
     public function boot(
         YnabService $ynabService,
         SettingsService $settingsService

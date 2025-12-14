@@ -1,10 +1,43 @@
-<div>
-    @php
-        $hasAnyLoans = count($this->availableLoans) > 0;
-        $hasRepayments = count($this->allRepayments) > 0;
-    @endphp
+<div wire:init="loadData">
+    @if ($isLoading)
+        <div class="animate-pulse space-y-6">
+            {{-- Main Card Skeleton --}}
+            <div class="premium-card rounded-2xl border border-slate-200/50 dark:border-slate-700/50 overflow-hidden">
+                {{-- Header Skeleton --}}
+                <div class="px-6 py-4 border-b border-slate-200/50 dark:border-slate-700/50">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div class="h-6 w-40 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                        <div class="flex items-center gap-3">
+                            <div class="h-4 w-12 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                            <div class="h-10 w-48 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                        </div>
+                    </div>
+                </div>
 
-    @if ($hasAnyLoans)
+                {{-- Repayment List Skeleton --}}
+                <div class="divide-y divide-slate-200/50 dark:divide-slate-700/50">
+                    @for ($i = 0; $i < 5; $i++)
+                        <div class="px-6 py-4">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1 space-y-2">
+                                    <div class="h-5 w-32 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                    <div class="h-4 w-48 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                    <div class="h-3 w-24 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                </div>
+                                <div class="h-6 w-20 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                            </div>
+                        </div>
+                    @endfor
+                </div>
+            </div>
+        </div>
+    @else
+        @php
+            $hasAnyLoans = count($this->availableLoans) > 0;
+            $hasRepayments = count($this->allRepayments) > 0;
+        @endphp
+
+        @if ($hasAnyLoans)
         <div class="premium-card rounded-2xl border border-slate-200/50 dark:border-slate-700/50 overflow-hidden">
             {{-- Header with Filter --}}
             <div class="px-6 py-4 border-b border-slate-200/50 dark:border-slate-700/50">
@@ -123,19 +156,20 @@
         </div>
     @endif
 
-    {{-- Empty State - No loans at all --}}
-    @if (!$hasAnyLoans && count($this->paidOffLoans) === 0)
-        <div class="premium-card rounded-2xl border border-slate-200/50 dark:border-slate-700/50 p-12 text-center">
-            <div class="max-w-sm mx-auto">
-                <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 dark:from-emerald-500/20 dark:to-cyan-500/20 flex items-center justify-center mx-auto mb-6">
-                    <svg class="w-10 h-10 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+        {{-- Empty State - No loans at all --}}
+        @if (!$hasAnyLoans && count($this->paidOffLoans) === 0)
+            <div class="premium-card rounded-2xl border border-slate-200/50 dark:border-slate-700/50 p-12 text-center">
+                <div class="max-w-sm mx-auto">
+                    <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 dark:from-emerald-500/20 dark:to-cyan-500/20 flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-10 h-10 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h2 class="font-display font-semibold text-xl text-slate-900 dark:text-white mb-2">{{ __('app.no_history_yet') }}</h2>
+                    <p class="text-slate-500 dark:text-slate-400">{{ __('app.repayments_will_appear') }}</p>
                 </div>
-                <h2 class="font-display font-semibold text-xl text-slate-900 dark:text-white mb-2">{{ __('app.no_history_yet') }}</h2>
-                <p class="text-slate-500 dark:text-slate-400">{{ __('app.repayments_will_appear') }}</p>
             </div>
-        </div>
+        @endif
     @endif
 
     {{-- Edit Repayment Modal --}}

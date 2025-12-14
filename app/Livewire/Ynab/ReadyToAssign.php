@@ -39,9 +39,14 @@ class ReadyToAssign extends Component
         $this->ynabEnabled = $this->settingsService->isYnabEnabled();
         $this->isConfigured = $this->settingsService->isYnabConfigured();
 
-        if (! $this->ynabEnabled) {
+        if (! $this->ynabEnabled || ! $this->isConfigured) {
             $this->isLoading = false;
+        }
+    }
 
+    public function loadData(): void
+    {
+        if (! $this->ynabEnabled || ! $this->isConfigured) {
             return;
         }
 

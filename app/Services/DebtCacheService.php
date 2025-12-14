@@ -20,7 +20,7 @@ class DebtCacheService
 
     public const CACHE_KEY_WITH_PAYMENTS = 'debts:all_with_payments';
 
-    public const CACHE_TTL_MINUTES = 5;
+    public const CACHE_TTL_MINUTES = 1440; // 24 hours
 
     /**
      * Get all debts with caching.

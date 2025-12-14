@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\DebtList;
 use App\Livewire\Debts\DebtLayout;
 use App\Livewire\EditDebt;
 use App\Models\Debt;
@@ -137,13 +138,12 @@ test('validates minimum payment is numeric and meets requirements', function () 
 });
 
 test('edit button uses SPA mode with parent editDebt call', function () {
-    $this->actingAs(User::factory()->create());
     $debt = Debt::factory()->create(['name' => 'Test Debt']);
 
-    $response = $this->get('/');
-
-    // SPA mode uses wire:click to call $parent.editDebt() instead of link
-    $response->assertSee('$parent.editDebt('.$debt->id.')');
+    // DebtList has wire:init, so we need to call loadData to render the debt cards
+    Livewire::test(DebtList::class)
+        ->call('loadData')
+        ->assertSee('$parent.editDebt('.$debt->id.')');
 });
 
 test('validation blocks save when minimum payment is below calculated minimum for forbrukslån', function () {

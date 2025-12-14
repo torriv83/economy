@@ -34,15 +34,23 @@ class SyncYnabDataJob implements ShouldQueue
         $ynabService = new YnabService($token, $budgetId);
 
         try {
-            // Pre-warm cache by fetching data
-            $ynabService->fetchBudgetSummary();
-            $ynabService->fetchCategories();
-            $ynabService->fetchDebtAccounts();
+            // Check if YNAB data has actually changed using delta sync
+            if ($ynabService->hasDataChanged()) {
+                // Clear old cache since data has changed
+                $ynabService->clearCache();
 
-            // Update last sync timestamp
+                // Pre-warm cache with fresh data
+                $ynabService->fetchBudgetSummary();
+                $ynabService->fetchCategories();
+                $ynabService->fetchDebtAccounts();
+
+                Log::info('YNAB background sync: data updated');
+            } else {
+                Log::info('YNAB background sync: no changes detected');
+            }
+
+            // Update last sync timestamp regardless
             $settingsService->setYnabLastSyncAt(new \DateTimeImmutable);
-
-            Log::info('YNAB background sync completed successfully');
         } catch (\Exception $e) {
             Log::error('YNAB background sync failed: '.$e->getMessage());
         }

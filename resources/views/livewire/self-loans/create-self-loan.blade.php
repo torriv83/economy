@@ -1,19 +1,45 @@
-<div>
-    @if (session('message'))
-        <div class="mb-6 premium-card rounded-xl border border-emerald-200 dark:border-emerald-800/50 px-4 py-3">
-            <div class="flex items-center gap-3">
-                <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                </div>
-                <p class="text-sm font-medium text-emerald-700 dark:text-emerald-300">{{ session('message') }}</p>
+<div wire:init="loadData">
+    @if ($isLoading)
+        <div class="animate-pulse space-y-5 premium-card rounded-2xl border border-slate-200/50 dark:border-slate-700/50 p-6 max-w-2xl">
+            {{-- Name Field Skeleton --}}
+            <div>
+                <div class="h-4 w-20 bg-slate-200 dark:bg-slate-700 rounded mb-2"></div>
+                <div class="h-12 w-full bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+            </div>
+
+            {{-- Description Field Skeleton --}}
+            <div>
+                <div class="h-4 w-32 bg-slate-200 dark:bg-slate-700 rounded mb-2"></div>
+                <div class="h-24 w-full bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+            </div>
+
+            {{-- Amount Field Skeleton --}}
+            <div>
+                <div class="h-4 w-24 bg-slate-200 dark:bg-slate-700 rounded mb-2"></div>
+                <div class="h-12 w-full bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+            </div>
+
+            {{-- Submit Button Skeleton --}}
+            <div class="pt-3">
+                <div class="h-12 w-full bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
             </div>
         </div>
-    @endif
+    @else
+        @if (session('message'))
+            <div class="mb-6 premium-card rounded-xl border border-emerald-200 dark:border-emerald-800/50 px-4 py-3">
+                <div class="flex items-center gap-3">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <p class="text-sm font-medium text-emerald-700 dark:text-emerald-300">{{ session('message') }}</p>
+                </div>
+            </div>
+        @endif
 
-    <div class="premium-card rounded-2xl border border-slate-200/50 dark:border-slate-700/50 p-6 max-w-2xl">
-        <form wire:submit.prevent="createLoan">
+        <div class="premium-card rounded-2xl border border-slate-200/50 dark:border-slate-700/50 p-6 max-w-2xl">
+            <form wire:submit.prevent="createLoan">
             <div class="space-y-5">
                 {{-- Name Field --}}
                 <div>
@@ -141,6 +167,7 @@
                     {{ __('app.create_self_loan') }}
                 </button>
             </div>
-        </form>
-    </div>
+            </form>
+        </div>
+    @endif
 </div>

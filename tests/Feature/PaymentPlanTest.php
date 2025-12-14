@@ -40,6 +40,7 @@ test('displays debt payoff overview', function () {
     Debt::factory()->create(['name' => 'Kredittkort', 'type' => 'kredittkort', 'balance' => 50000, 'original_balance' => 50000, 'interest_rate' => 8.5, 'minimum_payment' => 1500]);
 
     Livewire::test(PaymentPlan::class)
+        ->call('loadData')
         ->assertSee('Debt Payoff Overview')
         ->assertSee('Kredittkort');
 });
@@ -50,5 +51,27 @@ test('displays overall progress', function () {
     Debt::factory()->create(['name' => 'Kredittkort', 'type' => 'kredittkort', 'balance' => 50000, 'original_balance' => 50000, 'interest_rate' => 8.5, 'minimum_payment' => 1500]);
 
     Livewire::test(PaymentPlan::class)
+        ->call('loadData')
+        ->assertSee('Overall Progress');
+});
+
+test('displays skeleton loading state before loadData is called', function () {
+    Debt::factory()->create(['name' => 'Kredittkort', 'type' => 'kredittkort', 'balance' => 50000, 'original_balance' => 50000, 'interest_rate' => 8.5, 'minimum_payment' => 1500]);
+
+    Livewire::test(PaymentPlan::class)
+        ->assertSet('isLoading', true)
+        ->assertSee('animate-pulse');
+});
+
+test('hides skeleton and shows content after loadData is called', function () {
+    app()->setLocale('en');
+
+    Debt::factory()->create(['name' => 'Kredittkort', 'type' => 'kredittkort', 'balance' => 50000, 'original_balance' => 50000, 'interest_rate' => 8.5, 'minimum_payment' => 1500]);
+
+    Livewire::test(PaymentPlan::class)
+        ->assertSet('isLoading', true)
+        ->call('loadData')
+        ->assertSet('isLoading', false)
+        ->assertDontSee('animate-pulse')
         ->assertSee('Overall Progress');
 });

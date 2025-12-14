@@ -11,6 +11,8 @@ use Livewire\Component;
 
 class History extends Component
 {
+    public bool $isLoading = true;
+
     public ?int $selectedLoanId = null;
 
     // Edit modal properties
@@ -30,6 +32,11 @@ class History extends Component
     public ?int $repaymentToDelete = null;
 
     public string $repaymentLoanName = '';
+
+    public function loadData(): void
+    {
+        $this->isLoading = false;
+    }
 
     /**
      * @return array<int, array{id: int, name: string}>

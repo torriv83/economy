@@ -1,5 +1,19 @@
-<div>
-    @if(empty($this->progressData['datasets']))
+<div wire:init="loadData">
+    @if ($isLoading)
+        <div class="animate-pulse space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div class="h-32 bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
+                <div class="h-32 bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
+                <div class="h-32 bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div class="h-32 bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
+                <div class="h-32 bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
+                <div class="h-32 bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
+            </div>
+            <div class="h-80 bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
+        </div>
+    @elseif(empty($this->progressData['datasets']))
         <div class="premium-card rounded-2xl p-12 text-center animate-fade-in-up">
             <div class="mx-auto flex items-center justify-center h-14 w-14 rounded-2xl bg-slate-100 dark:bg-slate-800 mb-4">
                 <svg class="h-7 w-7 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">

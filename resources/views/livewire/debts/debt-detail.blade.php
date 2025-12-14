@@ -1,4 +1,52 @@
-<div class="animate-fade-in-up">
+<div wire:init="loadData" class="animate-fade-in-up">
+    @if ($isLoading)
+        {{-- Loading Skeleton --}}
+        <div class="animate-pulse space-y-6">
+            {{-- Header skeleton --}}
+            <div class="premium-card rounded-2xl p-6">
+                <div class="flex items-start justify-between">
+                    <div class="space-y-2">
+                        <div class="h-7 w-48 bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
+                        <div class="h-4 w-32 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                    </div>
+                    <div class="h-10 w-20 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                </div>
+            </div>
+
+            {{-- Stats grid skeleton --}}
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                @for ($i = 0; $i < 4; $i++)
+                    <div class="premium-card rounded-2xl p-5">
+                        <div class="h-4 w-24 bg-slate-200 dark:bg-slate-700 rounded mb-2"></div>
+                        <div class="h-6 w-20 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                    </div>
+                @endfor
+            </div>
+
+            {{-- What-if calculator skeleton --}}
+            <div class="premium-card rounded-2xl p-6">
+                <div class="h-5 w-40 bg-slate-200 dark:bg-slate-700 rounded mb-2"></div>
+                <div class="h-4 w-64 bg-slate-200 dark:bg-slate-700 rounded mb-5"></div>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <div class="h-12 w-48 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                    <div class="h-12 flex-1 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                </div>
+            </div>
+
+            {{-- Recent payments skeleton --}}
+            <div class="premium-card rounded-2xl p-6">
+                <div class="h-5 w-36 bg-slate-200 dark:bg-slate-700 rounded mb-4"></div>
+                <div class="space-y-3">
+                    @for ($i = 0; $i < 3; $i++)
+                        <div class="py-3 flex items-center justify-between">
+                            <div class="h-4 w-32 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                            <div class="h-4 w-20 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                        </div>
+                    @endfor
+                </div>
+            </div>
+        </div>
+    @else
     {{-- Debt Header --}}
     <div class="premium-card rounded-2xl p-6 mb-6">
         <div class="flex items-start justify-between">
@@ -214,4 +262,5 @@
             </div>
         @endif
     </div>
+    @endif
 </div>

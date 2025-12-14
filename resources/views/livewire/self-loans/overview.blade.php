@@ -1,18 +1,52 @@
-<div>
-    @if (session('message'))
-        <div class="mb-6 premium-card rounded-xl border border-emerald-200 dark:border-emerald-800/50 px-4 py-3">
-            <div class="flex items-center gap-3">
-                <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
+<div wire:init="loadData">
+    @if ($isLoading)
+        <div class="animate-pulse space-y-6">
+            {{-- Summary Card Skeleton --}}
+            <div class="premium-card rounded-2xl border border-slate-200/50 dark:border-slate-700/50 p-6">
+                <div class="flex items-center justify-between">
+                    <div class="space-y-3">
+                        <div class="h-4 w-32 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                        <div class="h-8 w-48 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                        <div class="h-4 w-24 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                    </div>
+                    <div class="w-16 h-16 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
                 </div>
-                <p class="text-sm font-medium text-emerald-700 dark:text-emerald-300">{{ session('message') }}</p>
+            </div>
+
+            {{-- Loan Cards Skeleton Grid --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @for ($i = 0; $i < 3; $i++)
+                    <div class="premium-card rounded-2xl border border-slate-200/50 dark:border-slate-700/50 p-6 space-y-4">
+                        <div class="h-6 w-3/4 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                        <div class="h-4 w-full bg-slate-200 dark:bg-slate-700 rounded"></div>
+                        <div class="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+                        <div class="space-y-2">
+                            <div class="h-4 w-1/2 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                            <div class="h-4 w-2/3 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 pt-4">
+                            <div class="h-10 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                            <div class="h-10 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                        </div>
+                    </div>
+                @endfor
             </div>
         </div>
-    @endif
+    @else
+        @if (session('message'))
+            <div class="mb-6 premium-card rounded-xl border border-emerald-200 dark:border-emerald-800/50 px-4 py-3">
+                <div class="flex items-center gap-3">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <p class="text-sm font-medium text-emerald-700 dark:text-emerald-300">{{ session('message') }}</p>
+                </div>
+            </div>
+        @endif
 
-    @if (count($this->selfLoans) > 0)
+        @if (count($this->selfLoans) > 0)
         {{-- Summary Card --}}
         <div class="mb-8 premium-card rounded-2xl border border-slate-200/50 dark:border-slate-700/50 p-6">
             <div class="flex items-center justify-between">
@@ -182,6 +216,7 @@
                 </p>
             </div>
         </div>
+    @endif
     @endif
 
     {{-- Repayment Modal --}}

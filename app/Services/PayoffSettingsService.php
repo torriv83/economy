@@ -11,7 +11,7 @@ class PayoffSettingsService
 {
     private const CACHE_KEY = 'payoff_settings';
 
-    private const CACHE_TTL_HOURS = 1;
+    private const CACHE_TTL_HOURS = 24;
 
     public function getSettings(): PayoffSetting
     {

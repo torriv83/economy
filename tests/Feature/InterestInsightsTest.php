@@ -15,10 +15,18 @@ beforeEach(function () {
 });
 
 describe('InterestInsights component', function () {
-    it('renders with default month period', function () {
+    it('renders with default month period and loading state', function () {
         Livewire::test(InterestInsights::class)
             ->assertSet('period', 'month')
+            ->assertSet('isLoading', true)
             ->assertStatus(200);
+    });
+
+    it('sets isLoading to false after loadData is called', function () {
+        Livewire::test(InterestInsights::class)
+            ->assertSet('isLoading', true)
+            ->call('loadData')
+            ->assertSet('isLoading', false);
     });
 
     it('can toggle between month and all time period', function () {
@@ -32,6 +40,7 @@ describe('InterestInsights component', function () {
 
     it('shows empty state when no payments exist', function () {
         Livewire::test(InterestInsights::class)
+            ->call('loadData')
             ->assertSee(__('app.no_payments_yet'))
             ->assertSee(__('app.no_payments_yet_description'));
     });
@@ -57,6 +66,7 @@ describe('InterestInsights component', function () {
         ]);
 
         Livewire::test(InterestInsights::class)
+            ->call('loadData')
             ->assertSee(__('app.interest_breakdown'))
             ->assertSee(__('app.principal_paid'))
             ->assertSee(__('app.interest_paid'));
@@ -85,6 +95,7 @@ describe('InterestInsights component', function () {
         ]);
 
         Livewire::test(InterestInsights::class)
+            ->call('loadData')
             ->assertSee(__('app.per_debt_breakdown'))
             ->assertSee('Credit Card');
 
@@ -129,6 +140,7 @@ describe('InterestInsights component', function () {
         ]);
 
         Livewire::test(InterestInsights::class)
+            ->call('loadData')
             ->assertSee(__('app.most_expensive_debt'))
             ->assertSee('High Interest');
 
@@ -156,6 +168,7 @@ describe('InterestInsights component', function () {
         ]);
 
         Livewire::test(InterestInsights::class)
+            ->call('loadData')
             ->assertSee(__('app.extra_payment_optimizer'))
             ->assertSee(__('app.current_extra_payment'))
             ->assertSee(__('app.if_you_add'));
@@ -184,7 +197,8 @@ describe('InterestInsights component', function () {
             'payment_month' => '2024-03',
         ]);
 
-        $component = Livewire::test(InterestInsights::class);
+        $component = Livewire::test(InterestInsights::class)
+            ->call('loadData');
 
         expect($component->get('principalPercentage'))->toBe(80.0);
 
@@ -225,7 +239,8 @@ describe('InterestInsights component', function () {
             'payment_month' => '2024-02',
         ]);
 
-        $component = Livewire::test(InterestInsights::class);
+        $component = Livewire::test(InterestInsights::class)
+            ->call('loadData');
 
         // Month view should only show March payment
         expect($component->get('breakdown')['total_paid'])->toBe(500.0);

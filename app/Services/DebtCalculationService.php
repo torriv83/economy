@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Cache;
 
 class DebtCalculationService
 {
+    private const CACHE_TTL_HOURS = 24;
+
     /**
      * Registered debt ordering strategies.
      *
@@ -404,7 +406,7 @@ class DebtCalculationService
 
         $cacheKey = $this->getPaymentScheduleCacheKey($debts, $extraPayment, $strategy).':'.$actualPaymentMonthOffset;
 
-        return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($debts, $extraPayment, $strategy, $actualPaymentMonthOffset) {
+        return Cache::remember($cacheKey, now()->addHours(self::CACHE_TTL_HOURS), function () use ($debts, $extraPayment, $strategy, $actualPaymentMonthOffset) {
             return $this->calculatePaymentSchedule($debts, $extraPayment, $strategy, $actualPaymentMonthOffset);
         });
     }
@@ -645,7 +647,7 @@ class DebtCalculationService
 
         $cacheKey = $this->getStrategyComparisonCacheKey($debts, $extraPayment);
 
-        return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($debts, $extraPayment) {
+        return Cache::remember($cacheKey, now()->addHours(self::CACHE_TTL_HOURS), function () use ($debts, $extraPayment) {
             return $this->calculateStrategyComparison($debts, $extraPayment);
         });
     }
@@ -712,7 +714,7 @@ class DebtCalculationService
 
         $cacheKey = $this->getMinimumPaymentsCacheKey($debts, 'months');
 
-        return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($debts) {
+        return Cache::remember($cacheKey, now()->addHours(self::CACHE_TTL_HOURS), function () use ($debts) {
             return $this->performCalculateMinimumPaymentsOnly($debts);
         });
     }
@@ -771,7 +773,7 @@ class DebtCalculationService
 
         $cacheKey = $this->getMinimumPaymentsCacheKey($debts, 'interest');
 
-        return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($debts) {
+        return Cache::remember($cacheKey, now()->addHours(self::CACHE_TTL_HOURS), function () use ($debts) {
             return $this->performCalculateMinimumPaymentsInterest($debts);
         });
     }

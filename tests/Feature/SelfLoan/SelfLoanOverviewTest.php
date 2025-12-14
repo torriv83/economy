@@ -30,6 +30,7 @@ test('displays active self-loans correctly', function () {
     ]);
 
     Livewire::test(Overview::class)
+        ->call('loadData')
         ->assertSee('Emergency Fund')
         ->assertSee('7 000')
         ->assertSee('Car Repair')
@@ -39,6 +40,7 @@ test('displays active self-loans correctly', function () {
 
 test('displays empty state when no active loans exist', function () {
     Livewire::test(Overview::class)
+        ->call('loadData')
         ->assertSee(__('app.no_active_self_loans'));
 });
 
@@ -47,7 +49,8 @@ test('calculates total borrowed correctly', function () {
     SelfLoan::factory()->create(['current_balance' => 3000]);
     SelfLoan::factory()->create(['current_balance' => 2000]);
 
-    $component = Livewire::test(Overview::class);
+    $component = Livewire::test(Overview::class)
+        ->call('loadData');
 
     expect($component->get('totalBorrowed'))->toBe(10000.0);
 });
@@ -59,6 +62,7 @@ test('can delete a self-loan', function () {
     ]);
 
     Livewire::test(Overview::class)
+        ->call('loadData')
         ->assertSee('Test Loan')
         ->call('confirmDelete', $loan->id, 'Test Loan')
         ->call('executeDelete')
@@ -107,6 +111,7 @@ test('shows progress percentage correctly', function () {
     ]);
 
     Livewire::test(Overview::class)
+        ->call('loadData')
         ->assertSee('30');
 });
 

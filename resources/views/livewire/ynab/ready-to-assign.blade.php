@@ -1,4 +1,4 @@
-<div>
+<div wire:init="loadData">
     @if (!$ynabEnabled)
         {{-- YNAB disabled - show nothing --}}
     @elseif (!$isConfigured)

@@ -17,6 +17,8 @@ class Recommendations extends Component
 
     private BufferRecommendationService $recommendationService;
 
+    public bool $isLoading = true;
+
     public bool $showScenarioComparison = false;
 
     public float $scenarioAmount = 5000;
@@ -156,6 +158,11 @@ class Recommendations extends Component
     {
         // Triggered by wire:model.live on the input
         // The property is already updated, so we just need to let the computed property recalculate
+    }
+
+    public function loadData(): void
+    {
+        $this->isLoading = false;
     }
 
     public function render(): \Illuminate\Contracts\View\View

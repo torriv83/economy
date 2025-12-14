@@ -1,4 +1,71 @@
-<div>
+<div wire:init="loadData">
+    @if ($isLoading)
+        {{-- Skeleton Loading State --}}
+        <div class="animate-pulse space-y-6">
+            {{-- Extra Payment Skeleton --}}
+            <div class="premium-card rounded-2xl border border-slate-200 dark:border-slate-700/50 p-6">
+                <div class="h-5 w-48 bg-slate-200 dark:bg-slate-700 rounded mb-3"></div>
+                <div class="flex items-center gap-3">
+                    <div class="h-12 w-12 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                    <div class="flex-1 h-12 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                    <div class="h-12 w-12 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                </div>
+                <div class="h-4 w-64 bg-slate-200 dark:bg-slate-700 rounded mt-3"></div>
+            </div>
+
+            {{-- Strategy Columns Skeleton --}}
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                @for ($i = 0; $i < 3; $i++)
+                    <div class="premium-card rounded-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
+                        <div class="bg-slate-100 dark:bg-slate-800/50 px-6 py-4">
+                            <div class="h-6 w-32 bg-slate-200 dark:bg-slate-700 rounded-xl mb-2"></div>
+                            <div class="h-4 w-full bg-slate-200 dark:bg-slate-700 rounded"></div>
+                        </div>
+                        <div class="px-6 py-5 space-y-3">
+                            <div class="h-4 w-24 bg-slate-200 dark:bg-slate-700 rounded mb-4"></div>
+                            @for ($j = 0; $j < 3; $j++)
+                                <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-7 h-7 bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
+                                        <div class="h-4 w-24 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="h-4 w-20 bg-slate-200 dark:bg-slate-700 rounded mb-1"></div>
+                                        <div class="h-3 w-12 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                    </div>
+                                </div>
+                            @endfor
+                        </div>
+                        <div class="border-t border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800/30 px-6 py-4 space-y-2">
+                            <div class="flex justify-between">
+                                <div class="h-4 w-32 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                <div class="h-4 w-16 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                            </div>
+                            <div class="flex justify-between">
+                                <div class="h-4 w-24 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                <div class="h-4 w-20 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                            </div>
+                        </div>
+                    </div>
+                @endfor
+            </div>
+
+            {{-- Chart Skeleton --}}
+            <div class="premium-card rounded-2xl border border-slate-200 dark:border-slate-700/50 p-6">
+                <div class="h-6 w-64 bg-slate-200 dark:bg-slate-700 rounded mb-6"></div>
+                <div class="h-96 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                <div class="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    @for ($i = 0; $i < 4; $i++)
+                        <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50">
+                            <div class="h-4 w-24 bg-slate-200 dark:bg-slate-700 rounded mb-2"></div>
+                            <div class="h-5 w-16 bg-slate-200 dark:bg-slate-700 rounded mb-1"></div>
+                            <div class="h-4 w-20 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                        </div>
+                    @endfor
+                </div>
+            </div>
+        </div>
+    @else
     {{-- Extra Payment Section --}}
     <div class="premium-card rounded-2xl border border-slate-200 dark:border-slate-700/50 p-6 mb-8">
         <label for="extraPayment" class="block font-display font-medium text-slate-700 dark:text-slate-300 mb-3">
@@ -515,5 +582,6 @@
                 </div>
             </div>
         </div>
+    @endif
     @endif
 </div>

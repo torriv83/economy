@@ -50,6 +50,7 @@ it('shows loading state initially then displays amount', function () {
     ]);
 
     Livewire::test(ReadyToAssign::class)
+        ->call('loadData')
         ->assertSet('isLoading', false)
         ->assertSet('hasError', false)
         ->assertSet('amount', 2500.0)
@@ -63,6 +64,7 @@ it('shows nothing when YNAB is not configured', function () {
     app()->singleton(YnabService::class, fn () => new YnabService('', ''));
 
     Livewire::test(ReadyToAssign::class)
+        ->call('loadData')
         ->assertSet('isConfigured', false)
         ->assertSet('isLoading', false)
         ->assertDontSee('Ready to Assign');
@@ -80,6 +82,7 @@ it('shows error state when YNAB API fails', function () {
     ]);
 
     Livewire::test(ReadyToAssign::class)
+        ->call('loadData')
         ->assertSet('hasError', true)
         ->assertSet('isLoading', false);
 });
@@ -119,6 +122,7 @@ it('can refresh the data', function () {
     ]);
 
     Livewire::test(ReadyToAssign::class)
+        ->call('loadData')
         ->assertSet('amount', 1000.0)
         ->call('refresh')
         ->assertSet('amount', 2000.0);
@@ -151,6 +155,7 @@ it('handles zero ready to assign amount', function () {
     ]);
 
     Livewire::test(ReadyToAssign::class)
+        ->call('loadData')
         ->assertSet('amount', 0.0)
         ->assertSee('0 kr');
 });
@@ -182,6 +187,7 @@ it('handles negative ready to assign (overbudgeted)', function () {
     ]);
 
     Livewire::test(ReadyToAssign::class)
+        ->call('loadData')
         ->assertSet('amount', -500.0)
         ->assertSee('-500 kr');
 });
@@ -227,6 +233,7 @@ it('rate limits refresh to prevent API abuse', function () {
     Cache::forget('ynab:ready_to_assign:test-budget');
 
     $component = Livewire::test(ReadyToAssign::class)
+        ->call('loadData')
         ->assertSet('amount', 1000.0);
 
     // First refresh should work (clears cache, gets fresh data)

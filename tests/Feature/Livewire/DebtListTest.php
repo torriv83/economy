@@ -17,6 +17,7 @@ describe('getDebtsProperty lastVerifiedAt', function () {
         // Assert the formatted date appears in the rendered output
         // Norwegian format: "15. mars 2024"
         Livewire::test(DebtList::class)
+            ->call('loadData')
             ->assertSee('15. mars 2024');
     });
 
@@ -28,6 +29,7 @@ describe('getDebtsProperty lastVerifiedAt', function () {
 
         // Verify the debt is displayed with "never verified" indicator
         Livewire::test(DebtList::class)
+            ->call('loadData')
             ->assertSee('Unverified Debt')
             ->assertSee(__('app.never_verified'));
     });

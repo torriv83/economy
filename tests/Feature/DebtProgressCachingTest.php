@@ -73,7 +73,8 @@ test('progress data is cached after first access', function () {
     ]);
 
     // Access progressData through the component
-    $component = Livewire::test(DebtProgress::class);
+    $component = Livewire::test(DebtProgress::class)
+        ->call('loadData');
     $data = $component->instance()->progressData;
 
     // Verify data was returned and has the expected structure
@@ -84,7 +85,8 @@ test('progress data is cached after first access', function () {
 });
 
 test('progress data returns empty arrays when no debts exist', function () {
-    $component = Livewire::test(DebtProgress::class);
+    $component = Livewire::test(DebtProgress::class)
+        ->call('loadData');
 
     expect($component->instance()->progressData)
         ->toBeArray()
@@ -101,7 +103,8 @@ test('cached progress data returns same result on multiple accesses', function (
         'minimum_payment' => 500,
     ]);
 
-    $component = Livewire::test(DebtProgress::class);
+    $component = Livewire::test(DebtProgress::class)
+        ->call('loadData');
 
     // First access
     $firstResult = $component->instance()->progressData;
@@ -173,7 +176,8 @@ test('progress data returns correct structure with debts and payments', function
         'payment_date' => now()->subMonth(),
     ]);
 
-    $component = Livewire::test(DebtProgress::class);
+    $component = Livewire::test(DebtProgress::class)
+        ->call('loadData');
     $data = $component->instance()->progressData;
 
     expect($data)
@@ -197,7 +201,8 @@ test('progress data includes correct debt names in datasets', function () {
         'original_balance' => 20000,
     ]);
 
-    $component = Livewire::test(DebtProgress::class);
+    $component = Livewire::test(DebtProgress::class)
+        ->call('loadData');
     $data = $component->instance()->progressData;
 
     $labels = collect($data['datasets'])->pluck('label')->toArray();

@@ -24,6 +24,7 @@ test('displays all repayments correctly', function () {
     ]);
 
     Livewire::test(History::class)
+        ->call('loadData')
         ->assertSee('Test Loan')
         ->assertSee('1 000 kr')
         ->assertSee('500 kr')
@@ -45,6 +46,7 @@ test('displays paid-off loans correctly', function () {
     ]);
 
     Livewire::test(History::class)
+        ->call('loadData')
         ->assertSee('Paid Off Loan')
         ->assertSee('Another Paid Loan')
         ->assertSee('5 000 kr')
@@ -53,6 +55,7 @@ test('displays paid-off loans correctly', function () {
 
 test('shows empty state when no history exists', function () {
     Livewire::test(History::class)
+        ->call('loadData')
         ->assertSee(__('app.no_history_yet'));
 });
 
@@ -67,7 +70,8 @@ test('does not show active loans in paid-off section', function () {
         'current_balance' => 0,
     ]);
 
-    $component = Livewire::test(History::class);
+    $component = Livewire::test(History::class)
+        ->call('loadData');
 
     // Active loans should NOT appear in the paid-off loans section
     $paidOffLoans = $component->get('paidOffLoans');
@@ -94,6 +98,7 @@ test('can filter repayments by loan', function () {
     ]);
 
     Livewire::test(History::class)
+        ->call('loadData')
         ->set('selectedLoanId', $loan1->id)
         ->assertSee('Payment for Loan One')
         ->assertDontSee('Payment for Loan Two');
@@ -114,6 +119,7 @@ test('shows all repayments when no filter is selected', function () {
     ]);
 
     Livewire::test(History::class)
+        ->call('loadData')
         ->assertSee('Loan One')
         ->assertSee('Loan Two');
 });
@@ -135,6 +141,7 @@ test('can clear filter', function () {
     ]);
 
     Livewire::test(History::class)
+        ->call('loadData')
         ->set('selectedLoanId', $loan1->id)
         ->assertSee('Payment One')
         ->assertDontSee('Payment Two')
@@ -153,6 +160,7 @@ test('displays available loans in filter dropdown', function () {
     ]);
 
     Livewire::test(History::class)
+        ->call('loadData')
         ->assertSee('First Loan')
         ->assertSee('Second Loan');
 });

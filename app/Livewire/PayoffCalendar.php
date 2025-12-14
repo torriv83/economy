@@ -21,6 +21,8 @@ use Livewire\Component;
  */
 class PayoffCalendar extends Component
 {
+    public bool $isLoading = true;
+
     public float $extraPayment;
 
     public string $strategy;
@@ -110,6 +112,11 @@ class PayoffCalendar extends Component
     {
         $this->currentMonth = (int) now()->month;
         $this->currentYear = (int) now()->year;
+    }
+
+    public function loadData(): void
+    {
+        $this->isLoading = false;
     }
 
     public function openPaymentModal(

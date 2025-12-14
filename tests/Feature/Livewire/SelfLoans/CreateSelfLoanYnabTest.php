@@ -23,6 +23,7 @@ it('shows YNAB connection options when YNAB is configured', function () {
     });
 
     Livewire::test(CreateSelfLoan::class)
+        ->call('loadData')
         ->assertSee(__('app.link_to_ynab_optional'));
 });
 

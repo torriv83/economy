@@ -26,6 +26,7 @@ describe('YNAB configuration', function () {
         // No YNAB settings - simulates unconfigured state
 
         Livewire::test(Recommendations::class)
+            ->call('loadData')
             ->assertSee(__('app.ynab_required_for_recommendations'))
             ->assertSee(__('app.ynab_required_for_recommendations_description'))
             ->assertSee(__('app.configure_ynab'));
@@ -50,6 +51,7 @@ describe('YNAB configuration', function () {
         app()->instance(YnabService::class, $mockYnabService);
 
         Livewire::test(Recommendations::class)
+            ->call('loadData')
             ->assertDontSee(__('app.ynab_required_for_recommendations'))
             ->assertSee(__('app.security_buffer'));
     });
@@ -76,7 +78,8 @@ describe('Buffer status calculations', function () {
 
         app()->instance(YnabService::class, $mockYnabService);
 
-        $component = Livewire::test(Recommendations::class);
+        $component = Livewire::test(Recommendations::class)
+            ->call('loadData');
 
         $bufferStatus = $component->get('bufferStatus');
 
@@ -105,7 +108,8 @@ describe('Buffer status calculations', function () {
 
         app()->instance(YnabService::class, $mockYnabService);
 
-        $component = Livewire::test(Recommendations::class);
+        $component = Livewire::test(Recommendations::class)
+            ->call('loadData');
 
         $bufferStatus = $component->get('bufferStatus');
 
@@ -133,7 +137,8 @@ describe('Buffer status calculations', function () {
 
         app()->instance(YnabService::class, $mockYnabService);
 
-        $component = Livewire::test(Recommendations::class);
+        $component = Livewire::test(Recommendations::class)
+            ->call('loadData');
 
         $bufferStatus = $component->get('bufferStatus');
 
@@ -157,7 +162,8 @@ describe('Buffer status calculations', function () {
 
         app()->instance(YnabService::class, $mockYnabService);
 
-        $component = Livewire::test(Recommendations::class);
+        $component = Livewire::test(Recommendations::class)
+            ->call('loadData');
 
         $bufferStatus = $component->get('bufferStatus');
 
@@ -182,7 +188,8 @@ describe('Buffer status calculations', function () {
 
         app()->instance(YnabService::class, $mockYnabService);
 
-        $component = Livewire::test(Recommendations::class);
+        $component = Livewire::test(Recommendations::class)
+            ->call('loadData');
 
         $bufferStatus = $component->get('bufferStatus');
 
@@ -206,7 +213,8 @@ describe('Buffer status calculations', function () {
 
         app()->instance(YnabService::class, $mockYnabService);
 
-        $component = Livewire::test(Recommendations::class);
+        $component = Livewire::test(Recommendations::class)
+            ->call('loadData');
 
         $bufferStatus = $component->get('bufferStatus');
 
@@ -236,6 +244,7 @@ describe('Livewire actions', function () {
         app()->instance(YnabService::class, $mockYnabService);
 
         Livewire::test(Recommendations::class)
+            ->call('loadData')
             ->assertSet('showScenarioComparison', false)
             ->call('toggleScenarioComparison')
             ->assertSet('showScenarioComparison', true)
@@ -264,6 +273,7 @@ describe('Livewire actions', function () {
         ]);
 
         Livewire::test(Recommendations::class)
+            ->call('loadData')
             ->assertDontSee(__('app.buffer.scenario_comparison_title', ['amount' => '5 000 kr']))
             ->call('toggleScenarioComparison')
             ->assertSee(__('app.buffer.scenario_buffer'));
@@ -282,6 +292,7 @@ describe('Livewire actions', function () {
         app()->instance(YnabService::class, $mockYnabService);
 
         Livewire::test(Recommendations::class)
+            ->call('loadData')
             ->assertSet('scenarioAmount', 5000.0)
             ->set('scenarioAmount', 10000)
             ->assertSet('scenarioAmount', 10000);
@@ -308,6 +319,7 @@ describe('Buffer status display', function () {
         app()->instance(YnabService::class, $mockYnabService);
 
         Livewire::test(Recommendations::class)
+            ->call('loadData')
             ->assertSee(__('app.buffer_status_healthy'));
     });
 
@@ -324,6 +336,7 @@ describe('Buffer status display', function () {
         app()->instance(YnabService::class, $mockYnabService);
 
         Livewire::test(Recommendations::class)
+            ->call('loadData')
             ->assertSee(__('app.buffer_status_warning'));
     });
 
@@ -340,6 +353,7 @@ describe('Buffer status display', function () {
         app()->instance(YnabService::class, $mockYnabService);
 
         Livewire::test(Recommendations::class)
+            ->call('loadData')
             ->assertSee(__('app.buffer_status_critical'));
     });
 });
@@ -358,7 +372,8 @@ describe('Error handling', function () {
 
         app()->instance(YnabService::class, $mockYnabService);
 
-        $component = Livewire::test(Recommendations::class);
+        $component = Livewire::test(Recommendations::class)
+            ->call('loadData');
 
         $bufferStatus = $component->get('bufferStatus');
 
@@ -373,6 +388,7 @@ describe('Error handling', function () {
         app()->instance(YnabService::class, $mockYnabService);
 
         Livewire::test(Recommendations::class)
+            ->call('loadData')
             ->assertSee(__('app.loading_recommendations'));
     });
 });

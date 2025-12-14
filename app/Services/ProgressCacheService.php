@@ -18,7 +18,7 @@ class ProgressCacheService
 {
     private const CACHE_KEY_PREFIX = 'progress_data';
 
-    private const CACHE_TTL_HOURS = 1;
+    private const CACHE_TTL_HOURS = 24;
 
     /**
      * Get the environment-aware cache key prefix.

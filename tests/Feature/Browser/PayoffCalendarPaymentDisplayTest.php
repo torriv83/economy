@@ -19,7 +19,8 @@ beforeEach(function () {
 });
 
 it('shows unpaid planned payments in component', function () {
-    $component = Livewire::test(\App\Livewire\PayoffCalendar::class);
+    $component = Livewire::test(\App\Livewire\PayoffCalendar::class)
+        ->call('loadData');
 
     $component->assertSee('Test Credit Card');
 
@@ -44,7 +45,8 @@ it('shows paid payment on actual payment date', function () {
         'is_reconciliation_adjustment' => false,
     ]);
 
-    $component = Livewire::test(\App\Livewire\PayoffCalendar::class);
+    $component = Livewire::test(\App\Livewire\PayoffCalendar::class)
+        ->call('loadData');
 
     $component->assertSee('Test Credit Card');
 
@@ -104,7 +106,8 @@ it('shows paid payment on due date when paid on planned date', function () {
         'is_reconciliation_adjustment' => false,
     ]);
 
-    $component = Livewire::test(\App\Livewire\PayoffCalendar::class);
+    $component = Livewire::test(\App\Livewire\PayoffCalendar::class)
+        ->call('loadData');
 
     $component->assertSee('Test Credit Card');
 
@@ -132,7 +135,8 @@ it('displays actual amount paid instead of planned amount', function () {
         'is_reconciliation_adjustment' => false,
     ]);
 
-    $component = Livewire::test(\App\Livewire\PayoffCalendar::class);
+    $component = Livewire::test(\App\Livewire\PayoffCalendar::class)
+        ->call('loadData');
 
     $component->assertSee('Test Credit Card')
         ->assertSee('600'); // Should show actual amount
@@ -196,7 +200,8 @@ it('handles multiple debts with different payment statuses', function () {
 
     // Don't create payment for second debt (unpaid)
 
-    $component = Livewire::test(\App\Livewire\PayoffCalendar::class);
+    $component = Livewire::test(\App\Livewire\PayoffCalendar::class)
+        ->call('loadData');
 
     $component->assertSee('Test Credit Card') // Paid debt
         ->assertSee('Student Loan'); // Unpaid debt

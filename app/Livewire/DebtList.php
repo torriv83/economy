@@ -23,6 +23,8 @@ class DebtList extends Component
 {
     use HasDeleteConfirmation;
 
+    public bool $isLoading = true;
+
     public bool $reorderMode = false;
 
     public bool $showYnabSync = false;
@@ -89,6 +91,11 @@ class DebtList extends Component
     {
         $this->ynabEnabled = $this->globalSettingsService->isYnabEnabled();
         // Reconciliations array is initialized on-demand when modals are opened
+    }
+
+    public function loadData(): void
+    {
+        $this->isLoading = false;
     }
 
     /**

@@ -384,7 +384,7 @@ describe('importing YNAB transactions', function () {
         ]);
 
         Livewire::test(PayoffCalendar::class)
-            ->call('updatePaymentFromYnab', 'tx-123', $payment->id, 2500.0);
+            ->call('updatePaymentFromYnab', 'tx-123', $payment->id, 2500.0, '2025-01-15');
 
         $payment->refresh();
 

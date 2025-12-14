@@ -16,6 +16,7 @@ describe('reconcile debt modal', function () {
         ]);
 
         Livewire::test(DebtList::class)
+            ->call('loadData')
             ->call('openReconciliationModal', $debt->id)
             ->assertSet('reconciliations.'.$debt->id.'.show', true)
             ->call('closeReconciliationModal', $debt->id)
@@ -30,6 +31,7 @@ describe('reconcile debt modal', function () {
         ]);
 
         Livewire::test(DebtList::class)
+            ->call('loadData')
             ->call('openReconciliationModal', $debt->id)
             ->assertSee(__('app.reconcile_debt'))
             ->assertSee('Test Credit Card')
@@ -40,6 +42,7 @@ describe('reconcile debt modal', function () {
         $debt = Debt::factory()->create();
 
         Livewire::test(DebtList::class)
+            ->call('loadData')
             ->call('openReconciliationModal', $debt->id)
             ->assertSet('reconciliations.'.$debt->id.'.date', now()->format('d.m.Y'));
     });
@@ -52,6 +55,7 @@ describe('difference calculation', function () {
         ]);
 
         Livewire::test(DebtList::class)
+            ->call('loadData')
             ->call('openReconciliationModal', $debt->id)
             ->set('reconciliations.'.$debt->id.'.balance', '10500')
             ->assertSee('+500,00 kr');
@@ -63,6 +67,7 @@ describe('difference calculation', function () {
         ]);
 
         Livewire::test(DebtList::class)
+            ->call('loadData')
             ->call('openReconciliationModal', $debt->id)
             ->set('reconciliations.'.$debt->id.'.balance', '9500')
             ->assertSee('-500,00 kr');
@@ -74,6 +79,7 @@ describe('difference calculation', function () {
         ]);
 
         Livewire::test(DebtList::class)
+            ->call('loadData')
             ->call('openReconciliationModal', $debt->id)
             ->set('reconciliations.'.$debt->id.'.balance', '10000')
             ->assertSee('+0,00 kr');
@@ -85,6 +91,7 @@ describe('difference calculation', function () {
         ]);
 
         Livewire::test(DebtList::class)
+            ->call('loadData')
             ->call('openReconciliationModal', $debt->id)
             ->set('reconciliations.'.$debt->id.'.balance', '10200.75')
             ->assertSee('+200,25 kr');

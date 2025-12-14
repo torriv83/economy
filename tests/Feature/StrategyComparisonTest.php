@@ -10,7 +10,8 @@ uses(RefreshDatabase::class);
 test('strategy comparison component renders successfully', function () {
     app()->setLocale('en');
 
-    $component = Livewire::test(StrategyComparison::class);
+    $component = Livewire::test(StrategyComparison::class)
+        ->call('loadData');
 
     $component->assertSuccessful();
     $component->assertSee('Extra Monthly Payment');
@@ -217,7 +218,8 @@ test('displays savings in UI when debts exist', function () {
     ]);
 
     $component = Livewire::test(StrategyComparison::class)
-        ->set('extraPayment', 500);
+        ->set('extraPayment', 500)
+        ->call('loadData');
 
     // Check if savings and chart section are displayed in the UI
     $component->assertSee('Debt Projection Comparison')

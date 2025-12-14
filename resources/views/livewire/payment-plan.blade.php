@@ -1,4 +1,58 @@
-<div>
+<div wire:init="loadData">
+    @if ($isLoading)
+        {{-- Skeleton Loading State --}}
+        <div class="animate-pulse space-y-6">
+            {{-- Overall Progress Skeleton --}}
+            <div class="premium-card rounded-2xl border border-slate-200 dark:border-slate-700/50 p-6">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="h-5 bg-slate-200 dark:bg-slate-700 rounded w-32"></div>
+                    <div class="h-5 bg-slate-200 dark:bg-slate-700 rounded w-16"></div>
+                </div>
+                <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+            </div>
+
+            {{-- Debt Payoff Overview Skeleton --}}
+            <div class="space-y-4">
+                <div class="h-7 bg-slate-200 dark:bg-slate-700 rounded-xl w-1/3"></div>
+                <div class="premium-card rounded-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
+                    <div class="space-y-0">
+                        @for ($i = 0; $i < 4; $i++)
+                            <div class="px-6 py-4 {{ $i > 0 ? 'border-t border-slate-100 dark:border-slate-800' : '' }}">
+                                <div class="flex items-center justify-between">
+                                    <div class="h-5 bg-slate-200 dark:bg-slate-700 rounded w-32"></div>
+                                    <div class="h-5 bg-slate-200 dark:bg-slate-700 rounded w-24"></div>
+                                    <div class="h-5 bg-slate-200 dark:bg-slate-700 rounded w-20"></div>
+                                    <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-full w-24"></div>
+                                </div>
+                            </div>
+                        @endfor
+                    </div>
+                </div>
+            </div>
+
+            {{-- Detailed Schedule Skeleton --}}
+            <div class="space-y-4 mt-12">
+                <div class="h-8 bg-slate-200 dark:bg-slate-700 rounded-xl w-1/2"></div>
+                <div class="premium-card rounded-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
+                    <div class="space-y-0">
+                        @for ($i = 0; $i < 5; $i++)
+                            <div class="px-4 py-4 {{ $i > 0 ? 'border-t border-slate-100 dark:border-slate-800' : '' }}">
+                                <div class="flex items-center gap-4">
+                                    <div class="h-12 bg-slate-200 dark:bg-slate-700 rounded w-16"></div>
+                                    <div class="flex-1 space-y-2">
+                                        <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
+                                        <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
+                                    </div>
+                                    <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-20"></div>
+                                    <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-4"></div>
+                                </div>
+                            </div>
+                        @endfor
+                    </div>
+                </div>
+            </div>
+        </div>
+    @else
     {{-- Overall Progress Bar --}}
     <div class="premium-card rounded-2xl border border-slate-200 dark:border-slate-700/50 p-6 mb-6">
         <div class="flex items-center justify-between mb-3">
@@ -625,4 +679,5 @@
         @endif
     </div>
 
+    @endif
 </div>

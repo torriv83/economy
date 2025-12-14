@@ -16,6 +16,8 @@ use Livewire\Component;
 
 class DebtProgress extends Component
 {
+    public bool $isLoading = true;
+
     protected DebtCalculationService $calculationService;
 
     protected PayoffSettingsService $settingsService;
@@ -38,6 +40,11 @@ class DebtProgress extends Component
         $this->debtCacheService = $debtCacheService;
         $this->progressCacheService = $progressCacheService;
         $this->progressChartService = $progressChartService;
+    }
+
+    public function loadData(): void
+    {
+        $this->isLoading = false;
     }
 
     /**
