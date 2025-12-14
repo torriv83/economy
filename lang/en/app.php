@@ -14,6 +14,8 @@ return [
     'debts' => 'Debts',
     'strategies' => 'Strategies',
     'settings' => 'Settings',
+    'insights_menu' => 'Insights',
+    'insights_menu_description' => 'Analyze progress and find optimization opportunities',
     'repayments' => 'Payment Plans',
     'pay_debt' => 'Pay Debt',
     'pay_debt_description' => 'Quickly register payments',

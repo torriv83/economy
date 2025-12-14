@@ -196,17 +196,36 @@
                         <a href="{{ route('debts', ['view' => 'pay']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-4 py-2 text-sm rounded-lg {{ request()->routeIs('debts') && $debtsView === 'pay' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
                             {{ __('app.pay_debt') }}
                         </a>
-                        <a href="{{ route('debts', ['view' => 'progress']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-4 py-2 text-sm rounded-lg {{ request()->routeIs('debts') && $debtsView === 'progress' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
-                            {{ __('app.progress') }}
-                        </a>
-                        <a href="{{ route('debts', ['view' => 'recommendations']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-4 py-2 text-sm rounded-lg {{ request()->routeIs('debts') && $debtsView === 'recommendations' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
-                            {{ __('app.recommendations') }}
-                        </a>
-                        <a href="{{ route('debts', ['view' => 'insights']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-4 py-2 text-sm rounded-lg {{ request()->routeIs('debts') && $debtsView === 'insights' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
-                            {{ __('app.insights') }}
-                        </a>
                         <a href="{{ route('debts', ['view' => 'reconciliations']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-4 py-2 text-sm rounded-lg {{ request()->routeIs('debts') && $debtsView === 'reconciliations' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
                             {{ __('app.reconciliation_history') }}
+                        </a>
+                    </div>
+                </div>
+
+                {{-- Insights Section --}}
+                @php
+                    $insightsView = request()->query('view', 'progress');
+                @endphp
+                <div x-data="{ insightsOpen: {{ request()->routeIs('insights') ? 'true' : 'false' }} }">
+                    <button
+                        type="button"
+                        @click="insightsOpen = !insightsOpen"
+                        class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-base font-medium {{ request()->routeIs('insights') ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' }} transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+                    >
+                        <span>{{ __('app.insights_menu') }}</span>
+                        <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': insightsOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div x-show="insightsOpen" x-collapse class="pl-4 space-y-1 mt-1">
+                        <a href="{{ route('insights', ['view' => 'progress']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-4 py-2 text-sm rounded-lg {{ request()->routeIs('insights') && $insightsView === 'progress' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
+                            {{ __('app.progress') }}
+                        </a>
+                        <a href="{{ route('insights', ['view' => 'recommendations']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-4 py-2 text-sm rounded-lg {{ request()->routeIs('insights') && $insightsView === 'recommendations' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
+                            {{ __('app.recommendations') }}
+                        </a>
+                        <a href="{{ route('insights', ['view' => 'interest']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-4 py-2 text-sm rounded-lg {{ request()->routeIs('insights') && $insightsView === 'interest' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
+                            {{ __('app.interest_insights') }}
                         </a>
                     </div>
                 </div>
@@ -334,7 +353,7 @@
     </nav>
 
     {{-- Main Content --}}
-    <main id="main-content" class="{{ request()->routeIs('home', 'debts', 'debts.edit', 'payoff', 'self-loans', 'settings') ? 'md:ml-64' : '' }} pt-24 px-4 sm:px-6 lg:px-8 pb-24 md:pb-8">
+    <main id="main-content" class="{{ request()->routeIs('home', 'debts', 'debts.edit', 'payoff', 'self-loans', 'settings', 'insights') ? 'md:ml-64' : '' }} pt-24 px-4 sm:px-6 lg:px-8 pb-24 md:pb-8">
         {{ $slot }}
     </main>
 
@@ -365,16 +384,16 @@
                 <span class="text-xs font-medium mt-1">{{ __('app.pay') }}</span>
             </a>
 
-            {{-- Plan --}}
+            {{-- Innsikt --}}
             <a
-                href="{{ route('payoff') }}"
+                href="{{ route('insights') }}"
                 wire:navigate.hover
-                class="flex flex-col items-center justify-center flex-1 py-2 rounded-lg transition-colors {{ request()->routeIs('payoff') ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300' }}"
+                class="flex flex-col items-center justify-center flex-1 py-2 rounded-lg transition-colors {{ request()->routeIs('insights') ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300' }}"
             >
                 <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
                 </svg>
-                <span class="text-xs font-medium mt-1">{{ __('app.plan') }}</span>
+                <span class="text-xs font-medium mt-1">{{ __('app.insights_menu') }}</span>
             </a>
 
             {{-- Innstillinger --}}

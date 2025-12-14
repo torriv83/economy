@@ -14,6 +14,8 @@ return [
     'debts' => 'Gjeld',
     'strategies' => 'Strategier',
     'settings' => 'Innstillinger',
+    'insights_menu' => 'Innsikt',
+    'insights_menu_description' => 'Analyser fremdrift og finn optimaliseringsmuligheter',
     'repayments' => 'Nedbetalingsplaner',
     'pay_debt' => 'Betal gjeld',
     'pay_debt_description' => 'Registrer betalinger raskt',
