@@ -120,17 +120,17 @@
                     </p>
                 </div>
                 {{-- Status Badge --}}
-                <div class="ml-auto">
+                <div class="ml-auto self-start">
                     @if ($this->bufferStatus['status'] === 'healthy')
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
                             {{ __('app.buffer_status_healthy') }}
                         </span>
                     @elseif ($this->bufferStatus['status'] === 'warning')
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                             {{ __('app.buffer_status_warning') }}
                         </span>
                     @else
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">
                             {{ __('app.buffer_status_critical') }}
                         </span>
                     @endif

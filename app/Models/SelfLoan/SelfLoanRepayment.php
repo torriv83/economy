@@ -5,7 +5,17 @@ namespace App\Models\SelfLoan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $self_loan_id
+ * @property float $amount
+ * @property string|null $notes
+ * @property Carbon $paid_at
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ */
 class SelfLoanRepayment extends Model
 {
     /** @use HasFactory<\Database\Factories\SelfLoan\SelfLoanRepaymentFactory> */
