@@ -16,6 +16,19 @@
                 "SITE_PATH": "P:\\Herd\\economy"
             }
         },
+        "serena": {
+            "command": "uvx",
+            "args": [
+                "--from",
+                "git+https://github.com/oraios/serena",
+                "serena",
+                "start-mcp-server",
+                "--context",
+                "claude-code",
+                "--project",
+                "P:\\Herd\\economy"
+            ]
+        },
         "ClickUp": {
             "type": "stdio",
             "command": "cmd",

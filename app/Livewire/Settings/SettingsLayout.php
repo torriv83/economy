@@ -15,7 +15,7 @@ class SettingsLayout extends Component
     public function mount(): void
     {
         $view = request()->query('view');
-        if (in_array($view, ['plan', 'debt', 'ynab', 'recommendations', 'shortcuts'])) {
+        if (in_array($view, ['plan', 'debt', 'ynab', 'recommendations', 'buffer', 'shortcuts'])) {
             $this->currentView = $view;
         }
     }
@@ -28,6 +28,7 @@ class SettingsLayout extends Component
             'debt' => $this->showDebt(),
             'ynab' => $this->showYnab(),
             'recommendations' => $this->showRecommendations(),
+            'buffer' => $this->showBuffer(),
             'shortcuts' => $this->showShortcuts(),
             default => null,
         };
@@ -51,6 +52,11 @@ class SettingsLayout extends Component
     public function showRecommendations(): void
     {
         $this->currentView = 'recommendations';
+    }
+
+    public function showBuffer(): void
+    {
+        $this->currentView = 'buffer';
     }
 
     public function showShortcuts(): void

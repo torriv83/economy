@@ -631,16 +631,16 @@ return [
     'ynab_sync_interval' => 'Sync interval',
     'ynab_last_sync' => 'Last synced',
 
-    // Security Buffer
-    'security_buffer' => 'Security Buffer',
-    'layer1_operational_buffer' => 'One Month Ahead',
-    'layer2_emergency_buffer' => 'Emergency Buffer',
+    // Preparedness / Buffer
+    'preparedness' => 'Preparedness',
+    'preparedness_description' => 'Your financial security and preparedness',
+    'emergency_buffer' => 'Emergency Buffer',
+    'dedicated_category' => 'Dedicated category',
+    'pay_period' => 'Pay Period',
+    'pay_period_funded' => 'Funded',
+    'covered' => 'Covered',
+    'not_covered' => 'Not covered',
     'savings_accounts' => 'Savings accounts',
-    'assigned_next_month' => 'Funded for pay period',
-    'total_buffer' => 'Total Buffer',
-    'month_ahead' => 'One month ahead',
-    'months_of_security_count' => ':count months of security',
-    'of_target' => ':months mo of :target mo target',
     'buffer_status_critical' => 'Critical',
     'buffer_status_warning' => 'Below target',
     'buffer_status_healthy' => 'Healthy',
@@ -659,50 +659,62 @@ return [
     'linked_to_ynab' => 'Linked to YNAB',
     'available_in_ynab' => 'Available',
 
-    // Buffer Recommendations (Phase 2)
+    // Buffer Recommendations
     'buffer' => [
-        // Layer 1 Recommendations
-        'layer1_success_title' => 'One Month Ahead!',
-        'layer1_success_description' => 'You\'re one month ahead - great financial foundation!',
-        'layer1_action_title' => 'Get One Month Ahead',
-        'layer1_action_description' => 'Transfer :transfer_amount kr from savings to checking account to fund next month\'s budget. You\'ll still have :remaining_months months in emergency buffer.',
-        'layer1_partial_description' => 'You need :shortfall kr to be one month ahead, but only have :transfer_amount kr available. Transfer what you can - you\'ll still need :still_needed kr.',
-        'layer1_no_savings_description' => 'You need :shortfall kr to be one month ahead, but have no funds in savings to transfer.',
+        // Pay Period Recommendations
+        'pay_period_covered_title' => 'Pay Period Covered',
+        'pay_period_covered_description' => 'All categories until next payday are funded.',
+        'pay_period_not_covered_title' => 'Pay Period Not Covered',
+        'pay_period_not_covered_description' => 'You need :shortfall kr to cover essential expenses until next payday.',
 
-        // Buffer Status
-        'buffer_good_title' => 'Emergency Buffer Healthy',
-        'buffer_good_description' => 'Your emergency buffer of :months months exceeds the recommended 2 months.',
-        'buffer_build_title' => 'Build Emergency Buffer',
-        'buffer_build_description' => 'You have :current_months months saved. Build to :target_months months by saving :shortfall kr more.',
+        // Minimum Buffer (under 50%) - Priority 2
+        'minimum_buffer_title' => 'Build Minimum Safety Buffer',
+        'minimum_buffer_description' => 'Your buffer is at :percentage% (:current_amount kr). Build to at least 50% (:target_50 kr) before focusing on other goals.',
+        'minimum_buffer_description_with_funds' => 'You have :ready_to_assign kr available. Set aside :recommended_amount kr to reach 50% (:target_50 kr).',
 
-        // High Interest Debt
-        'high_interest_debt_title' => 'High Interest Debt Detected',
-        'high_interest_debt_description' => 'Transfer :suggested_amount kr from savings to :debt_name (:interest_rate% interest) to save :interest_saved kr in interest. You have :available_savings kr available in savings.',
+        // Emergency Buffer (50-100%) - Priority 5
+        'emergency_buffer_good_title' => 'Emergency Buffer Covered',
+        'emergency_buffer_good_description' => 'Your buffer of :amount kr covers the target of :target kr.',
+        'emergency_buffer_low_title' => 'Complete Emergency Buffer',
+        'emergency_buffer_low_description' => 'You have :current_amount kr of :target_amount kr (:percentage%). Need :shortfall kr to reach the target.',
+        'emergency_buffer_low_description_with_funds' => 'You have :ready_to_assign kr available. Set aside :recommended_amount kr to get closer to the :target_amount kr target.',
 
-        // Low Interest Debt
-        'low_interest_debt_title' => 'Build Buffer First',
-        'low_interest_debt_description' => ':debt_name has low interest (:interest_rate%). Focus on building your buffer from :current_buffer_months to :target_buffer_months months first.',
+        // High Interest Debt (>10%) - Priority 3
+        'high_interest_debt_title' => 'Pay Down High-Interest Debt',
+        'high_interest_debt_description' => ':debt_name has :interest_rate% interest. High-interest debt costs more than buffer growth provides.',
+        'high_interest_debt_description_with_funds' => 'You have :ready_to_assign kr available. Pay :debt_name (:interest_rate% interest) - saves you :interest_saved kr in interest.',
 
-        // Good Buffer with Debt
-        'good_buffer_debt_title' => 'Accelerate Debt Payoff',
-        'good_buffer_debt_description' => 'Your buffer is solid. Transfer :suggested_amount kr to :debt_name - save :interest_saved kr in interest and pay off :months_saved months earlier.',
+        // Dedicated Category Recommendations - Priority 4
+        'category_low_title' => 'Fill :category_name',
+        'category_low_description' => 'You have :current_amount kr of :target_amount kr (:percentage%). Need :shortfall kr to reach the target.',
+        'category_low_description_with_funds' => 'You have :ready_to_assign kr available. Set aside :recommended_amount kr for :category_name.',
 
-        // Balanced Scenario
-        'balanced_title' => 'Balanced Approach',
-        'balanced_description' => 'With :debt_name at :interest_rate% and :current_buffer_months months buffer, consider splitting: 50% to buffer, 50% to debt.',
+        // Regular Debt Recommendations - Priority 6
+        'no_debt_title' => 'No Debt',
+        'no_debt_description' => 'Congratulations! You have no debt to pay down.',
+        'pay_debt_title' => 'Pay Down Debt',
+        'pay_debt_description' => 'Your preparedness is good. Focus on :debt_name (:interest_rate% interest).',
+        'pay_debt_description_with_funds' => 'You have :ready_to_assign kr available. Pay :debt_name - saves you :interest_saved kr in interest and :months_saved months.',
+
+        // All Good - Priority 7
+        'all_good_title' => 'You\'re in Great Shape!',
+        'all_good_description' => 'Your buffer of :buffer_amount kr is full, all categories are covered, and you have no debt. Well done!',
 
         // Scenario Comparison
-        'scenario_buffer' => 'Add to buffer',
+        'scenario_buffer' => 'Add to emergency buffer',
         'scenario_debt' => 'Pay :debt_name',
-        'scenario_buffer_impact' => '+:days days of security (:old_months → :new_months months)',
-        'scenario_debt_impact' => 'Save :interest_saved kr in interest, paid off :months_saved months earlier',
+        'buffer_impact' => '+:amount kr (:percentage% of target)',
+        'interest_savings' => ':amount kr saved',
+        'months_earlier' => ':months months earlier',
 
-        // Recommendations
-        'recommendation_critical_buffer' => 'Buffer too low - prioritize security',
-        'recommendation_high_interest' => 'High interest gives best return',
-        'recommendation_build_buffer' => 'Build buffer to recommended level first',
-        'recommendation_pay_debt' => 'Buffer is healthy - accelerate debt payoff',
-        'recommendation_maintain_buffer' => 'Maintain your emergency buffer',
+        // Recommendations for scenario
+        'recommendation_pay_period' => 'Fill NEED categories first to cover the pay period',
+        'recommendation_minimum_buffer' => 'Build emergency buffer to minimum 50% first',
+        'recommendation_high_interest_debt' => 'Pay down high-interest debt before buffer - saves more',
+        'recommendation_emergency_buffer' => 'Build emergency buffer to target amount',
+        'recommendation_dedicated_category' => 'Fill dedicated categories to target amounts',
+        'recommendation_pay_debt' => 'Preparedness is good - accelerate debt payoff',
+        'recommendation_maintain_buffer' => 'Maintain your preparedness',
 
         // UI Elements
         'recommendations_title' => 'Recommendations',
@@ -711,11 +723,37 @@ return [
         'compare_options' => 'Got extra money? See your options',
         'hide_options' => 'Hide Options',
         'recommended' => 'Recommended',
-        'view_details' => 'View Details',
-        'days_security' => ':days days of security',
-        'months_earlier' => ':months months earlier',
-        'interest_savings' => ':amount kr saved',
     ],
+
+    // Buffer Settings
+    'buffer_settings' => 'Buffer Settings',
+    'buffer_settings_description' => 'Configure emergency buffer targets and preparedness categories',
+    'buffer_settings_info_title' => 'About Buffer Settings',
+    'buffer_settings_info_description' => 'Set up targets for your emergency buffer and specific categories you want to build up. These targets are used to provide recommendations on when to save vs pay down debt.',
+    'buffer_target_amount' => 'Emergency Buffer Target',
+    'buffer_target_amount_help' => 'Total amount you want to have available in your emergency buffer',
+    'buffer_categories' => 'Buffer Categories',
+    'buffer_categories_help' => 'Specific categories with their own savings targets (e.g., dental, car maintenance)',
+    'add_category' => 'Add Category',
+    'category_name' => 'Category Name',
+    'target_amount' => 'Target Amount',
+    'no_categories' => 'No categories added yet',
+    'select_ynab_category' => 'Select YNAB category',
+    'ynab_required_for_categories' => 'YNAB must be configured to add categories',
+    'invalid_categories_warning' => 'Some categories do not exist in YNAB',
+    'invalid_categories_description' => 'The following categories do not exist in your YNAB account and cannot be tracked: :categories. Please select a valid category from the dropdown.',
+
+    // Buffer Settings Validation
+    'validation_buffer_target_amount_required' => 'Emergency buffer target is required.',
+    'validation_buffer_target_amount_numeric' => 'Emergency buffer target must be a number.',
+    'validation_buffer_target_amount_min' => 'Emergency buffer target cannot be negative.',
+    'validation_category_name_required' => 'Category name is required.',
+    'validation_category_name_string' => 'Category name must be a string.',
+    'validation_category_name_min' => 'Category name must have at least one character.',
+    'validation_category_name_max' => 'Category name cannot be longer than 100 characters.',
+    'validation_category_target_required' => 'Target amount is required.',
+    'validation_category_target_numeric' => 'Target amount must be a number.',
+    'validation_category_target_min' => 'Target amount cannot be negative.',
 
     // Login
     'login_title' => 'Sign In',

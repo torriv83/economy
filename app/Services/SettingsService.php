@@ -23,6 +23,16 @@ class SettingsService
 
     private const DEFAULT_MIN_INTEREST_SAVINGS = 1000.0;
 
+    private const DEFAULT_BUFFER_TARGET_AMOUNT = 20000.0;
+
+    /**
+     * @var array<int, array{name: string, target: float}>
+     */
+    private const DEFAULT_BUFFER_CATEGORIES = [
+        ['name' => 'Tannlege', 'target' => 1500.0],
+        ['name' => 'Service/Vedlikehold', 'target' => 15000.0],
+    ];
+
     private const CACHE_KEY = 'app_settings';
 
     private const CACHE_TTL_HOURS = 24;
@@ -316,6 +326,114 @@ class SettingsService
     public function setMinInterestSavings(float $amount): void
     {
         $this->set('recommendations.min_interest_savings', $amount, 'float', 'recommendations');
+    }
+
+    /**
+     * Get the buffer target amount (for emergency/savings account).
+     */
+    public function getBufferTargetAmount(): float
+    {
+        return $this->get('buffer.target_amount', 'float') ?? self::DEFAULT_BUFFER_TARGET_AMOUNT;
+    }
+
+    /**
+     * Set the buffer target amount.
+     */
+    public function setBufferTargetAmount(float $amount): void
+    {
+        $this->set('buffer.target_amount', $amount, 'float', 'buffer');
+    }
+
+    /**
+     * Get the buffer categories (YNAB category names with target amounts).
+     *
+     * @return array<int, array{name: string, target: float}>
+     */
+    public function getBufferCategories(): array
+    {
+        $categories = $this->get('buffer.categories', 'string');
+
+        if ($categories === null) {
+            return self::DEFAULT_BUFFER_CATEGORIES;
+        }
+
+        /** @var array<int, array{name: string, target: float}>|null $decoded */
+        $decoded = json_decode($categories, true);
+
+        return $decoded ?? self::DEFAULT_BUFFER_CATEGORIES;
+    }
+
+    /**
+     * Set the buffer categories.
+     *
+     * @param  array<int, array{name: string, target: float}>  $categories
+     */
+    public function setBufferCategories(array $categories): void
+    {
+        $json = json_encode($categories, JSON_THROW_ON_ERROR);
+        $this->set('buffer.categories', $json, 'string', 'buffer');
+    }
+
+    /**
+     * Add a buffer category.
+     */
+    public function addBufferCategory(string $name, float $target): void
+    {
+        $categories = $this->getBufferCategories();
+        $categories[] = ['name' => $name, 'target' => $target];
+        $this->setBufferCategories($categories);
+    }
+
+    /**
+     * Remove a buffer category by name.
+     */
+    public function removeBufferCategory(string $name): void
+    {
+        $categories = $this->getBufferCategories();
+        $categories = array_values(array_filter(
+            $categories,
+            fn (array $cat) => $cat['name'] !== $name
+        ));
+        $this->setBufferCategories($categories);
+    }
+
+    /**
+     * Update a buffer category's target amount.
+     */
+    public function updateBufferCategoryTarget(string $name, float $target): void
+    {
+        $categories = $this->getBufferCategories();
+        foreach ($categories as &$category) {
+            if ($category['name'] === $name) {
+                $category['target'] = $target;
+                break;
+            }
+        }
+        $this->setBufferCategories($categories);
+    }
+
+    /**
+     * Update a buffer category's name.
+     */
+    public function updateBufferCategoryName(string $oldName, string $newName): void
+    {
+        $categories = $this->getBufferCategories();
+        foreach ($categories as &$category) {
+            if ($category['name'] === $oldName) {
+                $category['name'] = $newName;
+                break;
+            }
+        }
+        $this->setBufferCategories($categories);
+    }
+
+    /**
+     * Reset buffer settings to defaults.
+     */
+    public function resetBufferSettingsToDefaults(): void
+    {
+        Setting::where('group', 'buffer')->delete();
+        $this->clearCache();
     }
 
     /**

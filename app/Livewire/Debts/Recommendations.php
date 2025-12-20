@@ -9,6 +9,9 @@ use App\Services\SettingsService;
 use App\Services\YnabService;
 use Livewire\Component;
 
+/**
+ * @property-read float $readyToAssign
+ */
 class Recommendations extends Component
 {
     private YnabService $ynabService;
@@ -22,6 +25,8 @@ class Recommendations extends Component
     public bool $showScenarioComparison = false;
 
     public float $scenarioAmount = 5000;
+
+    private ?float $cachedReadyToAssign = null;
 
     public function boot(
         YnabService $ynabService,
@@ -39,7 +44,30 @@ class Recommendations extends Component
     }
 
     /**
-     * @return array{layer1: array{amount: float, percentage: float, is_month_ahead: bool}, layer2: array{amount: float, months: float, target_months: int}, total_buffer: float, monthly_essential: float, months_of_security: float, status: string}|null
+     * Get YNAB "Ready to Assign" (available funds).
+     */
+    public function getReadyToAssignProperty(): float
+    {
+        if ($this->cachedReadyToAssign !== null) {
+            return $this->cachedReadyToAssign;
+        }
+
+        if (! $this->settingsService->isYnabConfigured()) {
+            return 0.0;
+        }
+
+        try {
+            $budgetSummary = $this->ynabService->fetchBudgetSummary();
+            $this->cachedReadyToAssign = $budgetSummary['ready_to_assign'];
+
+            return $this->cachedReadyToAssign;
+        } catch (\Exception $e) {
+            return 0.0;
+        }
+    }
+
+    /**
+     * @return array{emergency_buffer: array{amount: float, target: float, percentage: float}, dedicated_categories: array<int, array{name: string, balance: float, target: float, percentage: float}>, pay_period: array{funded: float, needed: float, is_covered: bool, start_date: string, end_date: string}, status: string}|null
      */
     public function getBufferStatusProperty(): ?array
     {
@@ -48,56 +76,131 @@ class Recommendations extends Component
         }
 
         try {
+            // Emergency buffer from savings accounts
             $savingsAccounts = $this->ynabService->fetchSavingsAccounts();
-            $payPeriodData = $this->ynabService->fetchPayPeriodShortfall(20);
-
-            $monthlyEssential = $payPeriodData['monthly_essential'];
-            $savingsTotal = $savingsAccounts->sum('balance');
-
-            // Layer 1: Operational buffer (one month ahead)
-            $layer1Amount = $payPeriodData['funded'];
-            $layer1Percentage = $monthlyEssential > 0
-                ? min(100, ($layer1Amount / $monthlyEssential) * 100)
+            $savingsTotal = (float) $savingsAccounts->sum('balance');
+            $bufferTarget = $this->settingsService->getBufferTargetAmount();
+            $emergencyPercentage = $bufferTarget > 0
+                ? min(100, ($savingsTotal / $bufferTarget) * 100)
                 : 0;
-            $isMonthAhead = $monthlyEssential > 0 && ($layer1Amount + $savingsTotal) >= $monthlyEssential;
 
-            // Layer 2: Emergency buffer (savings accounts)
-            $layer2Amount = $savingsTotal;
-            $recommendedEmergencyMonths = 2;
-            $layer2Months = $monthlyEssential > 0 ? $layer2Amount / $monthlyEssential : 0;
+            // Dedicated categories from settings
+            $bufferCategoriesConfig = $this->settingsService->getBufferCategories();
+            $categoryNames = array_column($bufferCategoriesConfig, 'name');
+            $ynabCategories = $this->ynabService->fetchCategoriesByNames($categoryNames);
 
-            // Total
-            $totalBuffer = $layer1Amount + $layer2Amount;
-            $totalMonths = $monthlyEssential > 0 ? $totalBuffer / $monthlyEssential : 0;
+            // Map YNAB category balances to config targets
+            $dedicatedCategories = [];
+            foreach ($bufferCategoriesConfig as $configCategory) {
+                $ynabCategory = $ynabCategories->firstWhere('name', $configCategory['name']);
+                $balance = $ynabCategory['balance'] ?? 0.0;
+                $target = $configCategory['target'];
+                $percentage = $target > 0 ? min(100, ($balance / $target) * 100) : 0;
+
+                $dedicatedCategories[] = [
+                    'name' => $configCategory['name'],
+                    'balance' => $balance,
+                    'target' => $target,
+                    'percentage' => round($percentage, 0),
+                ];
+            }
+
+            // Pay period status
+            $payPeriodData = $this->ynabService->fetchPayPeriodShortfall(20);
+            $funded = $payPeriodData['funded'];
+            $needed = $payPeriodData['monthly_essential'];
+            $isCovered = $funded >= $needed;
+
+            // Calculate pay period date range (20th to 19th)
+            $now = new \DateTimeImmutable;
+            $currentDay = (int) $now->format('j');
+            $payDay = 20;
+
+            if ($currentDay >= $payDay) {
+                // We're in the period starting this month
+                $startDate = $now->setDate((int) $now->format('Y'), (int) $now->format('n'), $payDay);
+                $endDate = $startDate->modify('+1 month')->modify('-1 day');
+            } else {
+                // We're in the period that started last month
+                $startDate = $now->modify('-1 month')->setDate((int) $now->modify('-1 month')->format('Y'), (int) $now->modify('-1 month')->format('n'), $payDay);
+                $endDate = $now->setDate((int) $now->format('Y'), (int) $now->format('n'), $payDay - 1);
+            }
+
+            $startDateFormatted = $startDate->format('j').'. '.mb_strtolower($this->getMonthName((int) $startDate->format('n')));
+            $endDateFormatted = $endDate->format('j').'. '.mb_strtolower($this->getMonthName((int) $endDate->format('n')));
+
+            // Determine overall status
+            $status = $this->calculateBufferStatus($emergencyPercentage, $dedicatedCategories, $isCovered);
 
             return [
-                'layer1' => [
-                    'amount' => $layer1Amount,
-                    'percentage' => round($layer1Percentage, 0),
-                    'is_month_ahead' => $isMonthAhead,
+                'emergency_buffer' => [
+                    'amount' => $savingsTotal,
+                    'target' => $bufferTarget,
+                    'percentage' => round($emergencyPercentage, 0),
                 ],
-                'layer2' => [
-                    'amount' => $layer2Amount,
-                    'months' => round($layer2Months, 1),
-                    'target_months' => $recommendedEmergencyMonths,
+                'dedicated_categories' => $dedicatedCategories,
+                'pay_period' => [
+                    'funded' => $funded,
+                    'needed' => $needed,
+                    'is_covered' => $isCovered,
+                    'start_date' => $startDateFormatted,
+                    'end_date' => $endDateFormatted,
                 ],
-                'total_buffer' => $totalBuffer,
-                'monthly_essential' => $monthlyEssential,
-                'months_of_security' => round($totalMonths, 1),
-                'status' => $this->getBufferStatus($totalMonths),
+                'status' => $status,
             ];
         } catch (\Exception $e) {
             return null;
         }
     }
 
-    private function getBufferStatus(float $months): string
+    /**
+     * Get Norwegian month name.
+     */
+    private function getMonthName(int $month): string
     {
-        if ($months < 1) {
+        $months = [
+            1 => 'jan',
+            2 => 'feb',
+            3 => 'mar',
+            4 => 'apr',
+            5 => 'mai',
+            6 => 'jun',
+            7 => 'jul',
+            8 => 'aug',
+            9 => 'sep',
+            10 => 'okt',
+            11 => 'nov',
+            12 => 'des',
+        ];
+
+        return $months[$month] ?? '';
+    }
+
+    /**
+     * Calculate overall buffer status based on all components.
+     *
+     * @param  array<int, array{name: string, balance: float, target: float, percentage: float}>  $dedicatedCategories
+     */
+    private function calculateBufferStatus(float $emergencyPercentage, array $dedicatedCategories, bool $payPeriodCovered): string
+    {
+        // Critical if:
+        // - Pay period is not covered, OR
+        // - Emergency buffer is below 25%
+        if (! $payPeriodCovered || $emergencyPercentage < 25) {
             return 'critical';
         }
-        if ($months < 2) {
+
+        // Warning if:
+        // - Emergency buffer is below 75%, OR
+        // - Any dedicated category is below 50%
+        if ($emergencyPercentage < 75) {
             return 'warning';
+        }
+
+        foreach ($dedicatedCategories as $category) {
+            if ($category['percentage'] < 50) {
+                return 'warning';
+            }
         }
 
         return 'healthy';
@@ -120,7 +223,9 @@ class Recommendations extends Component
         }
 
         try {
-            return $this->recommendationService->getRecommendations($bufferStatus);
+            $readyToAssign = $this->readyToAssign;
+
+            return $this->recommendationService->getRecommendations($bufferStatus, $readyToAssign);
         } catch (\Exception $e) {
             return [];
         }

@@ -36,6 +36,8 @@ describe('YNAB configuration', function () {
         Setting::create(['key' => 'ynab.enabled', 'value' => 'true', 'type' => 'boolean', 'group' => 'ynab']);
         Setting::create(['key' => 'ynab.token', 'value' => encrypt('test-token'), 'type' => 'encrypted', 'group' => 'ynab']);
         Setting::create(['key' => 'ynab.budget_id', 'value' => 'test-budget', 'type' => 'string', 'group' => 'ynab']);
+        Setting::create(['key' => 'buffer.target_amount', 'value' => '50000', 'type' => 'float', 'group' => 'buffer']);
+        Setting::create(['key' => 'buffer.categories', 'value' => json_encode([]), 'type' => 'json', 'group' => 'buffer']);
 
         $mockYnabService = Mockery::mock(YnabService::class);
         $mockYnabService->shouldReceive('fetchSavingsAccounts')
@@ -47,13 +49,15 @@ describe('YNAB configuration', function () {
                 'funded' => 30000,
                 'monthly_essential' => 25000,
             ]);
+        $mockYnabService->shouldReceive('fetchCategoriesByNames')
+            ->andReturn(collect([]));
 
         app()->instance(YnabService::class, $mockYnabService);
 
         Livewire::test(Recommendations::class)
             ->call('loadData')
             ->assertDontSee(__('app.ynab_required_for_recommendations'))
-            ->assertSee(__('app.security_buffer'));
+            ->assertSee(__('app.preparedness'));
     });
 });
 
@@ -62,9 +66,11 @@ describe('Buffer status calculations', function () {
         Setting::create(['key' => 'ynab.enabled', 'value' => 'true', 'type' => 'boolean', 'group' => 'ynab']);
         Setting::create(['key' => 'ynab.token', 'value' => encrypt('test-token'), 'type' => 'encrypted', 'group' => 'ynab']);
         Setting::create(['key' => 'ynab.budget_id', 'value' => 'test-budget', 'type' => 'string', 'group' => 'ynab']);
+        Setting::create(['key' => 'buffer.target_amount', 'value' => '50000', 'type' => 'float', 'group' => 'buffer']);
+        Setting::create(['key' => 'buffer.categories', 'value' => json_encode([]), 'type' => 'json', 'group' => 'buffer']);
     });
 
-    it('calculates layer 1 (operational buffer) correctly', function () {
+    it('calculates emergency buffer correctly', function () {
         $mockYnabService = Mockery::mock(YnabService::class);
         $mockYnabService->shouldReceive('fetchSavingsAccounts')
             ->andReturn(collect([
@@ -72,9 +78,11 @@ describe('Buffer status calculations', function () {
             ]));
         $mockYnabService->shouldReceive('fetchPayPeriodShortfall')
             ->andReturn([
-                'funded' => 20000,
+                'funded' => 25000,
                 'monthly_essential' => 25000,
             ]);
+        $mockYnabService->shouldReceive('fetchCategoriesByNames')
+            ->andReturn(collect([]));
 
         app()->instance(YnabService::class, $mockYnabService);
 
@@ -83,17 +91,17 @@ describe('Buffer status calculations', function () {
 
         $bufferStatus = $component->get('bufferStatus');
 
-        // Layer 1 amount should be the funded amount
-        expect($bufferStatus['layer1']['amount'])->toEqual(20000);
+        // Emergency buffer amount should be the sum of savings accounts
+        expect($bufferStatus['emergency_buffer']['amount'])->toEqual(30000);
 
-        // Layer 1 percentage should be (20000 / 25000) * 100 = 80%
-        expect($bufferStatus['layer1']['percentage'])->toEqual(80.0);
+        // Emergency buffer percentage should be (30000 / 50000) * 100 = 60%
+        expect($bufferStatus['emergency_buffer']['percentage'])->toEqual(60);
 
-        // is_month_ahead: funded (20000) + savings (30000) = 50000 >= 25000 = true
-        expect($bufferStatus['layer1']['is_month_ahead'])->toBeTrue();
+        // Target should be the configured target amount
+        expect($bufferStatus['emergency_buffer']['target'])->toEqual(50000);
     });
 
-    it('calculates layer 2 (emergency buffer) correctly', function () {
+    it('calculates pay period status correctly', function () {
         $mockYnabService = Mockery::mock(YnabService::class);
         $mockYnabService->shouldReceive('fetchSavingsAccounts')
             ->andReturn(collect([
@@ -105,6 +113,8 @@ describe('Buffer status calculations', function () {
                 'funded' => 25000,
                 'monthly_essential' => 25000,
             ]);
+        $mockYnabService->shouldReceive('fetchCategoriesByNames')
+            ->andReturn(collect([]));
 
         app()->instance(YnabService::class, $mockYnabService);
 
@@ -113,27 +123,39 @@ describe('Buffer status calculations', function () {
 
         $bufferStatus = $component->get('bufferStatus');
 
-        // Layer 2 amount should be sum of savings: 30000 + 20000 = 50000
-        expect($bufferStatus['layer2']['amount'])->toEqual(50000);
-
-        // Layer 2 months: 50000 / 25000 = 2.0 months
-        expect($bufferStatus['layer2']['months'])->toEqual(2.0);
-
-        // Target months is the default of 2
-        expect($bufferStatus['layer2']['target_months'])->toBe(2);
+        // Pay period should be covered when funded >= needed
+        expect($bufferStatus['pay_period']['funded'])->toEqual(25000);
+        expect($bufferStatus['pay_period']['needed'])->toEqual(25000);
+        expect($bufferStatus['pay_period']['is_covered'])->toBeTrue();
     });
 
-    it('returns critical status when buffer is less than 1 month', function () {
+    it('calculates dedicated categories correctly', function () {
+        // Override with categories config
+        Setting::where('key', 'buffer.categories')->delete();
+        Setting::create([
+            'key' => 'buffer.categories',
+            'value' => json_encode([
+                ['name' => 'Bil vedlikehold', 'target' => 10000],
+                ['name' => 'Forsikring', 'target' => 5000],
+            ]),
+            'type' => 'json',
+            'group' => 'buffer',
+        ]);
+
         $mockYnabService = Mockery::mock(YnabService::class);
         $mockYnabService->shouldReceive('fetchSavingsAccounts')
-            ->andReturn(collect([
-                ['name' => 'Savings', 'balance' => 10000],
-            ]));
+            ->andReturn(collect([['name' => 'Savings', 'balance' => 50000]]));
         $mockYnabService->shouldReceive('fetchPayPeriodShortfall')
             ->andReturn([
-                'funded' => 5000,
+                'funded' => 25000,
                 'monthly_essential' => 25000,
             ]);
+        $mockYnabService->shouldReceive('fetchCategoriesByNames')
+            ->with(['Bil vedlikehold', 'Forsikring'])
+            ->andReturn(collect([
+                ['name' => 'Bil vedlikehold', 'balance' => 3000],
+                ['name' => 'Forsikring', 'balance' => 5000],
+            ]));
 
         app()->instance(YnabService::class, $mockYnabService);
 
@@ -142,39 +164,20 @@ describe('Buffer status calculations', function () {
 
         $bufferStatus = $component->get('bufferStatus');
 
-        // Total buffer: 5000 + 10000 = 15000
-        // Months of security: 15000 / 25000 = 0.6 < 1
-        expect($bufferStatus['status'])->toBe('critical');
-        expect($bufferStatus['months_of_security'])->toBeLessThan(1.0);
+        expect($bufferStatus['dedicated_categories'])->toHaveCount(2);
+
+        // First category: 3000 / 10000 = 30%
+        expect($bufferStatus['dedicated_categories'][0]['name'])->toBe('Bil vedlikehold');
+        expect($bufferStatus['dedicated_categories'][0]['balance'])->toEqual(3000);
+        expect($bufferStatus['dedicated_categories'][0]['target'])->toEqual(10000);
+        expect($bufferStatus['dedicated_categories'][0]['percentage'])->toEqual(30);
+
+        // Second category: 5000 / 5000 = 100%
+        expect($bufferStatus['dedicated_categories'][1]['name'])->toBe('Forsikring');
+        expect($bufferStatus['dedicated_categories'][1]['percentage'])->toEqual(100);
     });
 
-    it('returns warning status when buffer is between 1 and 2 months', function () {
-        $mockYnabService = Mockery::mock(YnabService::class);
-        $mockYnabService->shouldReceive('fetchSavingsAccounts')
-            ->andReturn(collect([
-                ['name' => 'Savings', 'balance' => 25000],
-            ]));
-        $mockYnabService->shouldReceive('fetchPayPeriodShortfall')
-            ->andReturn([
-                'funded' => 10000,
-                'monthly_essential' => 25000,
-            ]);
-
-        app()->instance(YnabService::class, $mockYnabService);
-
-        $component = Livewire::test(Recommendations::class)
-            ->call('loadData');
-
-        $bufferStatus = $component->get('bufferStatus');
-
-        // Total buffer: 10000 + 25000 = 35000
-        // Months of security: 35000 / 25000 = 1.4 (between 1 and 2)
-        expect($bufferStatus['status'])->toBe('warning');
-        expect($bufferStatus['months_of_security'])->toBeGreaterThanOrEqual(1.0);
-        expect($bufferStatus['months_of_security'])->toBeLessThan(2.0);
-    });
-
-    it('returns healthy status when buffer is 2 months or more', function () {
+    it('returns critical status when pay period is not covered', function () {
         $mockYnabService = Mockery::mock(YnabService::class);
         $mockYnabService->shouldReceive('fetchSavingsAccounts')
             ->andReturn(collect([
@@ -182,9 +185,11 @@ describe('Buffer status calculations', function () {
             ]));
         $mockYnabService->shouldReceive('fetchPayPeriodShortfall')
             ->andReturn([
-                'funded' => 25000,
+                'funded' => 10000,
                 'monthly_essential' => 25000,
             ]);
+        $mockYnabService->shouldReceive('fetchCategoriesByNames')
+            ->andReturn(collect([]));
 
         app()->instance(YnabService::class, $mockYnabService);
 
@@ -193,10 +198,124 @@ describe('Buffer status calculations', function () {
 
         $bufferStatus = $component->get('bufferStatus');
 
-        // Total buffer: 25000 + 50000 = 75000
-        // Months of security: 75000 / 25000 = 3.0 >= 2
+        // Critical: pay period not covered
+        expect($bufferStatus['status'])->toBe('critical');
+        expect($bufferStatus['pay_period']['is_covered'])->toBeFalse();
+    });
+
+    it('returns critical status when emergency buffer is below 25%', function () {
+        $mockYnabService = Mockery::mock(YnabService::class);
+        $mockYnabService->shouldReceive('fetchSavingsAccounts')
+            ->andReturn(collect([
+                ['name' => 'Savings', 'balance' => 10000], // 10000 / 50000 = 20%
+            ]));
+        $mockYnabService->shouldReceive('fetchPayPeriodShortfall')
+            ->andReturn([
+                'funded' => 25000,
+                'monthly_essential' => 25000,
+            ]);
+        $mockYnabService->shouldReceive('fetchCategoriesByNames')
+            ->andReturn(collect([]));
+
+        app()->instance(YnabService::class, $mockYnabService);
+
+        $component = Livewire::test(Recommendations::class)
+            ->call('loadData');
+
+        $bufferStatus = $component->get('bufferStatus');
+
+        // Critical: emergency buffer below 25%
+        expect($bufferStatus['status'])->toBe('critical');
+        expect($bufferStatus['emergency_buffer']['percentage'])->toEqual(20);
+    });
+
+    it('returns warning status when emergency buffer is below 75%', function () {
+        $mockYnabService = Mockery::mock(YnabService::class);
+        $mockYnabService->shouldReceive('fetchSavingsAccounts')
+            ->andReturn(collect([
+                ['name' => 'Savings', 'balance' => 25000], // 25000 / 50000 = 50%
+            ]));
+        $mockYnabService->shouldReceive('fetchPayPeriodShortfall')
+            ->andReturn([
+                'funded' => 25000,
+                'monthly_essential' => 25000,
+            ]);
+        $mockYnabService->shouldReceive('fetchCategoriesByNames')
+            ->andReturn(collect([]));
+
+        app()->instance(YnabService::class, $mockYnabService);
+
+        $component = Livewire::test(Recommendations::class)
+            ->call('loadData');
+
+        $bufferStatus = $component->get('bufferStatus');
+
+        // Warning: emergency buffer between 25% and 75%
+        expect($bufferStatus['status'])->toBe('warning');
+        expect($bufferStatus['emergency_buffer']['percentage'])->toEqual(50);
+    });
+
+    it('returns warning status when any dedicated category is below 50%', function () {
+        // Override with categories config
+        Setting::where('key', 'buffer.categories')->delete();
+        Setting::create([
+            'key' => 'buffer.categories',
+            'value' => json_encode([
+                ['name' => 'Bil vedlikehold', 'target' => 10000],
+            ]),
+            'type' => 'json',
+            'group' => 'buffer',
+        ]);
+
+        $mockYnabService = Mockery::mock(YnabService::class);
+        $mockYnabService->shouldReceive('fetchSavingsAccounts')
+            ->andReturn(collect([
+                ['name' => 'Savings', 'balance' => 50000], // 100% - healthy emergency buffer
+            ]));
+        $mockYnabService->shouldReceive('fetchPayPeriodShortfall')
+            ->andReturn([
+                'funded' => 25000,
+                'monthly_essential' => 25000,
+            ]);
+        $mockYnabService->shouldReceive('fetchCategoriesByNames')
+            ->with(['Bil vedlikehold'])
+            ->andReturn(collect([
+                ['name' => 'Bil vedlikehold', 'balance' => 4000], // 40% - below 50%
+            ]));
+
+        app()->instance(YnabService::class, $mockYnabService);
+
+        $component = Livewire::test(Recommendations::class)
+            ->call('loadData');
+
+        $bufferStatus = $component->get('bufferStatus');
+
+        // Warning: dedicated category below 50%
+        expect($bufferStatus['status'])->toBe('warning');
+    });
+
+    it('returns healthy status when all buffers are sufficient', function () {
+        $mockYnabService = Mockery::mock(YnabService::class);
+        $mockYnabService->shouldReceive('fetchSavingsAccounts')
+            ->andReturn(collect([
+                ['name' => 'Savings', 'balance' => 50000], // 100%
+            ]));
+        $mockYnabService->shouldReceive('fetchPayPeriodShortfall')
+            ->andReturn([
+                'funded' => 25000,
+                'monthly_essential' => 25000,
+            ]);
+        $mockYnabService->shouldReceive('fetchCategoriesByNames')
+            ->andReturn(collect([]));
+
+        app()->instance(YnabService::class, $mockYnabService);
+
+        $component = Livewire::test(Recommendations::class)
+            ->call('loadData');
+
+        $bufferStatus = $component->get('bufferStatus');
+
         expect($bufferStatus['status'])->toBe('healthy');
-        expect($bufferStatus['months_of_security'])->toBeGreaterThanOrEqual(2.0);
     });
 
     it('handles zero monthly essential gracefully', function () {
@@ -210,6 +329,8 @@ describe('Buffer status calculations', function () {
                 'funded' => 0,
                 'monthly_essential' => 0,
             ]);
+        $mockYnabService->shouldReceive('fetchCategoriesByNames')
+            ->andReturn(collect([]));
 
         app()->instance(YnabService::class, $mockYnabService);
 
@@ -218,9 +339,8 @@ describe('Buffer status calculations', function () {
 
         $bufferStatus = $component->get('bufferStatus');
 
-        // Should not crash, percentage should be 0
-        expect($bufferStatus['layer1']['percentage'])->toEqual(0);
-        expect($bufferStatus['layer2']['months'])->toEqual(0);
+        // Should not crash, pay period should be considered covered when needed is 0
+        expect($bufferStatus['pay_period']['is_covered'])->toBeTrue();
     });
 });
 
@@ -229,6 +349,8 @@ describe('Livewire actions', function () {
         Setting::create(['key' => 'ynab.enabled', 'value' => 'true', 'type' => 'boolean', 'group' => 'ynab']);
         Setting::create(['key' => 'ynab.token', 'value' => encrypt('test-token'), 'type' => 'encrypted', 'group' => 'ynab']);
         Setting::create(['key' => 'ynab.budget_id', 'value' => 'test-budget', 'type' => 'string', 'group' => 'ynab']);
+        Setting::create(['key' => 'buffer.target_amount', 'value' => '50000', 'type' => 'float', 'group' => 'buffer']);
+        Setting::create(['key' => 'buffer.categories', 'value' => json_encode([]), 'type' => 'json', 'group' => 'buffer']);
     });
 
     it('toggleScenarioComparison toggles the boolean property', function () {
@@ -240,6 +362,8 @@ describe('Livewire actions', function () {
                 'funded' => 25000,
                 'monthly_essential' => 25000,
             ]);
+        $mockYnabService->shouldReceive('fetchCategoriesByNames')
+            ->andReturn(collect([]));
 
         app()->instance(YnabService::class, $mockYnabService);
 
@@ -261,6 +385,8 @@ describe('Livewire actions', function () {
                 'funded' => 25000,
                 'monthly_essential' => 25000,
             ]);
+        $mockYnabService->shouldReceive('fetchCategoriesByNames')
+            ->andReturn(collect([]));
 
         app()->instance(YnabService::class, $mockYnabService);
 
@@ -288,6 +414,8 @@ describe('Livewire actions', function () {
                 'funded' => 25000,
                 'monthly_essential' => 25000,
             ]);
+        $mockYnabService->shouldReceive('fetchCategoriesByNames')
+            ->andReturn(collect([]));
 
         app()->instance(YnabService::class, $mockYnabService);
 
@@ -304,6 +432,8 @@ describe('Buffer status display', function () {
         Setting::create(['key' => 'ynab.enabled', 'value' => 'true', 'type' => 'boolean', 'group' => 'ynab']);
         Setting::create(['key' => 'ynab.token', 'value' => encrypt('test-token'), 'type' => 'encrypted', 'group' => 'ynab']);
         Setting::create(['key' => 'ynab.budget_id', 'value' => 'test-budget', 'type' => 'string', 'group' => 'ynab']);
+        Setting::create(['key' => 'buffer.target_amount', 'value' => '50000', 'type' => 'float', 'group' => 'buffer']);
+        Setting::create(['key' => 'buffer.categories', 'value' => json_encode([]), 'type' => 'json', 'group' => 'buffer']);
     });
 
     it('displays healthy status badge correctly', function () {
@@ -315,6 +445,8 @@ describe('Buffer status display', function () {
                 'funded' => 25000,
                 'monthly_essential' => 25000,
             ]);
+        $mockYnabService->shouldReceive('fetchCategoriesByNames')
+            ->andReturn(collect([]));
 
         app()->instance(YnabService::class, $mockYnabService);
 
@@ -326,12 +458,14 @@ describe('Buffer status display', function () {
     it('displays warning status badge correctly', function () {
         $mockYnabService = Mockery::mock(YnabService::class);
         $mockYnabService->shouldReceive('fetchSavingsAccounts')
-            ->andReturn(collect([['name' => 'Savings', 'balance' => 25000]]));
+            ->andReturn(collect([['name' => 'Savings', 'balance' => 25000]])); // 50% - warning
         $mockYnabService->shouldReceive('fetchPayPeriodShortfall')
             ->andReturn([
-                'funded' => 10000,
+                'funded' => 25000,
                 'monthly_essential' => 25000,
             ]);
+        $mockYnabService->shouldReceive('fetchCategoriesByNames')
+            ->andReturn(collect([]));
 
         app()->instance(YnabService::class, $mockYnabService);
 
@@ -343,12 +477,14 @@ describe('Buffer status display', function () {
     it('displays critical status badge correctly', function () {
         $mockYnabService = Mockery::mock(YnabService::class);
         $mockYnabService->shouldReceive('fetchSavingsAccounts')
-            ->andReturn(collect([['name' => 'Savings', 'balance' => 10000]]));
+            ->andReturn(collect([['name' => 'Savings', 'balance' => 10000]])); // 20% - critical
         $mockYnabService->shouldReceive('fetchPayPeriodShortfall')
             ->andReturn([
-                'funded' => 5000,
+                'funded' => 25000,
                 'monthly_essential' => 25000,
             ]);
+        $mockYnabService->shouldReceive('fetchCategoriesByNames')
+            ->andReturn(collect([]));
 
         app()->instance(YnabService::class, $mockYnabService);
 
@@ -363,6 +499,8 @@ describe('Error handling', function () {
         Setting::create(['key' => 'ynab.enabled', 'value' => 'true', 'type' => 'boolean', 'group' => 'ynab']);
         Setting::create(['key' => 'ynab.token', 'value' => encrypt('test-token'), 'type' => 'encrypted', 'group' => 'ynab']);
         Setting::create(['key' => 'ynab.budget_id', 'value' => 'test-budget', 'type' => 'string', 'group' => 'ynab']);
+        Setting::create(['key' => 'buffer.target_amount', 'value' => '50000', 'type' => 'float', 'group' => 'buffer']);
+        Setting::create(['key' => 'buffer.categories', 'value' => json_encode([]), 'type' => 'json', 'group' => 'buffer']);
     });
 
     it('returns null buffer status when YNAB API throws exception', function () {

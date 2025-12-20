@@ -647,4 +647,30 @@ class YnabService
             ? (float) $category['goal_target']
             : (float) ($category['budgeted'] ?? 0);
     }
+
+    /**
+     * Fetch specific categories by their names.
+     *
+     * @param  array<int, string>  $names  Category names to fetch
+     * @return Collection<int, array{name: string, balance: float, budgeted: float, goal_target: float, goal_under_funded: float}>
+     */
+    public function fetchCategoriesByNames(array $names): Collection
+    {
+        $allCategories = $this->fetchCategories();
+
+        return $allCategories
+            ->filter(function ($category) use ($names) {
+                return in_array($category['name'], $names, true);
+            })
+            ->map(function ($category): array {
+                return [
+                    'name' => (string) $category['name'],
+                    'balance' => (float) $category['balance'],
+                    'budgeted' => (float) $category['budgeted'],
+                    'goal_target' => (float) $category['goal_target'],
+                    'goal_under_funded' => (float) $category['goal_under_funded'],
+                ];
+            })
+            ->values();
+    }
 }

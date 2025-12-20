@@ -631,16 +631,16 @@ return [
     'ynab_sync_interval' => 'Synkroniseringsintervall',
     'ynab_last_sync' => 'Sist synkronisert',
 
-    // Security Buffer
-    'security_buffer' => 'Sikkerhetsbuffer',
-    'layer1_operational_buffer' => 'En måned foran',
-    'layer2_emergency_buffer' => 'Nødbuffer',
+    // Preparedness / Buffer
+    'preparedness' => 'Beredskap',
+    'preparedness_description' => 'Din økonomiske sikkerhet og beredskap',
+    'emergency_buffer' => 'Uforutsett-buffer',
+    'dedicated_category' => 'Dedikert kategori',
+    'pay_period' => 'Lønnsperiode',
+    'pay_period_funded' => 'Finansiert',
+    'covered' => 'Dekket',
+    'not_covered' => 'Ikke dekket',
     'savings_accounts' => 'Sparekontoer',
-    'assigned_next_month' => 'Finansiert for lønningsperioden',
-    'total_buffer' => 'Total buffer',
-    'month_ahead' => 'En måned foran',
-    'months_of_security_count' => ':count måneder sikkerhet',
-    'of_target' => ':months mnd av :target mnd mål',
     'buffer_status_critical' => 'Kritisk',
     'buffer_status_warning' => 'Under mål',
     'buffer_status_healthy' => 'God',
@@ -659,50 +659,62 @@ return [
     'linked_to_ynab' => 'Koblet til YNAB',
     'available_in_ynab' => 'Tilgjengelig',
 
-    // Buffer Recommendations (Phase 2)
+    // Buffer Recommendations
     'buffer' => [
-        // Layer 1 Recommendations
-        'layer1_success_title' => 'En måned foran!',
-        'layer1_success_description' => 'Du er en måned foran - flott økonomisk fundament!',
-        'layer1_action_title' => 'Bli en måned foran',
-        'layer1_action_description' => 'Overfør :transfer_amount kr fra sparing til brukskonto for å finansiere neste måneds budsjett. Du har fortsatt :remaining_months måneder i nødbuffer.',
-        'layer1_partial_description' => 'Du trenger :shortfall kr for å være en måned foran, men har kun :transfer_amount kr tilgjengelig. Overfør det du kan - du mangler fortsatt :still_needed kr.',
-        'layer1_no_savings_description' => 'Du trenger :shortfall kr for å være en måned foran, men har ingen midler i sparekontoen å overføre.',
+        // Pay Period Recommendations
+        'pay_period_covered_title' => 'Lønnsperiode dekket',
+        'pay_period_covered_description' => 'Alle kategorier til neste lønning er finansiert.',
+        'pay_period_not_covered_title' => 'Lønnsperiode ikke dekket',
+        'pay_period_not_covered_description' => 'Du mangler :shortfall kr for å dekke nødvendige utgifter til neste lønning.',
 
-        // Buffer Status
-        'buffer_good_title' => 'Nødbuffer sunn',
-        'buffer_good_description' => 'Nødbufferen din på :months måneder overstiger anbefalte 2 måneder.',
-        'buffer_build_title' => 'Bygg nødbuffer',
-        'buffer_build_description' => 'Du har :current_months måneder spart. Bygg til :target_months måneder ved å spare :shortfall kr mer.',
+        // Minimum Buffer (under 50%) - Priority 2
+        'minimum_buffer_title' => 'Bygg minimum sikkerhetsbuffer',
+        'minimum_buffer_description' => 'Bufferen din er på :percentage% (:current_amount kr). Bygg til minst 50% (:target_50 kr) før du fokuserer på annet.',
+        'minimum_buffer_description_with_funds' => 'Du har :ready_to_assign kr tilgjengelig. Sett av :recommended_amount kr til bufferen for å nå 50% (:target_50 kr).',
 
-        // High Interest Debt
-        'high_interest_debt_title' => 'Høyrentegjeld oppdaget',
-        'high_interest_debt_description' => 'Overfør :suggested_amount kr fra sparing til :debt_name (:interest_rate% rente) for å spare :interest_saved kr i renter. Du har :available_savings kr tilgjengelig i sparing.',
+        // Emergency Buffer (50-100%) - Priority 5
+        'emergency_buffer_good_title' => 'Uforutsett-buffer dekket',
+        'emergency_buffer_good_description' => 'Bufferen din på :amount kr dekker målbeløpet på :target kr.',
+        'emergency_buffer_low_title' => 'Fullfør uforutsett-buffer',
+        'emergency_buffer_low_description' => 'Du har :current_amount kr av :target_amount kr (:percentage%). Mangler :shortfall kr for å nå målet.',
+        'emergency_buffer_low_description_with_funds' => 'Du har :ready_to_assign kr tilgjengelig. Sett av :recommended_amount kr for å nærme deg målet på :target_amount kr.',
 
-        // Low Interest Debt
-        'low_interest_debt_title' => 'Bygg buffer først',
-        'low_interest_debt_description' => ':debt_name har lav rente (:interest_rate%). Fokuser på å bygge bufferen fra :current_buffer_months til :target_buffer_months måneder først.',
+        // High Interest Debt (>10%) - Priority 3
+        'high_interest_debt_title' => 'Betal ned høyrentegjeld',
+        'high_interest_debt_description' => ':debt_name har :interest_rate% rente. Høyrentegjeld koster mer enn buffervekst gir.',
+        'high_interest_debt_description_with_funds' => 'Du har :ready_to_assign kr tilgjengelig. Betal på :debt_name (:interest_rate% rente) - sparer deg :interest_saved kr i renter.',
 
-        // Good Buffer with Debt
-        'good_buffer_debt_title' => 'Akselerer gjeldsnedbetalingen',
-        'good_buffer_debt_description' => 'Bufferen din er solid. Overfør :suggested_amount kr til :debt_name - spar :interest_saved kr i renter og betal ned :months_saved måneder tidligere.',
+        // Dedicated Category Recommendations - Priority 4
+        'category_low_title' => 'Fyll :category_name',
+        'category_low_description' => 'Du har :current_amount kr av :target_amount kr (:percentage%). Mangler :shortfall kr for å nå målet.',
+        'category_low_description_with_funds' => 'Du har :ready_to_assign kr tilgjengelig. Sett av :recommended_amount kr til :category_name.',
 
-        // Balanced Scenario
-        'balanced_title' => 'Balansert tilnærming',
-        'balanced_description' => 'Med :debt_name på :interest_rate% og :current_buffer_months måneder buffer, vurder å dele: 50% til buffer, 50% til gjeld.',
+        // Regular Debt Recommendations - Priority 6
+        'no_debt_title' => 'Ingen gjeld',
+        'no_debt_description' => 'Gratulerer! Du har ingen gjeld å betale ned.',
+        'pay_debt_title' => 'Betal ned gjeld',
+        'pay_debt_description' => 'Beredskapen er god. Fokuser på :debt_name (:interest_rate% rente).',
+        'pay_debt_description_with_funds' => 'Du har :ready_to_assign kr tilgjengelig. Betal på :debt_name - sparer deg :interest_saved kr i renter og :months_saved måneder.',
+
+        // All Good - Priority 7
+        'all_good_title' => 'Du er i god form!',
+        'all_good_description' => 'Bufferen på :buffer_amount kr er full, alle kategorier er dekket, og du har ingen gjeld. Flott jobbet!',
 
         // Scenario Comparison
-        'scenario_buffer' => 'Legg til buffer',
+        'scenario_buffer' => 'Legg til uforutsett-buffer',
         'scenario_debt' => 'Betal :debt_name',
-        'scenario_buffer_impact' => '+:days dager sikkerhet (:old_months → :new_months mnd)',
-        'scenario_debt_impact' => 'Spar :interest_saved kr i renter, nedbetalt :months_saved måneder tidligere',
+        'buffer_impact' => '+:amount kr (:percentage% av mål)',
+        'interest_savings' => ':amount kr spart',
+        'months_earlier' => ':months måneder tidligere',
 
-        // Recommendations
-        'recommendation_critical_buffer' => 'Buffer for lav - prioriter sikkerhet',
-        'recommendation_high_interest' => 'Høy rente gir best avkastning',
-        'recommendation_build_buffer' => 'Bygg buffer til anbefalt nivå først',
-        'recommendation_pay_debt' => 'Buffer er sunn - akselerer gjeldsnedbetalingen',
-        'recommendation_maintain_buffer' => 'Oppretthold nødbufferen din',
+        // Recommendations for scenario
+        'recommendation_pay_period' => 'Fyll NEED-kategorier først for å dekke lønnsperioden',
+        'recommendation_minimum_buffer' => 'Bygg uforutsett-buffer til minimum 50% først',
+        'recommendation_high_interest_debt' => 'Betal ned høyrentegjeld før buffer - sparer mest',
+        'recommendation_emergency_buffer' => 'Bygg uforutsett-buffer til målbeløpet',
+        'recommendation_dedicated_category' => 'Fyll dedikerte kategorier til målbeløpet',
+        'recommendation_pay_debt' => 'Beredskapen er god - akselerer gjeldsnedbetalingen',
+        'recommendation_maintain_buffer' => 'Oppretthold beredskapen din',
 
         // UI Elements
         'recommendations_title' => 'Anbefalinger',
@@ -711,11 +723,37 @@ return [
         'compare_options' => 'Fått ekstra penger? Se alternativer',
         'hide_options' => 'Skjul alternativer',
         'recommended' => 'Anbefalt',
-        'view_details' => 'Vis detaljer',
-        'days_security' => ':days dager sikkerhet',
-        'months_earlier' => ':months måneder tidligere',
-        'interest_savings' => ':amount kr spart',
     ],
+
+    // Buffer Settings
+    'buffer_settings' => 'Bufferinnstillinger',
+    'buffer_settings_description' => 'Konfigurer mål for nødbuffer og beredskapskategorier',
+    'buffer_settings_info_title' => 'Om bufferinnstillinger',
+    'buffer_settings_info_description' => 'Sett opp mål for nødbufferen din og spesifikke kategorier du vil bygge opp. Disse målene brukes til å gi anbefalinger om når du bør spare vs betale ned gjeld.',
+    'buffer_target_amount' => 'Nødbuffer-målbeløp',
+    'buffer_target_amount_help' => 'Totalt beløp du ønsker å ha tilgjengelig i nødbufferen',
+    'buffer_categories' => 'Bufferkategorier',
+    'buffer_categories_help' => 'Spesifikke kategorier med egne sparemål (f.eks. tannlege, bilservice)',
+    'add_category' => 'Legg til kategori',
+    'category_name' => 'Kategorinavn',
+    'target_amount' => 'Målbeløp',
+    'no_categories' => 'Ingen kategorier lagt til ennå',
+    'select_ynab_category' => 'Velg YNAB-kategori',
+    'ynab_required_for_categories' => 'YNAB må være konfigurert for å legge til kategorier',
+    'invalid_categories_warning' => 'Noen kategorier finnes ikke i YNAB',
+    'invalid_categories_description' => 'Følgende kategorier finnes ikke i din YNAB-konto og vil ikke kunne spores: :categories. Velg en gyldig kategori fra nedtrekkslisten.',
+
+    // Buffer Settings Validation
+    'validation_buffer_target_amount_required' => 'Nødbuffer-målbeløp er påkrevd.',
+    'validation_buffer_target_amount_numeric' => 'Nødbuffer-målbeløp må være et tall.',
+    'validation_buffer_target_amount_min' => 'Nødbuffer-målbeløp kan ikke være negativt.',
+    'validation_category_name_required' => 'Kategorinavn er påkrevd.',
+    'validation_category_name_string' => 'Kategorinavn må være en tekst.',
+    'validation_category_name_min' => 'Kategorinavn må ha minst ett tegn.',
+    'validation_category_name_max' => 'Kategorinavn kan ikke være lengre enn 100 tegn.',
+    'validation_category_target_required' => 'Målbeløp er påkrevd.',
+    'validation_category_target_numeric' => 'Målbeløp må være et tall.',
+    'validation_category_target_min' => 'Målbeløp kan ikke være negativt.',
 
     // Login
     'login_title' => 'Logg inn',
