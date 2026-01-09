@@ -26,3 +26,5 @@ yarn-error.log
 .idea/economy.iml
 /.ai
 /.serena
+/.claude/settings.local.json
+/.mcp.json
