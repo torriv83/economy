@@ -75,3 +75,54 @@ test('hides skeleton and shows content after loadData is called', function () {
         ->assertDontSee('animate-pulse')
         ->assertSee('Overall Progress');
 });
+
+test('payments_made excludes reconciliation adjustments', function () {
+    $debt = Debt::factory()->create([
+        'name' => 'Kredittkort',
+        'type' => 'kredittkort',
+        'balance' => 50000,
+        'original_balance' => 50000,
+        'interest_rate' => 8.5,
+        'minimum_payment' => 1500,
+    ]);
+
+    // Create 1 regular payment with month_number
+    $debt->payments()->create([
+        'planned_amount' => 2000,
+        'actual_amount' => 2000,
+        'payment_date' => now(),
+        'month_number' => 1,
+        'payment_month' => now()->format('Y-m'),
+        'is_reconciliation_adjustment' => false,
+    ]);
+
+    // Create 2 reconciliation adjustments (no month_number)
+    $debt->payments()->create([
+        'planned_amount' => 0,
+        'actual_amount' => 500,
+        'payment_date' => now(),
+        'month_number' => null,
+        'payment_month' => now()->format('Y-m'),
+        'is_reconciliation_adjustment' => true,
+    ]);
+
+    $debt->payments()->create([
+        'planned_amount' => 0,
+        'actual_amount' => -300,
+        'payment_date' => now(),
+        'month_number' => null,
+        'payment_month' => now()->format('Y-m'),
+        'is_reconciliation_adjustment' => true,
+    ]);
+
+    // Verify total payments is 3 (1 regular + 2 reconciliations)
+    expect($debt->payments()->count())->toBe(3);
+
+    // Verify payments_made only counts the regular payment (not reconciliations)
+    $component = Livewire::test(PaymentPlan::class);
+    $schedule = $component->get('debtPayoffSchedule');
+
+    $debtSchedule = collect($schedule)->firstWhere('name', 'Kredittkort');
+
+    expect($debtSchedule['payments_made'])->toBe(1);
+});
