@@ -201,8 +201,12 @@ class PayoffCalendar extends Component
             $paymentService->updateDebtBalances();
         });
 
+        // Lagre verdier FØR modal lukkes (closePaymentModal resetter til 0)
+        $amount = $this->paymentAmount;
+        $debtName = $this->selectedDebtName;
+
         $this->closePaymentModal();
-        session()->flash('payment_recorded', 'Betaling på '.number_format($this->paymentAmount, 0, ',', ' ').' kr registrert for '.$this->selectedDebtName);
+        session()->flash('payment_recorded', 'Betaling på '.number_format($amount, 0, ',', ' ').' kr registrert for '.$debtName);
     }
 
     public function openYnabModal(): void
