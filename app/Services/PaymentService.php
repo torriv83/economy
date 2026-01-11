@@ -72,34 +72,22 @@ class PaymentService
 
     /**
      * Update all debt balances based on recorded payments
-     * Uses atomic database operations to prevent race conditions
+     * Uses Eloquent to trigger observers for proper cache invalidation
      */
     public function updateDebtBalances(): void
     {
-        // Get all debt IDs that have payments or need balance updates
-        $debtIds = Debt::pluck('id');
-        $now = now()->format('Y-m-d H:i:s');
+        $debts = Debt::all();
 
-        foreach ($debtIds as $debtId) {
-            // Update balance using principal_paid (which accounts for interest)
-            // Balance = original_balance - SUM(principal_paid)
-            // Note: Using CASE WHEN instead of GREATEST for SQLite/MySQL compatibility
-            DB::update('
-                UPDATE `debts`
-                SET `balance` = CASE
-                    WHEN `original_balance` - COALESCE(
-                        (SELECT SUM(`principal_paid`) FROM `payments` WHERE `debt_id` = ?),
-                        0
-                    ) > 0
-                    THEN `original_balance` - COALESCE(
-                        (SELECT SUM(`principal_paid`) FROM `payments` WHERE `debt_id` = ?),
-                        0
-                    )
-                    ELSE 0
-                END,
-                `updated_at` = ?
-                WHERE `id` = ?
-            ', [$debtId, $debtId, $now, $debtId]);
+        foreach ($debts as $debt) {
+            // Hent sum av principal_paid for denne gjelden
+            $totalPrincipalPaid = Payment::where('debt_id', $debt->id)
+                ->sum('principal_paid');
+
+            // Beregn ny balanse
+            $newBalance = max(0, $debt->original_balance - $totalPrincipalPaid);
+
+            // Oppdater via Eloquent (triggerer observer)
+            $debt->update(['balance' => $newBalance]);
         }
     }
 
@@ -482,6 +470,11 @@ class PaymentService
             ]);
 
             $this->updateDebtBalances();
+
+            // Clear relevant caches
+            \App\Services\DebtCacheService::clearCache();
+            \App\Services\ProgressCacheService::clearCache();
+            \App\Services\DebtCalculationService::clearAllCalculationCaches();
         });
 
         return $payment->fresh();
@@ -499,6 +492,11 @@ class PaymentService
         DB::transaction(function () use ($payment) {
             $payment->delete();
             $this->updateDebtBalances();
+
+            // Explicitly clear all caches since updateDebtBalances() uses raw SQL
+            DebtCacheService::clearCache();
+            ProgressCacheService::clearCache();
+            DebtCalculationService::clearAllCalculationCaches();
         });
 
         return true;

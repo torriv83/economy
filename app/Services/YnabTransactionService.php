@@ -9,9 +9,16 @@ use App\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use App\Services\DebtCacheService;
+use App\Services\ProgressCacheService;
+use App\Services\DebtCalculationService;
 
 class YnabTransactionService
 {
+    public function __construct(
+        private PaymentService $paymentService
+    ) {}
+
     /**
      * Import a YNAB transaction as a payment.
      *
@@ -63,8 +70,21 @@ class YnabTransactionService
      */
     public function updatePaymentFromTransaction(Payment $payment, string $ynabTransactionId, float $amount, ?string $date = null): void
     {
+        // Hent gjeldende balanse på betalingstidspunktet
+        $debt = $payment->debt;
+
+        // Beregn månedlig rente
+        $monthlyInterestRate = ($debt->interest_rate / 100) / 12;
+        $monthlyInterest = round($debt->balance * $monthlyInterestRate, 2);
+
+        // Fordel betaling: Rente først, deretter hovedstol
+        $interestPaid = min($amount, $monthlyInterest);
+        $principalPaid = max(0, $amount - $monthlyInterest);
+
         $data = [
             'actual_amount' => $amount,
+            'interest_paid' => $interestPaid,
+            'principal_paid' => $principalPaid,
             'ynab_transaction_id' => $ynabTransactionId,
         ];
 
@@ -73,6 +93,14 @@ class YnabTransactionService
         }
 
         $payment->update($data);
+
+        // Oppdater gjeldssaldo
+        $this->paymentService->updateDebtBalances();
+
+        // Temporary cache clear (til Bug #509 er fikset)
+        DebtCacheService::clearCache();
+        ProgressCacheService::clearCache();
+        DebtCalculationService::clearAllCalculationCaches();
     }
 
     /**
@@ -220,10 +248,31 @@ class YnabTransactionService
     {
         $paymentDate = Carbon::parse($date);
 
+        // Hent gjeldende balanse på betalingstidspunktet
+        $debt = $payment->debt;
+
+        // Beregn månedlig rente
+        $monthlyInterestRate = ($debt->interest_rate / 100) / 12;
+        $monthlyInterest = round($debt->balance * $monthlyInterestRate, 2);
+
+        // Fordel betaling: Rente først, deretter hovedstol
+        $interestPaid = min($amount, $monthlyInterest);
+        $principalPaid = max(0, $amount - $monthlyInterest);
+
         $payment->update([
             'actual_amount' => $amount,
+            'interest_paid' => $interestPaid,
+            'principal_paid' => $principalPaid,
             'payment_date' => $paymentDate,
             'ynab_transaction_id' => $ynabTransactionId,
         ]);
+
+        // Oppdater gjeldssaldo
+        $this->paymentService->updateDebtBalances();
+
+        // Temporary cache clear (til Bug #509 er fikset)
+        DebtCacheService::clearCache();
+        ProgressCacheService::clearCache();
+        DebtCalculationService::clearAllCalculationCaches();
     }
 }
