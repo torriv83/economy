@@ -25,7 +25,7 @@ test('can import a YNAB transaction as a payment', function () {
     $paymentService = app(PaymentService::class);
     $service = new YnabTransactionService($paymentService);
 
-    $payment = $service->importTransaction($debt, $transaction, $paymentService);
+    $payment = $service->importTransaction($debt, $transaction);
 
     expect($payment)->toBeInstanceOf(Payment::class)
         ->and($payment->debt_id)->toBe($debt->id)
@@ -50,9 +50,8 @@ test('import transaction uses default note when memo is null', function () {
     ];
 
     $service = new YnabTransactionService(app(PaymentService::class));
-    $paymentService = app(PaymentService::class);
 
-    $payment = $service->importTransaction($debt, $transaction, $paymentService);
+    $payment = $service->importTransaction($debt, $transaction);
 
     expect($payment->notes)->toBe(__('app.imported_from_ynab'));
 });
@@ -60,6 +59,7 @@ test('import transaction uses default note when memo is null', function () {
 test('can update payment with YNAB transaction data', function () {
     $debt = Debt::factory()->create([
         'balance' => 5000.00,
+        'original_balance' => 5000.00,
         'interest_rate' => 12.0,
     ]);
     $payment = Payment::factory()->create([
@@ -85,6 +85,7 @@ test('can update payment with YNAB transaction data', function () {
 test('can update payment with YNAB transaction data including date', function () {
     $debt = Debt::factory()->create([
         'balance' => 5000.00,
+        'original_balance' => 5000.00,
         'interest_rate' => 12.0,
     ]);
     $payment = Payment::factory()->create([
@@ -251,9 +252,8 @@ test('import transaction calculates month_number as integer', function () {
     ];
 
     $service = new YnabTransactionService(app(PaymentService::class));
-    $paymentService = app(PaymentService::class);
 
-    $payment = $service->importTransaction($debt, $transaction, $paymentService);
+    $payment = $service->importTransaction($debt, $transaction);
 
     // month_number should be exactly 1 (integer), not a float like 1.277...
     expect($payment->month_number)->toBe(1)
@@ -278,9 +278,8 @@ test('import transaction calculates correct month_number across months', functio
     ];
 
     $service = new YnabTransactionService(app(PaymentService::class));
-    $paymentService = app(PaymentService::class);
 
-    $payment = $service->importTransaction($debt, $transaction, $paymentService);
+    $payment = $service->importTransaction($debt, $transaction);
 
     expect($payment->month_number)->toBe(2)
         ->and($payment->month_number)->toBeInt();

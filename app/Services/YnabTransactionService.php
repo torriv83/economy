@@ -9,9 +9,7 @@ use App\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use App\Services\DebtCacheService;
-use App\Services\ProgressCacheService;
-use App\Services\DebtCalculationService;
+use InvalidArgumentException;
 
 class YnabTransactionService
 {
@@ -24,21 +22,24 @@ class YnabTransactionService
      *
      * @param  array<string, mixed>  $transaction
      */
-    public function importTransaction(Debt $debt, array $transaction, PaymentService $paymentService): Payment
+    public function importTransaction(Debt $debt, array $transaction): Payment
     {
+        $this->validateTransactionData($transaction);
+
         $paymentDate = Carbon::parse($transaction['date']);
         $paymentMonth = $paymentDate->format('Y-m');
 
         // Calculate month number based on payment date relative to debt creation
         // Use startOfMonth to compare months properly, ensuring integer result
-        $monthNumber = (int) $debt->created_at->startOfMonth()->diffInMonths($paymentDate->startOfMonth()) + 1;
+        // Ensure month number is at least 1 (handle edge cases with timezone/data errors)
+        $monthNumber = max(1, (int) $debt->created_at->startOfMonth()->diffInMonths($paymentDate->startOfMonth()) + 1);
 
         $payment = null;
 
-        DB::transaction(function () use ($debt, $transaction, $paymentDate, $paymentMonth, $monthNumber, $paymentService, &$payment) {
-            // Calculate interest/principal breakdown based on current balance
-            $currentBalance = $debt->balance;
-            $monthlyInterest = round($currentBalance * ($debt->interest_rate / 100) / 12, 2);
+        DB::transaction(function () use ($debt, $transaction, $paymentDate, $paymentMonth, $monthNumber, &$payment) {
+            // Calculate interest/principal breakdown based on historical balance
+            $balanceAtPaymentTime = $this->getHistoricalBalance($debt, $paymentDate);
+            $monthlyInterest = round($balanceAtPaymentTime * ($debt->interest_rate / 100) / 12, 2);
             $actualAmount = $transaction['amount'];
 
             // Payment goes to interest first, then principal
@@ -59,7 +60,7 @@ class YnabTransactionService
                 'is_reconciliation_adjustment' => false,
             ]);
 
-            $paymentService->updateDebtBalances();
+            $this->paymentService->updateDebtBalances();
         });
 
         return $payment;
@@ -70,12 +71,20 @@ class YnabTransactionService
      */
     public function updatePaymentFromTransaction(Payment $payment, string $ynabTransactionId, float $amount, ?string $date = null): void
     {
-        // Hent gjeldende balanse på betalingstidspunktet
-        $debt = $payment->debt;
+        $this->validateAmount($amount);
 
-        // Beregn månedlig rente
+        if ($date !== null) {
+            $this->validateDateFormat($date);
+        }
+
+        // Hent historisk balanse på betalingstidspunktet
+        $debt = $payment->debt;
+        $paymentDate = $date !== null ? Carbon::parse($date) : $payment->payment_date;
+
+        // Beregn månedlig rente basert på historisk balanse (ekskluder denne betalingen)
         $monthlyInterestRate = ($debt->interest_rate / 100) / 12;
-        $monthlyInterest = round($debt->balance * $monthlyInterestRate, 2);
+        $balanceAtPaymentTime = $this->getHistoricalBalance($debt, $paymentDate, $payment);
+        $monthlyInterest = round($balanceAtPaymentTime * $monthlyInterestRate, 2);
 
         // Fordel betaling: Rente først, deretter hovedstol
         $interestPaid = min($amount, $monthlyInterest);
@@ -98,9 +107,7 @@ class YnabTransactionService
         $this->paymentService->updateDebtBalances();
 
         // Temporary cache clear (til Bug #509 er fikset)
-        DebtCacheService::clearCache();
-        ProgressCacheService::clearCache();
-        DebtCalculationService::clearAllCalculationCaches();
+        $this->clearTemporaryCaches();
     }
 
     /**
@@ -246,14 +253,18 @@ class YnabTransactionService
      */
     public function linkTransactionToPayment(Payment $payment, string $ynabTransactionId, float $amount, string $date): void
     {
+        $this->validateAmount($amount);
+        $this->validateDateFormat($date);
+
         $paymentDate = Carbon::parse($date);
 
-        // Hent gjeldende balanse på betalingstidspunktet
+        // Hent historisk balanse på betalingstidspunktet
         $debt = $payment->debt;
 
-        // Beregn månedlig rente
+        // Beregn månedlig rente basert på historisk balanse (ekskluder denne betalingen)
         $monthlyInterestRate = ($debt->interest_rate / 100) / 12;
-        $monthlyInterest = round($debt->balance * $monthlyInterestRate, 2);
+        $balanceAtPaymentTime = $this->getHistoricalBalance($debt, $paymentDate, $payment);
+        $monthlyInterest = round($balanceAtPaymentTime * $monthlyInterestRate, 2);
 
         // Fordel betaling: Rente først, deretter hovedstol
         $interestPaid = min($amount, $monthlyInterest);
@@ -271,6 +282,93 @@ class YnabTransactionService
         $this->paymentService->updateDebtBalances();
 
         // Temporary cache clear (til Bug #509 er fikset)
+        $this->clearTemporaryCaches();
+    }
+
+    /**
+     * Calculate the historical balance for a debt at a given payment date.
+     *
+     * This method calculates what the debt balance was at the time of the payment
+     * by starting with the original balance and subtracting all principal payments
+     * made before this payment date.
+     *
+     * @param  Payment|null  $excludePayment  Optional payment to exclude from calculation (used when updating existing payments)
+     */
+    private function getHistoricalBalance(Debt $debt, Carbon $paymentDate, ?Payment $excludePayment = null): float
+    {
+        // Beregn alle betalinger (hovedstol) som skjedde FØR denne datoen
+        $query = Payment::where('debt_id', $debt->id)
+            ->where('payment_date', '<', $paymentDate);
+
+        // Ekskluder betalingen vi oppdaterer (hvis angitt)
+        if ($excludePayment !== null) {
+            $query->where('id', '!=', $excludePayment->id);
+        }
+
+        $previousPrincipal = $query->sum('principal_paid');
+
+        // Hvis original_balance er satt og virker fornuftig, bruk den
+        if ($debt->original_balance !== null) {
+            return max(0, $debt->original_balance - $previousPrincipal);
+        }
+
+        // Ellers beregn original balance fra current balance + all principal paid
+        $allPrincipalPaid = Payment::where('debt_id', $debt->id)
+            ->when($excludePayment, fn ($q) => $q->where('id', '!=', $excludePayment->id))
+            ->sum('principal_paid');
+
+        $originalBalance = $debt->balance + $allPrincipalPaid;
+
+        return max(0, $originalBalance - $previousPrincipal);
+    }
+
+    /**
+     * Validate transaction data from YNAB.
+     *
+     * @param  array<string, mixed>  $transaction
+     */
+    private function validateTransactionData(array $transaction): void
+    {
+        if (! isset($transaction['date']) || ! is_string($transaction['date'])) {
+            throw new InvalidArgumentException('Transaction date is required and must be a string');
+        }
+
+        $this->validateDateFormat($transaction['date']);
+
+        if (! isset($transaction['amount']) || ! is_numeric($transaction['amount'])) {
+            throw new InvalidArgumentException('Transaction amount is required and must be numeric');
+        }
+
+        $this->validateAmount((float) $transaction['amount']);
+    }
+
+    /**
+     * Validate date format.
+     */
+    private function validateDateFormat(string $date): void
+    {
+        try {
+            Carbon::parse($date);
+        } catch (\Exception $e) {
+            throw new InvalidArgumentException("Invalid date format: {$date}");
+        }
+    }
+
+    /**
+     * Validate amount is not negative.
+     */
+    private function validateAmount(float $amount): void
+    {
+        if ($amount < 0) {
+            throw new InvalidArgumentException('Amount cannot be negative');
+        }
+    }
+
+    /**
+     * Clear temporary caches (until Bug #509 is fixed).
+     */
+    private function clearTemporaryCaches(): void
+    {
         DebtCacheService::clearCache();
         ProgressCacheService::clearCache();
         DebtCalculationService::clearAllCalculationCaches();
