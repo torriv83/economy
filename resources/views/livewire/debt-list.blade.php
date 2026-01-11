@@ -122,16 +122,23 @@
                             {{ __('app.debt_free_in') }}
                         </p>
                         @if ($this->strategyEstimate)
-                            <p class="text-4xl font-display font-bold tracking-tight">
-                                <span class="gradient-text">
-                                    @if ($this->strategyEstimate['years'] > 0)
-                                        {{ $this->strategyEstimate['years'] }} {{ trans_choice('app.years', $this->strategyEstimate['years']) }}
-                                    @endif
-                                    @if ($this->strategyEstimate['months'] > 0)
-                                        {{ $this->strategyEstimate['months'] }} {{ trans_choice('app.months', $this->strategyEstimate['months']) }}
-                                    @endif
-                                </span>
-                            </p>
+                            <div class="flex items-center gap-4">
+                                <p class="text-4xl font-display font-bold tracking-tight">
+                                    <span class="gradient-text">
+                                        @if ($this->strategyEstimate['years'] > 0)
+                                            {{ $this->strategyEstimate['years'] }} {{ trans_choice('app.years', $this->strategyEstimate['years']) }}
+                                        @endif
+                                        @if ($this->strategyEstimate['months'] > 0)
+                                            {{ $this->strategyEstimate['months'] }} {{ trans_choice('app.months', $this->strategyEstimate['months']) }}
+                                        @endif
+                                    </span>
+                                </p>
+                                @if ($this->strategyPayoffDate)
+                                    <p class="text-lg font-medium text-slate-600 dark:text-slate-300">
+                                        {{ $this->strategyPayoffDate }}
+                                    </p>
+                                @endif
+                            </div>
                             <p class="text-sm text-slate-500 dark:text-slate-400 mt-3">
                                 <span>{{ __('app.with_chosen_strategy') }}</span>
                                 @if ($this->payoffEstimate)

@@ -106,3 +106,24 @@ test('shows empty state when no debts exist', function () {
         ->assertSee(__('app.add_first_debt'))
         ->assertDontSee(__('app.total_debt'));
 });
+
+test('displays payoff date with strategy estimate', function () {
+    // Create debts with minimum payments
+    Debt::factory()->create([
+        'name' => 'Kredittkort',
+        'balance' => 10000,
+        'interest_rate' => 10.0,
+        'minimum_payment' => 500,
+    ]);
+
+    $component = Livewire::test(DebtList::class)
+        ->call('loadData');
+
+    // Verify the computed property returns a formatted date
+    $strategyPayoffDate = $component->get('strategyPayoffDate');
+    expect($strategyPayoffDate)->not->toBeNull()
+        ->and($strategyPayoffDate)->toBeString();
+
+    // Verify the date is displayed in the view
+    $component->assertSee($strategyPayoffDate);
+});

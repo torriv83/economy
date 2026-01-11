@@ -222,6 +222,32 @@ class DebtList extends Component
         ];
     }
 
+    /**
+     * Get the formatted payoff date using the user's chosen strategy.
+     */
+    public function getStrategyPayoffDateProperty(): ?string
+    {
+        $debts = $this->debtCacheService->getAll();
+
+        if ($debts->isEmpty()) {
+            return null;
+        }
+
+        $extraPayment = $this->settingsService->getExtraPayment();
+        $strategy = $this->settingsService->getStrategy();
+
+        $schedule = $this->calculationService->generatePaymentSchedule($debts, $extraPayment, $strategy);
+
+        if (empty($schedule['payoffDate'])) {
+            return null;
+        }
+
+        $payoffDate = Carbon::parse($schedule['payoffDate']);
+        $payoffDate->locale('nb');
+
+        return $payoffDate->isoFormat('MMMM YYYY');
+    }
+
     protected function performDelete(int $id): void
     {
         $debt = Debt::find($id);
