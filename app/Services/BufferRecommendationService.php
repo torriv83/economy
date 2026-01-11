@@ -390,10 +390,11 @@ class BufferRecommendationService
 
         // Options 2+: Pay down each debt
         $debts = Debt::with('payments')->get();
+        $debtOptions = [];
         foreach ($debts as $debt) {
             $impact = $this->calculateDebtImpact($debt, $amount);
 
-            $options[] = [
+            $debtOptions[] = [
                 'target' => 'debt',
                 'debt_id' => $debt->id,
                 'debt_name' => $debt->name,
@@ -401,6 +402,17 @@ class BufferRecommendationService
                 'impact' => $impact,
             ];
         }
+
+        // Sort debt options by interest saved (highest first)
+        usort($debtOptions, function ($a, $b) {
+            $aSaved = $a['impact']['interest_saved'] ?? 0;
+            $bSaved = $b['impact']['interest_saved'] ?? 0;
+
+            return $bSaved <=> $aSaved; // Descending order
+        });
+
+        // Add sorted debt options to main options array
+        $options = array_merge($options, $debtOptions);
 
         // Determine recommendation
         $recommendation = $this->determineRecommendation($options, $bufferStatus);
@@ -537,6 +549,9 @@ class BufferRecommendationService
     /**
      * Calculate the impact of paying an amount toward a specific debt.
      *
+     * Returns total debt-free date impact (when ALL debts are paid off),
+     * not just when this specific debt is paid off.
+     *
      * @return array{interest_saved: float, months_saved: int, new_payoff_date: string}
      */
     private function calculateDebtImpact(Debt $debt, float $amount): array
@@ -574,16 +589,21 @@ class BufferRecommendationService
 
         $whatIfStartingBalance = max(0, $debt->balance - $amount);
 
-        $currentPayoffMonth = $this->findDebtPayoffMonth($currentSchedule['schedule'], $debt->name, $debt->balance);
-        $whatIfPayoffMonth = $this->findDebtPayoffMonth($whatIfSchedule['schedule'], $debt->name, $whatIfStartingBalance);
+        // Calculate total debt-free date (when ALL debts are paid off)
+        $currentDebtFreeMonth = ! empty($currentSchedule['schedule'])
+            ? end($currentSchedule['schedule'])['month']
+            : 0;
+        $whatIfDebtFreeMonth = ! empty($whatIfSchedule['schedule'])
+            ? end($whatIfSchedule['schedule'])['month']
+            : 0;
 
-        $monthsSaved = max(0, $currentPayoffMonth - $whatIfPayoffMonth);
+        $monthsSaved = max(0, $currentDebtFreeMonth - $whatIfDebtFreeMonth);
         $interestSaved = max(0, $currentSchedule['totalInterest'] - $whatIfSchedule['totalInterest']);
 
         return [
             'interest_saved' => round($interestSaved, 2),
             'months_saved' => $monthsSaved,
-            'new_payoff_date' => now()->addMonths($whatIfPayoffMonth)->format('Y-m-d'),
+            'new_payoff_date' => now()->addMonths($whatIfDebtFreeMonth)->format('Y-m-d'),
         ];
     }
 

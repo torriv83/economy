@@ -304,6 +304,14 @@
                                 </div>
                             </div>
 
+                            {{-- Recommendation Reason --}}
+                            <div class="mb-4 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800/50">
+                                <p class="text-sm text-emerald-700 dark:text-emerald-300">
+                                    <span class="font-medium">{{ __('app.buffer.recommended') }}:</span>
+                                    {{ __('app.'.$this->scenarioComparison['recommendation']['reason']) }}
+                                </p>
+                            </div>
+
                             {{-- Options --}}
                             <div class="space-y-3">
                                 @foreach ($this->scenarioComparison['options'] as $option)
@@ -317,11 +325,6 @@
                                                             {{ __('app.buffer.scenario_debt', ['debt_name' => $option['debt_name'] ?? '']) }}
                                                         @endif
                                                     </span>
-                                                    @if ($this->scenarioComparison['recommendation']['target'] === $option['target'] || ($option['target'] === 'debt' && isset($option['debt_id']) && $this->scenarioComparison['recommendation']['target'] === 'debt'))
-                                                        <span class="px-1.5 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 rounded">
-                                                            {{ __('app.buffer.recommended') }}
-                                                        </span>
-                                                    @endif
                                                 </div>
                                                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
                                                     @if ($option['target'] === 'buffer')
@@ -334,14 +337,6 @@
                                             </div>
                                         </div>
                                 @endforeach
-                            </div>
-
-                            {{-- Recommendation Reason --}}
-                            <div class="mt-4 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800/50">
-                                <p class="text-sm text-emerald-700 dark:text-emerald-300">
-                                    <span class="font-medium">{{ __('app.buffer.recommended') }}:</span>
-                                    {{ __('app.'.$this->scenarioComparison['recommendation']['reason']) }}
-                                </p>
                             </div>
                         </div>
                     @endif
