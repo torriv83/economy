@@ -22,8 +22,8 @@ test('can import a YNAB transaction as a payment', function () {
         'memo' => 'Monthly payment',
     ];
 
-    $service = new YnabTransactionService;
     $paymentService = app(PaymentService::class);
+    $service = new YnabTransactionService($paymentService);
 
     $payment = $service->importTransaction($debt, $transaction, $paymentService);
 
@@ -49,7 +49,7 @@ test('import transaction uses default note when memo is null', function () {
         'memo' => null,
     ];
 
-    $service = new YnabTransactionService;
+    $service = new YnabTransactionService(app(PaymentService::class));
     $paymentService = app(PaymentService::class);
 
     $payment = $service->importTransaction($debt, $transaction, $paymentService);
@@ -58,25 +58,35 @@ test('import transaction uses default note when memo is null', function () {
 });
 
 test('can update payment with YNAB transaction data', function () {
-    $debt = Debt::factory()->create();
+    $debt = Debt::factory()->create([
+        'balance' => 5000.00,
+        'interest_rate' => 12.0,
+    ]);
     $payment = Payment::factory()->create([
         'debt_id' => $debt->id,
         'actual_amount' => 400.00,
         'ynab_transaction_id' => null,
     ]);
 
-    $service = new YnabTransactionService;
+    $service = new YnabTransactionService(app(PaymentService::class));
 
     $service->updatePaymentFromTransaction($payment, 'ynab-tx-003', 450.00);
 
     $payment->refresh();
 
+    // Verify amount and ID updated
     expect($payment->actual_amount)->toBe(450.00)
-        ->and($payment->ynab_transaction_id)->toBe('ynab-tx-003');
+        ->and($payment->ynab_transaction_id)->toBe('ynab-tx-003')
+        // Verify interest/principal recalculated
+        ->and($payment->interest_paid)->toBeGreaterThan(0)
+        ->and($payment->principal_paid)->toBeGreaterThan(0);
 });
 
 test('can update payment with YNAB transaction data including date', function () {
-    $debt = Debt::factory()->create();
+    $debt = Debt::factory()->create([
+        'balance' => 5000.00,
+        'interest_rate' => 12.0,
+    ]);
     $payment = Payment::factory()->create([
         'debt_id' => $debt->id,
         'actual_amount' => 400.00,
@@ -84,7 +94,7 @@ test('can update payment with YNAB transaction data including date', function ()
         'ynab_transaction_id' => null,
     ]);
 
-    $service = new YnabTransactionService;
+    $service = new YnabTransactionService(app(PaymentService::class));
 
     $service->updatePaymentFromTransaction($payment, 'ynab-tx-004', 450.00, '2024-06-15');
 
@@ -92,7 +102,10 @@ test('can update payment with YNAB transaction data including date', function ()
 
     expect($payment->actual_amount)->toBe(450.00)
         ->and($payment->ynab_transaction_id)->toBe('ynab-tx-004')
-        ->and($payment->payment_date->format('Y-m-d'))->toBe('2024-06-15');
+        ->and($payment->payment_date->format('Y-m-d'))->toBe('2024-06-15')
+        // Verify interest/principal recalculated
+        ->and($payment->interest_paid)->toBeGreaterThan(0)
+        ->and($payment->principal_paid)->toBeGreaterThan(0);
 });
 
 test('compare transactions identifies matched transactions', function () {
@@ -120,7 +133,7 @@ test('compare transactions identifies matched transactions', function () {
         ],
     ]);
 
-    $service = new YnabTransactionService;
+    $service = new YnabTransactionService(app(PaymentService::class));
     $results = $service->compareTransactionsForDebt($debt, $ynabTransactions);
 
     expect($results)->toHaveCount(1)
@@ -144,7 +157,7 @@ test('compare transactions identifies missing transactions', function () {
         ],
     ]);
 
-    $service = new YnabTransactionService;
+    $service = new YnabTransactionService(app(PaymentService::class));
     $results = $service->compareTransactionsForDebt($debt, $ynabTransactions);
 
     expect($results)->toHaveCount(1)
@@ -176,7 +189,7 @@ test('compare transactions identifies mismatched amounts', function () {
         ],
     ]);
 
-    $service = new YnabTransactionService;
+    $service = new YnabTransactionService(app(PaymentService::class));
     $results = $service->compareTransactionsForDebt($debt, $ynabTransactions);
 
     expect($results)->toHaveCount(1)
@@ -210,7 +223,7 @@ test('compare transactions identifies mismatched dates', function () {
         ],
     ]);
 
-    $service = new YnabTransactionService;
+    $service = new YnabTransactionService(app(PaymentService::class));
     $results = $service->compareTransactionsForDebt($debt, $ynabTransactions);
 
     expect($results)->toHaveCount(1)
@@ -237,7 +250,7 @@ test('import transaction calculates month_number as integer', function () {
         'memo' => 'Test payment',
     ];
 
-    $service = new YnabTransactionService;
+    $service = new YnabTransactionService(app(PaymentService::class));
     $paymentService = app(PaymentService::class);
 
     $payment = $service->importTransaction($debt, $transaction, $paymentService);
@@ -264,7 +277,7 @@ test('import transaction calculates correct month_number across months', functio
         'memo' => 'Second month payment',
     ];
 
-    $service = new YnabTransactionService;
+    $service = new YnabTransactionService(app(PaymentService::class));
     $paymentService = app(PaymentService::class);
 
     $payment = $service->importTransaction($debt, $transaction, $paymentService);
@@ -298,7 +311,7 @@ test('fuzzy matching finds unlinked payments in same month', function () {
         ],
     ]);
 
-    $service = new YnabTransactionService;
+    $service = new YnabTransactionService(app(PaymentService::class));
     $results = $service->compareTransactionsForDebt($debt, $ynabTransactions);
 
     expect($results)->toHaveCount(1)
@@ -330,7 +343,7 @@ it('fuzzy matching returns matched when amount and date both match', function ()
         ],
     ]);
 
-    $service = new YnabTransactionService;
+    $service = new YnabTransactionService(app(PaymentService::class));
     $results = $service->compareTransactionsForDebt($debt, $ynabTransactions);
 
     expect($results)->toHaveCount(1)
