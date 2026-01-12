@@ -40,7 +40,7 @@
     <nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 transition-colors duration-300">
         <div class="flex items-center h-16">
             {{-- Logo/Brand --}}
-            <div class="flex items-center justify-center {{ request()->routeIs('home', 'debts', 'debts.edit', 'payoff', 'self-loans', 'settings') ? 'px-4 md:w-64' : 'px-4 sm:px-6 lg:px-8' }} flex-shrink-0">
+            <div class="flex items-center justify-center {{ request()->routeIs('home', 'debts', 'debts.edit', 'payoff', 'self-loans', 'settings', 'insights') ? 'px-4 md:w-64' : 'px-4 sm:px-6 lg:px-8' }} flex-shrink-0">
                 <a href="{{ route('home') }}" wire:navigate.hover class="flex items-center gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 rounded-lg">
                     {{-- Animated Logo --}}
                     <div class="relative">
