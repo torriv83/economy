@@ -594,3 +594,62 @@ When the `Edit` tool fails with "File has been unexpectedly modified" even thoug
 2. **Workaround**: Read the file fresh, then use `Write` to overwrite with the corrected content
 3. `Write` is stateless - it just overwrites without comparing against previous state
 4. Only requires having read the file at least once before writing
+
+## Language Convention
+- **UI text and messages**: Norwegian (Norsk)
+- **Code** (variables, methods, classes): English
+
+## Additional Commands
+
+### Static Analysis
+```bash
+vendor/bin/phpstan          # Run static analysis (level 6)
+```
+
+### Cache Management
+```bash
+php artisan config:clear    # Clear config cache
+php artisan cache:clear     # Clear application cache
+php artisan view:clear      # Clear compiled views
+```
+
+### Queue Processing
+```bash
+php artisan queue:listen --tries=1    # Process queue jobs (YNAB sync)
+```
+
+### Full Development Server
+```bash
+composer run dev            # Run server, queue, and vite concurrently
+```
+
+## Application Structure
+```
+app/
+├── Contracts/          # Interfaces (DebtOrderingStrategy)
+├── Http/
+│   ├── Controllers/
+│   └── Requests/       # Form Request validation classes
+├── Jobs/               # Background jobs (YnabSync)
+├── Livewire/           # Livewire components
+│   └── Concerns/       # Traits for shared Livewire functionality
+├── Models/             # Eloquent models
+├── Observers/          # Model observers (PaymentObserver)
+├── Rules/              # Custom validation rules
+├── Services/           # Business logic services
+│   └── DebtOrdering/   # Payoff strategy implementations
+└── Support/            # Helper classes
+```
+
+## Livewire Concerns Pattern
+Shared Livewire functionality lives in `app/Livewire/Concerns/` as traits:
+- `HasDebtValidation` - Debt form validation
+- `HasDeleteConfirmation` - Delete confirmation modals
+- `HasConsistentFlashMessages` - Flash message helpers
+
+## Database Models
+- `Debt` - Main debt records (balance, interest, minimum payment, YNAB link)
+- `Payment` - Payment history with interest/principal breakdown
+- `PayoffSetting` - User preferences for payoff calculations
+- `SelfLoan` / `SelfLoanRepayment` - Self-loan tracking
+- `Setting` - Application settings
