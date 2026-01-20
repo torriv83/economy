@@ -117,7 +117,7 @@ class PayDebt extends Component
             return;
         }
 
-        $paymentMonth = now()->addMonths($monthNumber - 1)->format('Y-m');
+        $paymentMonth = now()->format('Y-m');
 
         $this->paymentService->recordPayment(
             $debt,
@@ -162,7 +162,7 @@ class PayDebt extends Component
 
         // Mark all as paid
         $payments = [];
-        $paymentMonth = now()->addMonths($monthNumber - 1)->format('Y-m');
+        $paymentMonth = now()->format('Y-m');
 
         foreach ($monthData['payments'] as $payment) {
             $debt = $debts->get($payment['name']);
