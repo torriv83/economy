@@ -98,7 +98,9 @@ class YnabTransactionService
         ];
 
         if ($date !== null) {
-            $data['payment_date'] = Carbon::parse($date);
+            $parsedDate = Carbon::parse($date);
+            $data['payment_date'] = $parsedDate;
+            $data['payment_month'] = $parsedDate->format('Y-m');
         }
 
         $payment->update($data);
@@ -275,6 +277,7 @@ class YnabTransactionService
             'interest_paid' => $interestPaid,
             'principal_paid' => $principalPaid,
             'payment_date' => $paymentDate,
+            'payment_month' => $paymentDate->format('Y-m'),
             'ynab_transaction_id' => $ynabTransactionId,
         ]);
 

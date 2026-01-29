@@ -350,3 +350,61 @@ it('fuzzy matching returns matched when amount and date both match', function ()
         ->and($results[0]['local_payment_id'])->not->toBeNull()
         ->and($results[0]['local_date'])->toBe('2024-06-15');
 });
+
+test('updatePaymentFromTransaction updates payment_month when date changes', function () {
+    $debt = Debt::factory()->create([
+        'balance' => 5000.00,
+        'original_balance' => 5000.00,
+        'interest_rate' => 12.0,
+    ]);
+
+    // Create payment in March
+    $payment = Payment::factory()->create([
+        'debt_id' => $debt->id,
+        'actual_amount' => 400.00,
+        'payment_date' => '2024-03-15',
+        'payment_month' => '2024-03',
+        'ynab_transaction_id' => null,
+    ]);
+
+    $service = new YnabTransactionService(app(PaymentService::class));
+
+    // Update payment with January date
+    $service->updatePaymentFromTransaction($payment, 'ynab-tx-month-fix', 450.00, '2024-01-28');
+
+    $payment->refresh();
+
+    // Verify payment_month is updated to match the new date
+    expect($payment->payment_date->format('Y-m-d'))->toBe('2024-01-28')
+        ->and($payment->payment_month)->toBe('2024-01');
+});
+
+test('linkTransactionToPayment updates payment_month to match transaction date', function () {
+    $debt = Debt::factory()->create([
+        'balance' => 5000.00,
+        'original_balance' => 5000.00,
+        'interest_rate' => 12.0,
+    ]);
+
+    // Create payment with wrong payment_month (simulating the bug scenario)
+    $payment = Payment::factory()->create([
+        'debt_id' => $debt->id,
+        'actual_amount' => 400.00,
+        'payment_date' => '2024-03-15',
+        'payment_month' => '2024-03',
+        'ynab_transaction_id' => null,
+    ]);
+
+    $service = new YnabTransactionService(app(PaymentService::class));
+
+    // Link with YNAB transaction from different month
+    $service->linkTransactionToPayment($payment, 'ynab-tx-link-fix', 500.00, '2024-01-28');
+
+    $payment->refresh();
+
+    // Verify payment_month is updated to match the YNAB transaction date
+    expect($payment->payment_date->format('Y-m-d'))->toBe('2024-01-28')
+        ->and($payment->payment_month)->toBe('2024-01')
+        ->and($payment->actual_amount)->toBe(500.00)
+        ->and($payment->ynab_transaction_id)->toBe('ynab-tx-link-fix');
+});

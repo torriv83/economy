@@ -354,7 +354,7 @@ class PayoffCalendar extends Component
         $this->isCheckingYnab = false;
     }
 
-    public function importYnabTransaction(string $ynabTransactionId, int $debtId, PaymentService $paymentService): void
+    public function importYnabTransaction(string $ynabTransactionId, int $debtId): void
     {
         // Find the transaction in our results
         $transaction = null;
@@ -374,7 +374,7 @@ class PayoffCalendar extends Component
         }
 
         $debt = Debt::findOrFail($debtId);
-        $this->ynabTransactionService->importTransaction($debt, $transaction, $paymentService);
+        $this->ynabTransactionService->importTransaction($debt, $transaction);
 
         // Refresh the comparison results
         $this->checkYnabTransactions();
