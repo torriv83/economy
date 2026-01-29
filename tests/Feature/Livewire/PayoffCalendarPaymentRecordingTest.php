@@ -91,6 +91,129 @@ describe('payment modal', function () {
     });
 });
 
+describe('edit payment modal', function () {
+    it('opens edit modal with existing payment data', function () {
+        $debt = Debt::factory()->create([
+            'name' => 'Test Debt',
+            'balance' => 4500,
+            'original_balance' => 5000,
+            'interest_rate' => 10,
+            'minimum_payment' => 500,
+            'due_day' => 15,
+        ]);
+
+        $payment = Payment::factory()->create([
+            'debt_id' => $debt->id,
+            'planned_amount' => 500,
+            'actual_amount' => 550,
+            'month_number' => 1,
+            'payment_month' => now()->format('Y-m'),
+            'payment_date' => now()->subDays(5),
+            'notes' => 'Original notes',
+        ]);
+
+        Livewire::test(PayoffCalendar::class, ['extraPayment' => 2000, 'strategy' => 'avalanche'])
+            ->call('openEditPaymentModal', $payment->id)
+            ->assertSet('showPaymentModal', true)
+            ->assertSet('isEditMode', true)
+            ->assertSet('selectedPaymentId', $payment->id)
+            ->assertSet('selectedDebtId', $debt->id)
+            ->assertSet('selectedDebtName', $debt->name)
+            ->assertSet('plannedAmount', 500)
+            ->assertSet('paymentAmount', 550)
+            ->assertSet('selectedMonthNumber', 1)
+            ->assertSet('paymentNotes', 'Original notes');
+    });
+
+    it('updates existing payment when in edit mode', function () {
+        $debt = Debt::factory()->create([
+            'name' => 'Test Debt',
+            'balance' => 4500,
+            'original_balance' => 5000,
+            'interest_rate' => 10,
+            'minimum_payment' => 500,
+            'due_day' => 15,
+        ]);
+
+        $payment = Payment::factory()->create([
+            'debt_id' => $debt->id,
+            'planned_amount' => 500,
+            'actual_amount' => 500,
+            'month_number' => 1,
+            'payment_month' => now()->format('Y-m'),
+            'payment_date' => now()->subDays(5),
+            'notes' => null,
+        ]);
+
+        Livewire::test(PayoffCalendar::class, ['extraPayment' => 2000, 'strategy' => 'avalanche'])
+            ->call('openEditPaymentModal', $payment->id)
+            ->set('paymentAmount', 600)
+            ->set('paymentDate', now()->subDays(3)->format('d.m.Y'))
+            ->set('paymentNotes', 'Updated notes')
+            ->call('recordPayment')
+            ->assertSet('showPaymentModal', false);
+
+        $payment->refresh();
+        expect($payment->actual_amount)->toBe(600.0)
+            ->and($payment->payment_date->format('Y-m-d'))->toBe(now()->subDays(3)->format('Y-m-d'))
+            ->and($payment->notes)->toBe('Updated notes');
+    });
+
+    it('does not create duplicate when editing', function () {
+        $debt = Debt::factory()->create([
+            'name' => 'Test Debt',
+            'balance' => 4500,
+            'original_balance' => 5000,
+            'interest_rate' => 10,
+            'minimum_payment' => 500,
+            'due_day' => 15,
+        ]);
+
+        $payment = Payment::factory()->create([
+            'debt_id' => $debt->id,
+            'month_number' => 1,
+            'payment_month' => now()->format('Y-m'),
+            'payment_date' => now()->subDays(5),
+        ]);
+
+        $initialCount = Payment::count();
+
+        Livewire::test(PayoffCalendar::class, ['extraPayment' => 2000, 'strategy' => 'avalanche'])
+            ->call('openEditPaymentModal', $payment->id)
+            ->set('paymentAmount', 600)
+            ->call('recordPayment');
+
+        expect(Payment::count())->toBe($initialCount);
+    });
+
+    it('closes edit modal and resets edit state', function () {
+        $debt = Debt::factory()->create([
+            'name' => 'Test Debt',
+            'balance' => 4500,
+            'original_balance' => 5000,
+            'interest_rate' => 10,
+            'minimum_payment' => 500,
+            'due_day' => 15,
+        ]);
+
+        $payment = Payment::factory()->create([
+            'debt_id' => $debt->id,
+            'month_number' => 1,
+            'payment_month' => now()->format('Y-m'),
+            'payment_date' => now()->subDays(5),
+        ]);
+
+        Livewire::test(PayoffCalendar::class, ['extraPayment' => 2000, 'strategy' => 'avalanche'])
+            ->call('openEditPaymentModal', $payment->id)
+            ->assertSet('isEditMode', true)
+            ->assertSet('selectedPaymentId', $payment->id)
+            ->call('closePaymentModal')
+            ->assertSet('isEditMode', false)
+            ->assertSet('selectedPaymentId', null)
+            ->assertSet('showPaymentModal', false);
+    });
+});
+
 describe('payment validation', function () {
     it('validates amount is required', function () {
         $debt = Debt::factory()->create([
@@ -584,7 +707,7 @@ describe('payment events with context', function () {
         }
     });
 
-    it('marks paid events without context data', function () {
+    it('marks paid events with context data for editing', function () {
         $debt = Debt::factory()->create([
             'name' => 'Test Debt',
             'balance' => 5000,
@@ -614,7 +737,8 @@ describe('payment events with context', function () {
         if ($paidEvent) {
             $paidDebt = collect($paidEvent['debts'])->first(fn ($d) => $d['isPaid'] ?? false);
             expect($paidDebt['isPaid'])->toBeTrue()
-                ->and($paidDebt)->not->toHaveKey('debt_id'); // Paid events don't have debt_id for modal
+                ->and($paidDebt)->toHaveKey('debt_id') // Paid events have debt_id for editing
+                ->and($paidDebt)->toHaveKey('payment_id'); // Paid events have payment_id for editing
         }
     });
 });

@@ -330,7 +330,11 @@
                                                 $statusText = $isPaid ? ' - ' . __('app.paid') : ($isOverdue ? ' - ' . __('app.payment_overdue') : '');
                                             @endphp
                                             <div
-                                                @if (!$isPaid)
+                                                @if ($isPaid && isset($debt['payment_id']))
+                                                    wire:click="openEditPaymentModal({{ $debt['payment_id'] }})"
+                                                    class="cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded px-1 -mx-1 transition-colors"
+                                                    title="{{ __('app.click_to_edit_payment') }}"
+                                                @elseif (!$isPaid)
                                                     wire:click="openPaymentModal({{ $debt['debt_id'] }}, @js($debt['name']), {{ $debt['amount'] }}, {{ $debt['month_number'] }}, @js($debt['payment_month']))"
                                                     class="cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700/50 rounded px-1 -mx-1 transition-colors"
                                                     title="{{ __('app.click_to_register_payment') }}"
@@ -419,11 +423,14 @@
                                                 $textColor = $isPaid ? 'text-emerald-700 dark:text-emerald-300' : ($isOverdue ? 'text-rose-700 dark:text-rose-300' : 'text-slate-700 dark:text-slate-300');
                                             @endphp
                                             <div
-                                                @if (!$isPaid)
+                                                @if ($isPaid && isset($debt['payment_id']))
+                                                    wire:click="openEditPaymentModal({{ $debt['payment_id'] }})"
+                                                    title="{{ __('app.tap_to_edit_payment') }}"
+                                                @elseif (!$isPaid)
                                                     wire:click="openPaymentModal({{ $debt['debt_id'] }}, @js($debt['name']), {{ $debt['amount'] }}, {{ $debt['month_number'] }}, @js($debt['payment_month']))"
                                                     title="{{ __('app.tap_to_register_payment') }}"
                                                 @endif
-                                                class="flex items-center justify-between gap-2 {{ $textColor }} {{ !$isPaid ? 'cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700/50 rounded-lg px-2 py-1 -mx-2 transition-colors' : '' }}"
+                                                class="flex items-center justify-between gap-2 {{ $textColor }} {{ ($isPaid && isset($debt['payment_id'])) ? 'cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-lg px-2 py-1 -mx-2 transition-colors' : (!$isPaid ? 'cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700/50 rounded-lg px-2 py-1 -mx-2 transition-colors' : '') }}"
                                             >
                                                 <div class="flex items-center gap-2 min-w-0">
                                                     @if ($isPaid)
@@ -527,7 +534,7 @@
     @if ($showPaymentModal)
         <x-modal wire:model="showPaymentModal" max-width="md">
             <form wire:submit="recordPayment">
-                <x-modal.header :title="__('app.register_payment')" on-close="closePaymentModal" />
+                <x-modal.header :title="$isEditMode ? __('app.edit_payment') : __('app.register_payment')" on-close="closePaymentModal" />
 
                 <x-modal.body>
                     {{-- Debt Info Display --}}
@@ -581,7 +588,7 @@
                         :loading="true"
                         loading-target="recordPayment"
                     >
-                        {{ __('app.register_payment') }}
+                        {{ $isEditMode ? __('app.save_changes') : __('app.register_payment') }}
                     </x-modal.button-primary>
                 </x-modal.footer>
             </form>
