@@ -654,6 +654,31 @@ Shared Livewire functionality lives in `app/Livewire/Concerns/` as traits:
 - `SelfLoan` / `SelfLoanRepayment` - Self-loan tracking
 - `Setting` - Application settings
 
+## Produksjonsserver (SSH via LSM)
+
+Appen kjører på DigitalOcean via LSM (Laravel Server Manager) i Docker.
+
+**Sti på server:** `/var/www/economy.tor.priv.no/releases/$(ls -t /var/www/economy.tor.priv.no/releases/ | head -1)`
+
+**Slik kjører du kommandoer på produksjon:**
+```bash
+wsl docker exec -i lsm-app php artisan tinker << 'TINKER'
+$site = App\Models\Site::where('domain', 'economy.tor.priv.no')->first();
+$server = $site->server;
+$sshService = new App\Services\SshService($server);
+$sshService->connect();
+$result = $sshService->executeCommand('cd /var/www/economy.tor.priv.no/releases/$(ls -t /var/www/economy.tor.priv.no/releases/ | head -1) && php artisan tinker --execute="echo App\\\\Models\\\\Debt::count();"');
+$sshService->disconnect();
+echo $result['output'];
+TINKER
+```
+
+**Viktig:**
+- KUN leseoperasjoner — ALDRI endre data på produksjon
+- Bruk `--execute="..."` for tinker-kommandoer
+- Dobbelt-escape backslash for namespaces: `App\\\\Models\\\\Debt`
+- Se Kanban Memory #52 "Connect to production site via ssh" for mer detaljer
+
 ## TaskHub MCP - Oppgavehåndtering
 
 ### Prosjekt-IDer

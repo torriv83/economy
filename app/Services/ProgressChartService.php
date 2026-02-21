@@ -231,7 +231,12 @@ class ProgressChartService
 
         $scheduleEntries = $schedule['schedule'] ?? [];
 
-        foreach ($scheduleEntries as $entry) {
+        foreach ($scheduleEntries as $index => $entry) {
+            // Skip the first entry — it represents the current month which is already
+            // included in the historical data. Without this, the chart shows a duplicate month.
+            if ($index === 0) {
+                continue;
+            }
             $labels[] = $entry['monthName'];
 
             $monthTotal = 0;
