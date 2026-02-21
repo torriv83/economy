@@ -69,10 +69,14 @@ class PaymentPlan extends Component
             return [];
         }
 
+        $historicalPayments = $this->paymentService->getHistoricalPayments();
+        $historicalMonthOffset = count($historicalPayments);
+
         $fullSchedule = $this->calculationService->generatePaymentSchedule(
             $debts,
             $this->extraPayment,
-            $this->strategy
+            $this->strategy,
+            $historicalMonthOffset
         );
 
         return array_slice($fullSchedule['schedule'], 0, 6);
@@ -128,10 +132,14 @@ class PaymentPlan extends Component
             return 0;
         }
 
+        $historicalPayments = $this->paymentService->getHistoricalPayments();
+        $historicalMonthOffset = count($historicalPayments);
+
         $schedule = $this->calculationService->generatePaymentSchedule(
             $debts,
             $this->extraPayment,
-            $this->strategy
+            $this->strategy,
+            $historicalMonthOffset
         );
 
         return $schedule['months'];
@@ -161,10 +169,14 @@ class PaymentPlan extends Component
             return [];
         }
 
+        $historicalPayments = $this->paymentService->getHistoricalPayments();
+        $historicalMonthOffset = count($historicalPayments);
+
         $fullSchedule = $this->calculationService->generatePaymentSchedule(
             $debts,
             $this->extraPayment,
-            $this->strategy
+            $this->strategy,
+            $historicalMonthOffset
         );
 
         $payoffDates = [];

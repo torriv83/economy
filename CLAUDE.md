@@ -653,3 +653,23 @@ Shared Livewire functionality lives in `app/Livewire/Concerns/` as traits:
 - `PayoffSetting` - User preferences for payoff calculations
 - `SelfLoan` / `SelfLoanRepayment` - Self-loan tracking
 - `Setting` - Application settings
+
+## TaskHub MCP - Oppgavehåndtering
+
+### Prosjekt-IDer
+- **list_id**: `31` (Economy)
+
+### Kolonne-IDer
+| Kolonne | ID | Farge |
+|---------|-----|-------|
+| Backlog | `94` | #6B7280 |
+| Ready | `90` | #3B82F6 |
+| In Progress | `91` | #F97316 |
+| Bugs | `92` | #EF4444 |
+| Review | `93` | #8B5CF6 |
+| Fullført | `95` | #6B7280 |
+
+### Oppgaveregler
+- Du har KUN lov til å markere **deloppgaver/sjekklister** som fullført (`complete_task` / `toggle_checklist_item`)
+- Du har **ALDRI** lov til å markere **hovedoppgaver** som fullført
+- Når du er ferdig med en oppgave, flytt den til **Review**-kolonnen (`move_task` til kolonne `93`)

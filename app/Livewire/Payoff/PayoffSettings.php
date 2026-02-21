@@ -6,6 +6,7 @@ namespace App\Livewire\Payoff;
 
 use App\Models\Debt;
 use App\Services\DebtCalculationService;
+use App\Services\PaymentService;
 use App\Services\PayoffSettingsService;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -17,6 +18,8 @@ class PayoffSettings extends Component
     public string $strategy = 'avalanche';
 
     protected DebtCalculationService $calculationService;
+
+    protected PaymentService $paymentService;
 
     protected PayoffSettingsService $settingsService;
 
@@ -43,9 +46,10 @@ class PayoffSettings extends Component
         ];
     }
 
-    public function boot(DebtCalculationService $calculationService, PayoffSettingsService $settingsService): void
+    public function boot(DebtCalculationService $calculationService, PaymentService $paymentService, PayoffSettingsService $settingsService): void
     {
         $this->calculationService = $calculationService;
+        $this->paymentService = $paymentService;
         $this->settingsService = $settingsService;
     }
 
@@ -76,10 +80,14 @@ class PayoffSettings extends Component
             return 0;
         }
 
+        $historicalPayments = $this->paymentService->getHistoricalPayments();
+        $historicalMonthOffset = count($historicalPayments);
+
         $schedule = $this->calculationService->generatePaymentSchedule(
             $debts,
             $this->extraPayment,
-            $this->strategy
+            $this->strategy,
+            $historicalMonthOffset
         );
 
         return $schedule['months'];
@@ -93,10 +101,14 @@ class PayoffSettings extends Component
             return now()->locale('nb')->translatedFormat('F Y');
         }
 
+        $historicalPayments = $this->paymentService->getHistoricalPayments();
+        $historicalMonthOffset = count($historicalPayments);
+
         $schedule = $this->calculationService->generatePaymentSchedule(
             $debts,
             $this->extraPayment,
-            $this->strategy
+            $this->strategy,
+            $historicalMonthOffset
         );
 
         return now()->parse($schedule['payoffDate'])->locale('nb')->translatedFormat('F Y');
@@ -110,10 +122,14 @@ class PayoffSettings extends Component
             return 0;
         }
 
+        $historicalPayments = $this->paymentService->getHistoricalPayments();
+        $historicalMonthOffset = count($historicalPayments);
+
         $schedule = $this->calculationService->generatePaymentSchedule(
             $debts,
             $this->extraPayment,
-            $this->strategy
+            $this->strategy,
+            $historicalMonthOffset
         );
 
         return $schedule['totalInterest'];
@@ -133,10 +149,14 @@ class PayoffSettings extends Component
             return ['labels' => [], 'datasets' => []];
         }
 
+        $historicalPayments = $this->paymentService->getHistoricalPayments();
+        $historicalMonthOffset = count($historicalPayments);
+
         $schedule = $this->calculationService->generatePaymentSchedule(
             $debts,
             $this->extraPayment,
-            $this->strategy
+            $this->strategy,
+            $historicalMonthOffset
         );
 
         if (empty($schedule['schedule'])) {

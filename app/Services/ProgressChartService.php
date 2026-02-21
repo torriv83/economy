@@ -41,7 +41,8 @@ class ProgressChartService
     public function __construct(
         protected DebtCacheService $debtCacheService,
         protected DebtCalculationService $calculationService,
-        protected PayoffSettingsService $settingsService
+        protected PayoffSettingsService $settingsService,
+        protected PaymentService $paymentService
     ) {}
 
     /**
@@ -208,13 +209,15 @@ class ProgressChartService
         $extraPayment = $this->settingsService->getExtraPayment();
         $strategy = $this->settingsService->getStrategy();
 
-        // Generate payment schedule starting from current state
-        // We use actualPaymentMonthOffset to indicate we're starting from month 1 in projection
+        // Calculate offset based on historical payments so projections start from current state
+        $historicalPayments = $this->paymentService->getHistoricalPayments();
+        $historicalMonthOffset = count($historicalPayments);
+
         $schedule = $this->calculationService->generatePaymentSchedule(
             $debts,
             $extraPayment,
             $strategy,
-            0 // Start from month 1 in the schedule
+            $historicalMonthOffset
         );
 
         $labels = [];
@@ -226,17 +229,9 @@ class ProgressChartService
             $debtData[$debt->name] = [];
         }
 
-        // Skip the first month of projections if it overlaps with current month
-        // The first month in schedule represents the current month's payment
         $scheduleEntries = $schedule['schedule'] ?? [];
 
-        // Start from month 2 in projections (month 1 is current month, covered by historical)
-        foreach ($scheduleEntries as $index => $entry) {
-            // Skip the first month as it overlaps with the last historical month
-            if ($index === 0) {
-                continue;
-            }
-
+        foreach ($scheduleEntries as $entry) {
             $labels[] = $entry['monthName'];
 
             $monthTotal = 0;

@@ -204,7 +204,10 @@ class DebtList extends Component
         $extraPayment = $this->settingsService->getExtraPayment();
         $strategy = $this->settingsService->getStrategy();
 
-        $schedule = $this->calculationService->generatePaymentSchedule($debts, $extraPayment, $strategy);
+        $historicalPayments = $this->paymentService->getHistoricalPayments();
+        $historicalMonthOffset = count($historicalPayments);
+
+        $schedule = $this->calculationService->generatePaymentSchedule($debts, $extraPayment, $strategy, $historicalMonthOffset);
 
         if (empty($schedule['payoffDate'])) {
             return null;
@@ -236,7 +239,10 @@ class DebtList extends Component
         $extraPayment = $this->settingsService->getExtraPayment();
         $strategy = $this->settingsService->getStrategy();
 
-        $schedule = $this->calculationService->generatePaymentSchedule($debts, $extraPayment, $strategy);
+        $historicalPayments = $this->paymentService->getHistoricalPayments();
+        $historicalMonthOffset = count($historicalPayments);
+
+        $schedule = $this->calculationService->generatePaymentSchedule($debts, $extraPayment, $strategy, $historicalMonthOffset);
 
         if (empty($schedule['payoffDate'])) {
             return null;

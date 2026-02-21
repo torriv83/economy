@@ -8,6 +8,7 @@ use App\Models\Debt;
 use App\Models\Payment;
 use App\Services\DebtCacheService;
 use App\Services\DebtCalculationService;
+use App\Services\PaymentService;
 use App\Services\PayoffSettingsService;
 use App\Services\ProgressCacheService;
 use App\Services\ProgressChartService;
@@ -28,18 +29,22 @@ class DebtProgress extends Component
 
     protected ProgressChartService $progressChartService;
 
+    protected PaymentService $paymentService;
+
     public function boot(
         DebtCalculationService $calculationService,
         PayoffSettingsService $settingsService,
         DebtCacheService $debtCacheService,
         ProgressCacheService $progressCacheService,
-        ProgressChartService $progressChartService
+        ProgressChartService $progressChartService,
+        PaymentService $paymentService
     ): void {
         $this->calculationService = $calculationService;
         $this->settingsService = $settingsService;
         $this->debtCacheService = $debtCacheService;
         $this->progressCacheService = $progressCacheService;
         $this->progressChartService = $progressChartService;
+        $this->paymentService = $paymentService;
     }
 
     public function loadData(): void
@@ -163,10 +168,14 @@ class DebtProgress extends Component
             return 0;
         }
 
+        $historicalPayments = $this->paymentService->getHistoricalPayments();
+        $historicalMonthOffset = count($historicalPayments);
+
         $schedule = $this->calculationService->generatePaymentSchedule(
             $debts,
             $this->settingsService->getExtraPayment(),
-            $this->settingsService->getStrategy()
+            $this->settingsService->getStrategy(),
+            $historicalMonthOffset
         );
 
         $months = $schedule['months'] ?? 0;
@@ -185,10 +194,14 @@ class DebtProgress extends Component
             return $carbon->isoFormat('MMMM YYYY');
         }
 
+        $historicalPayments = $this->paymentService->getHistoricalPayments();
+        $historicalMonthOffset = count($historicalPayments);
+
         $schedule = $this->calculationService->generatePaymentSchedule(
             $debts,
             $this->settingsService->getExtraPayment(),
-            $this->settingsService->getStrategy()
+            $this->settingsService->getStrategy(),
+            $historicalMonthOffset
         );
 
         /** @var string $payoffDate */
@@ -207,10 +220,14 @@ class DebtProgress extends Component
             return 0;
         }
 
+        $historicalPayments = $this->paymentService->getHistoricalPayments();
+        $historicalMonthOffset = count($historicalPayments);
+
         $schedule = $this->calculationService->generatePaymentSchedule(
             $debts,
             $this->settingsService->getExtraPayment(),
-            $this->settingsService->getStrategy()
+            $this->settingsService->getStrategy(),
+            $historicalMonthOffset
         );
 
         $totalInterest = $schedule['totalInterest'] ?? 0;
