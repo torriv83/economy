@@ -179,8 +179,37 @@ class DebtProgress extends Component
         );
 
         $months = $schedule['months'] ?? 0;
+        $months = is_numeric($months) ? (int) $months : 0;
 
-        return is_numeric($months) ? (int) $months : 0;
+        if ($months > 0 && $this->allActiveDebtsPaidForCurrentMonth()) {
+            $months--;
+        }
+
+        return $months;
+    }
+
+    protected function allActiveDebtsPaidForCurrentMonth(): bool
+    {
+        $activeDebts = Debt::where('balance', '>', 0)->get();
+
+        if ($activeDebts->isEmpty()) {
+            return false;
+        }
+
+        $currentMonth = now()->format('Y-m');
+
+        foreach ($activeDebts as $debt) {
+            $hasPayment = Payment::where('debt_id', $debt->id)
+                ->where('payment_month', $currentMonth)
+                ->where('is_reconciliation_adjustment', false)
+                ->exists();
+
+            if (! $hasPayment) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function getProjectedPayoffDateProperty(): string

@@ -213,15 +213,17 @@ class DebtList extends Component
             return null;
         }
 
-        // Calculate months directly from the payoff date for accuracy
+        // Calculate calendar-month distance so the "X years Y months" label
+        // matches the payoff-date month shown alongside it.
         $payoffDate = Carbon::parse($schedule['payoffDate']);
         $now = now();
-        $diff = $now->diff($payoffDate);
+        $totalMonths = (($payoffDate->year - $now->year) * 12) + ($payoffDate->month - $now->month);
+        $totalMonths = max(0, $totalMonths);
 
         return [
-            'years' => $diff->y,
-            'months' => $diff->m,
-            'totalMonths' => ($diff->y * 12) + $diff->m,
+            'years' => intdiv($totalMonths, 12),
+            'months' => $totalMonths % 12,
+            'totalMonths' => $totalMonths,
         ];
     }
 

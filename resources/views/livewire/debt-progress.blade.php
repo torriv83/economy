@@ -107,7 +107,7 @@
                         </div>
                     </div>
                     <div class="ml-5 w-0 flex-1">
-                        <dt class="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">{{ __('app.months_to_debt_free') }}</dt>
+                        <dt class="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">{{ __('app.payment_months_remaining') }}</dt>
                         <dd class="flex items-baseline">
                             <div class="font-display text-2xl font-bold text-slate-900 dark:text-white">{{ $this->monthsToDebtFree }} {{ trans_choice('app.months', $this->monthsToDebtFree) }}</div>
                         </dd>

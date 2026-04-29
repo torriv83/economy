@@ -168,6 +168,7 @@ return [
     'principal_paid' => 'Principal Paid',
     'selected_strategy' => 'Selected Strategy',
     'months_to_debt_free' => 'Months to Debt-Free',
+    'payment_months_remaining' => 'Payment Months Remaining',
     'payoff_date' => 'Payoff Date',
     'debt_projection_per_debt' => 'Projection per Debt',
     'month' => 'Month',

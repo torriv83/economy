@@ -168,6 +168,7 @@ return [
     'principal_paid' => 'Avdrag betalt',
     'selected_strategy' => 'Valgt strategi',
     'months_to_debt_free' => 'Måneder til gjeldsfri',
+    'payment_months_remaining' => 'Betalingsmåneder igjen',
     'payoff_date' => 'Ferdigbetalt dato',
     'debt_projection_per_debt' => 'Projeksjon per gjeld',
     'month' => 'Måned',
