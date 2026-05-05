@@ -65,26 +65,21 @@
     </div>
 
     {{-- Debt Payoff Overview --}}
-    <div class="space-y-4" x-data="{ showOverview: $persist(true).as('payoff-overview-expanded') }">
+    <div class="space-y-4" x-data="collapsible(true, 'payoff-overview-expanded')">
         <button
             type="button"
-            @click="showOverview = !showOverview"
+            @click="toggle()"
             class="w-full flex items-center justify-between text-left cursor-pointer group"
         >
             <h2 class="font-display text-xl font-bold text-slate-900 dark:text-white">{{ __('app.debt_payoff_overview') }}</h2>
-            <svg
+            <x-icons.chevron-down
                 class="w-5 h-5 text-slate-500 dark:text-slate-400 transition-transform duration-200 group-hover:text-slate-700 dark:group-hover:text-slate-300"
-                :class="{ 'rotate-180': showOverview }"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-            >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
+                rotated="open"
+            />
         </button>
 
         {{-- Desktop Table View --}}
-        <div x-show="showOverview" x-collapse class="hidden md:block premium-card rounded-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
+        <div x-show="open" x-collapse class="hidden md:block premium-card rounded-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-slate-50 dark:bg-slate-800/50">
@@ -155,7 +150,7 @@
         </div>
 
         {{-- Mobile Card View --}}
-        <div x-show="showOverview" x-collapse class="md:hidden space-y-3">
+        <div x-show="open" x-collapse class="md:hidden space-y-3">
             @foreach ($this->debtPayoffSchedule as $debt)
                 <div wire:key="payoff-card-{{ $loop->index }}" class="premium-card rounded-xl border border-slate-200 dark:border-slate-700/50 p-4">
                     <div class="flex justify-between items-start mb-3">
@@ -205,10 +200,23 @@
     </div>
 
     {{-- Detailed Repayment Schedule - Every Debt, Every Month --}}
-    <div class="mt-12">
-        <h2 class="font-display text-2xl font-bold text-slate-900 dark:text-white mb-6">
-            {{ __('app.complete_repayment_schedule') }}
-        </h2>
+    <div class="mt-12" x-data="collapsibleMap({ persistKey: 'payment-plan-expanded-months', historicalKeys: @js($this->historicalMonthNumbers) })">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+            <h2 class="font-display text-2xl font-bold text-slate-900 dark:text-white">
+                {{ __('app.complete_repayment_schedule') }}
+            </h2>
+            @if (count($this->historicalMonthNumbers) > 0)
+                <button
+                    type="button"
+                    @click="toggleAllHistorical()"
+                    :aria-expanded="!allHistoricalCollapsed"
+                    class="self-start sm:self-auto inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                >
+                    <span x-show="allHistoricalCollapsed">{{ __('app.expand_all_historical') }}</span>
+                    <span x-show="!allHistoricalCollapsed" x-cloak>{{ __('app.collapse_all_historical') }}</span>
+                </button>
+            @endif
+        </div>
 
         {{-- Desktop Table View --}}
         <div class="hidden md:block premium-card rounded-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
@@ -216,9 +224,6 @@
                 <table class="w-full">
                     <thead class="bg-slate-50 dark:bg-slate-800/50 sticky top-0">
                         <tr>
-                            <th class="px-4 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                {{ __('app.month') }}
-                            </th>
                             <th class="px-4 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                                 {{ __('app.debt_name') }}
                             </th>
@@ -236,24 +241,59 @@
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    @php
+                        $paidOffDebts = []; // Track which debts have been fully paid off
+                    @endphp
+                    @foreach ($this->detailedSchedule as $month)
                         @php
-                            $paidOffDebts = []; // Track which debts have been fully paid off
-                        @endphp
-                        @foreach ($this->detailedSchedule as $month)
-                            @php
-                                $rowCount = count($month['payments']);
-                                $isHistorical = isset($month['isHistorical']) && $month['isHistorical'];
-                                $allPaidOff = collect($month['payments'])->every(fn($p) => $p['remaining'] <= 0.01);
+                            $isHistorical = isset($month['isHistorical']) && $month['isHistorical'];
+                            $allPaidOff = collect($month['payments'])->every(fn ($p) => $p['remaining'] <= 0.01);
 
-                                if ($isHistorical) {
-                                    $rowClass = 'bg-cyan-50 dark:bg-cyan-900/10';
-                                } elseif ($allPaidOff) {
-                                    $rowClass = 'bg-emerald-50 dark:bg-emerald-900/20';
-                                } else {
-                                    $rowClass = $month['month'] % 2 == 1 ? 'bg-slate-50/50 dark:bg-slate-800/30' : '';
-                                }
-                            @endphp
+                            if ($isHistorical) {
+                                $rowClass = 'bg-cyan-50 dark:bg-cyan-900/10';
+                            } elseif ($allPaidOff) {
+                                $rowClass = 'bg-emerald-50 dark:bg-emerald-900/20';
+                            } else {
+                                $rowClass = $month['month'] % 2 == 1 ? 'bg-slate-50/50 dark:bg-slate-800/30' : '';
+                            }
+                        @endphp
+                        <tbody x-data="{ month: {{ $month['month'] }} }">
+                            <tr wire:key="header-{{ $month['month'] }}" class="{{ $rowClass }} border-t-2 border-slate-200 dark:border-slate-700/60">
+                                <td colspan="5" class="px-4 py-3">
+                                    <div class="flex items-center justify-between gap-4">
+                                        <button
+                                            type="button"
+                                            @click="toggle(month)"
+                                            class="flex items-center gap-3 text-left flex-1 cursor-pointer group focus:outline-none"
+                                            :aria-expanded="isExpanded(month)"
+                                        >
+                                            <x-icons.chevron-down
+                                                class="w-5 h-5 text-slate-500 dark:text-slate-400 transition-transform duration-200 group-hover:text-slate-700 dark:group-hover:text-slate-300"
+                                                rotated="isExpanded(month)"
+                                            />
+                                            <div class="flex items-baseline gap-3">
+                                                <span class="font-bold text-slate-900 dark:text-white">{{ $month['month'] }}</span>
+                                                <span class="text-sm text-slate-500 dark:text-slate-400">
+                                                    {{ \Carbon\Carbon::parse($month['date'])->locale('nb')->translatedFormat('M Y') }}
+                                                </span>
+                                                @if ($isHistorical)
+                                                    <span class="text-xs font-semibold text-cyan-600 dark:text-cyan-400">{{ __('app.historical') }}</span>
+                                                @endif
+                                            </div>
+                                        </button>
+                                        @if (!$isHistorical)
+                                            <button
+                                                type="button"
+                                                wire:click="markMonthAsPaid({{ $month['month'] }})"
+                                                aria-label="{{ $this->isMonthFullyPaid($month['month']) ? __('app.unmark_all_as_paid') : __('app.mark_all_as_paid') }}"
+                                                class="text-xs px-2 py-1 {{ $this->isMonthFullyPaid($month['month']) ? 'bg-rose-500 hover:bg-rose-600' : 'bg-emerald-500 hover:bg-emerald-600' }} text-white rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                                            >
+                                                {{ $this->isMonthFullyPaid($month['month']) ? __('app.unmark_all_as_paid') : __('app.mark_all_as_paid') }}
+                                            </button>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
 
                             @foreach ($month['payments'] as $index => $payment)
                                 @php
@@ -262,30 +302,8 @@
                                     $paymentKey = $month['month'] . '_' . $debtId;
                                     $isPaid = $debt ? $this->paymentService->paymentExists($debtId, $month['month']) : false;
                                 @endphp
-                                <tr wire:key="detail-{{ $month['month'] }}-{{ $index }}" class="{{ $rowClass }}">
-                                    @if ($index === 0)
-                                        <td rowspan="{{ $rowCount }}" class="px-4 py-3 text-sm font-bold text-slate-900 dark:text-white align-top border-r border-slate-200 dark:border-slate-700">
-                                            <div class="flex flex-col gap-2">
-                                                <div>
-                                                    {{ $month['month'] }}<br>
-                                                    <span class="text-xs font-normal text-slate-500 dark:text-slate-400">{{ \Carbon\Carbon::parse($month['date'])->locale('nb')->translatedFormat('M Y') }}</span>
-                                                    @if ($isHistorical)
-                                                        <span class="block mt-1 text-xs font-semibold text-cyan-600 dark:text-cyan-400">{{ __('app.historical') }}</span>
-                                                    @endif
-                                                </div>
-                                                @if (!$isHistorical)
-                                                    <button
-                                                        type="button"
-                                                        wire:click="markMonthAsPaid({{ $month['month'] }})"
-                                                        aria-label="{{ $this->isMonthFullyPaid($month['month']) ? __('app.unmark_all_as_paid') : __('app.mark_all_as_paid') }}"
-                                                        class="text-xs px-2 py-1 {{ $this->isMonthFullyPaid($month['month']) ? 'bg-rose-500 hover:bg-rose-600' : 'bg-emerald-500 hover:bg-emerald-600' }} text-white rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
-                                                    >
-                                                        {{ $this->isMonthFullyPaid($month['month']) ? __('app.unmark_all_as_paid') : __('app.mark_all_as_paid') }}
-                                                    </button>
-                                                @endif
-                                            </div>
-                                        </td>
-                                    @endif
+                                <template x-if="isExpanded(month)">
+                                <tr wire:key="detail-{{ $month['month'] }}-{{ $index }}" class="{{ $rowClass }} border-t border-slate-100 dark:border-slate-800">
                                     <td class="px-4 py-3 text-sm text-slate-900 dark:text-white {{ $payment['remaining'] <= 0.01 ? 'font-medium' : '' }}">
                                         {{ $payment['name'] }}
                                         @php
@@ -389,9 +407,11 @@
                                         @endif
                                     </td>
                                 </tr>
+                                </template>
                                 @if ($isPaid && $debt && isset($this->showNoteInput[$key]) && $this->showNoteInput[$key])
+                                    <template x-if="isExpanded(month)">
                                     <tr wire:key="note-{{ $month['month'] }}-{{ $index }}" class="{{ $rowClass }}">
-                                        <td colspan="7" class="px-4 py-3">
+                                        <td colspan="5" class="px-4 py-3">
                                             <div class="max-w-2xl">
                                                 <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                                                     {{ __('app.payment_notes') }}
@@ -432,17 +452,11 @@
                                             </div>
                                         </td>
                                     </tr>
+                                    </template>
                                 @endif
                             @endforeach
-
-                            {{-- Separator between months --}}
-                            @if (!$loop->last)
-                                <tr>
-                                    <td colspan="6" class="border-b-2 border-slate-200 dark:border-slate-700"></td>
-                                </tr>
-                            @endif
-                        @endforeach
-                    </tbody>
+                        </tbody>
+                    @endforeach
                 </table>
             </div>
 
@@ -454,31 +468,42 @@
                 @php
                     $isHistorical = isset($month['isHistorical']) && $month['isHistorical'];
                 @endphp
-                <div wire:key="detail-mobile-{{ $month['month'] }}" class="premium-card rounded-2xl border-2 {{ $isHistorical ? 'border-cyan-300 dark:border-cyan-700' : 'border-slate-200 dark:border-slate-700/50' }} overflow-hidden">
+                <div wire:key="detail-mobile-{{ $month['month'] }}" x-data="{ month: {{ $month['month'] }} }" class="premium-card rounded-2xl border-2 {{ $isHistorical ? 'border-cyan-300 dark:border-cyan-700' : 'border-slate-200 dark:border-slate-700/50' }} overflow-hidden">
                     <div class="{{ $isHistorical ? 'bg-cyan-50 dark:bg-cyan-900/20' : 'bg-slate-50 dark:bg-slate-800/50' }} px-4 py-3 border-b border-slate-200 dark:border-slate-700/50">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <div class="font-display font-bold text-slate-900 dark:text-white">{{ __('app.month') }} {{ $month['month'] }}</div>
-                                <div class="text-xs text-slate-500 dark:text-slate-400">
-                                    {{ \Carbon\Carbon::parse($month['date'])->locale('nb')->translatedFormat('F Y') }}
+                        <div class="flex items-center justify-between gap-3">
+                            <button
+                                type="button"
+                                @click="toggle(month)"
+                                class="flex items-center gap-3 text-left flex-1 cursor-pointer group focus:outline-none"
+                                :aria-expanded="isExpanded(month)"
+                            >
+                                <x-icons.chevron-down
+                                    class="w-5 h-5 text-slate-500 dark:text-slate-400 transition-transform duration-200 group-hover:text-slate-700 dark:group-hover:text-slate-300 shrink-0"
+                                    rotated="isExpanded(month)"
+                                />
+                                <div>
+                                    <div class="font-display font-bold text-slate-900 dark:text-white">{{ __('app.month') }} {{ $month['month'] }}</div>
+                                    <div class="text-xs text-slate-500 dark:text-slate-400">
+                                        {{ \Carbon\Carbon::parse($month['date'])->locale('nb')->translatedFormat('F Y') }}
+                                    </div>
+                                    @if ($isHistorical)
+                                        <span class="text-xs font-semibold text-cyan-600 dark:text-cyan-400">{{ __('app.historical') }}</span>
+                                    @endif
                                 </div>
-                                @if ($isHistorical)
-                                    <span class="text-xs font-semibold text-cyan-600 dark:text-cyan-400">{{ __('app.historical') }}</span>
-                                @endif
-                            </div>
+                            </button>
                             @if (!$isHistorical)
                                 <button
                                     type="button"
                                     wire:click="markMonthAsPaid({{ $month['month'] }})"
                                     aria-label="{{ $this->isMonthFullyPaid($month['month']) ? __('app.unmark_all_as_paid') : __('app.mark_all_as_paid') }}"
-                                    class="text-xs px-3 py-1.5 {{ $this->isMonthFullyPaid($month['month']) ? 'bg-rose-500 hover:bg-rose-600' : 'bg-emerald-500 hover:bg-emerald-600' }} text-white rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                                    class="text-xs px-3 py-1.5 {{ $this->isMonthFullyPaid($month['month']) ? 'bg-rose-500 hover:bg-rose-600' : 'bg-emerald-500 hover:bg-emerald-600' }} text-white rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 shrink-0"
                                 >
                                     {{ $this->isMonthFullyPaid($month['month']) ? __('app.unmark_all_as_paid') : __('app.mark_all_as_paid') }}
                                 </button>
                             @endif
                         </div>
                     </div>
-                    <div class="divide-y divide-slate-200 dark:divide-slate-700/50">
+                    <div x-show="isExpanded(month)" x-collapse class="divide-y divide-slate-200 dark:divide-slate-700/50">
                         @foreach ($month['payments'] as $payment)
                             @php
                                 $debt = $this->debts->get($payment['name']);

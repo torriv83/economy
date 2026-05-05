@@ -206,6 +206,8 @@ return [
     'already_paid' => 'Allerede betalt',
     'paid' => 'Betalt',
     'historical' => 'Historisk',
+    'collapse_all_historical' => 'Kollaps alle tidligere måneder',
+    'expand_all_historical' => 'Ekspander alle tidligere måneder',
     'projected' => 'Projeksjon',
     'notes' => 'Notater',
     'payment_notes' => 'Betalingsnotater',

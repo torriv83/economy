@@ -124,6 +124,18 @@ class PaymentPlan extends Component
         $this->visibleMonths = $this->totalMonths;
     }
 
+    /**
+     * @return array<int, int>
+     */
+    public function getHistoricalMonthNumbersProperty(): array
+    {
+        return collect($this->detailedSchedule)
+            ->filter(fn ($month) => isset($month['isHistorical']) && $month['isHistorical'])
+            ->pluck('month')
+            ->values()
+            ->all();
+    }
+
     public function getTotalMonthsProperty(): int
     {
         $debts = $this->debtCacheService->getAllWithPayments();

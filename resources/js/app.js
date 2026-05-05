@@ -3,6 +3,7 @@ import sort from '@alpinejs/sort';
 
 // Import Alpine components
 import './alpine/debt-type-calculator';
+import './alpine/collapsible';
 
 Alpine.plugin(sort);
 

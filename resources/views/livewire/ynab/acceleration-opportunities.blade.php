@@ -1,4 +1,4 @@
-<div wire:init="loadOpportunities" x-data="{ expanded: false, initialCount: 5 }">
+<div wire:init="loadOpportunities" x-data="collapsible(false)">
     @if (!$ynabEnabled)
         {{-- YNAB disabled - show nothing --}}
     @elseif (!$isConfigured)
@@ -63,7 +63,7 @@
                 <div
                     wire:key="opportunity-{{ $index }}-{{ $opportunity['name'] }}"
                     @if ($index >= 5)
-                        x-show="expanded"
+                        x-show="open"
                         x-cloak
                     @endif
                     class="flex items-start gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-colors"
@@ -144,19 +144,14 @@
             {{-- Show more/less button --}}
             @if ($opportunities->count() > 5)
                 <button
-                    x-on:click="expanded = !expanded"
+                    x-on:click="toggle()"
                     class="w-full py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer flex items-center justify-center gap-1"
                 >
-                    <span x-text="expanded ? '{{ __('app.show_less') }}' : '{{ __('app.show_more_count', ['count' => $opportunities->count() - 5]) }}'"></span>
-                    <svg
+                    <span x-text="open ? '{{ __('app.show_less') }}' : '{{ __('app.show_more_count', ['count' => $opportunities->count() - 5]) }}'"></span>
+                    <x-icons.chevron-down
                         class="h-4 w-4 transition-transform"
-                        :class="{ 'rotate-180': expanded }"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                    </svg>
+                        rotated="open"
+                    />
                 </button>
             @endif
         </div>

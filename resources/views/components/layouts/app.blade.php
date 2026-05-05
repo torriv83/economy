@@ -181,9 +181,7 @@
                         class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-base font-medium {{ request()->routeIs('home', 'debts', 'debts.edit') ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' }} transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
                     >
                         <span>{{ __('app.debts') }}</span>
-                        <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': debtsOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <x-icons.chevron-down class="w-4 h-4 transition-transform" rotated="debtsOpen" />
                     </button>
                     @php
                         $debtsView = request()->query('view', 'overview');
@@ -215,9 +213,7 @@
                         class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-base font-medium {{ request()->routeIs('insights') ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' }} transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
                     >
                         <span>{{ __('app.insights_menu') }}</span>
-                        <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': insightsOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <x-icons.chevron-down class="w-4 h-4 transition-transform" rotated="insightsOpen" />
                     </button>
                     <div x-show="insightsOpen" x-collapse class="pl-4 space-y-1 mt-1">
                         <a href="{{ route('insights', ['view' => 'progress']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-4 py-2 text-sm rounded-lg {{ request()->routeIs('insights') && $insightsView === 'progress' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
@@ -240,9 +236,7 @@
                         class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-base font-medium {{ request()->routeIs('payoff') ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' }} transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
                     >
                         <span>{{ __('app.payoff_planning') }}</span>
-                        <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': payoffOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <x-icons.chevron-down class="w-4 h-4 transition-transform" rotated="payoffOpen" />
                     </button>
                     <div x-show="payoffOpen" x-collapse class="pl-4 space-y-1 mt-1">
                         <a href="{{ route('payoff', ['view' => 'calendar']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-4 py-2 text-sm rounded-lg {{ request()->routeIs('payoff') && $payoffView === 'calendar' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
@@ -265,9 +259,7 @@
                         class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-base font-medium {{ request()->routeIs('self-loans') ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' }} transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
                     >
                         <span>{{ __('app.self_loans') }}</span>
-                        <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': selfLoansOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <x-icons.chevron-down class="w-4 h-4 transition-transform" rotated="selfLoansOpen" />
                     </button>
                     <div x-show="selfLoansOpen" x-collapse class="pl-4 space-y-1 mt-1">
                         <a href="{{ route('self-loans', ['view' => 'overview']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-4 py-2 text-sm rounded-lg {{ request()->routeIs('self-loans') && $selfLoansView === 'overview' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
@@ -290,9 +282,7 @@
                         class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-base font-medium {{ request()->routeIs('settings') ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' }} transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
                     >
                         <span>{{ __('app.settings') }}</span>
-                        <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': settingsOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <x-icons.chevron-down class="w-4 h-4 transition-transform" rotated="settingsOpen" />
                     </button>
                     <div x-show="settingsOpen" x-collapse class="pl-4 space-y-1 mt-1">
                         <a href="{{ route('settings', ['view' => 'plan']) }}" wire:navigate.hover @click="mobileMenuOpen = false" class="block px-4 py-2 text-sm rounded-lg {{ request()->routeIs('settings') && $settingsView === 'plan' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }}">

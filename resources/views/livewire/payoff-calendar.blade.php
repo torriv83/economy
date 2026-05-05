@@ -102,15 +102,10 @@
                     <h2 class="font-display text-lg font-semibold text-slate-900 dark:text-white">
                         {{ __('app.countdown_to_freedom') }}
                     </h2>
-                    <svg
+                    <x-icons.chevron-down
                         class="w-5 h-5 text-slate-400 transition-transform duration-200 group-hover:text-slate-600 dark:group-hover:text-slate-300"
-                        :class="{ 'rotate-180': showCountdown }"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                    </svg>
+                        rotated="showCountdown"
+                    />
                 </button>
                 <div x-show="showCountdown" x-collapse>
                 <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-4 md:gap-8 mb-4">

@@ -206,6 +206,8 @@ return [
     'already_paid' => 'Already paid',
     'paid' => 'Paid',
     'historical' => 'Historical',
+    'collapse_all_historical' => 'Collapse all past months',
+    'expand_all_historical' => 'Expand all past months',
     'projected' => 'Projected',
     'notes' => 'Notes',
     'payment_notes' => 'Payment Notes',
