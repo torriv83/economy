@@ -248,6 +248,51 @@ describe('generatePaymentSchedule', function () {
             ->and($result['schedule'])->not->toBeEmpty();
     });
 
+    it('rolls unused extra to next priority debt in the same month when priority debt is paid off', function () {
+        // Prioritert gjeld trenger bare 300 kr for å bli nedbetalt, men ekstra-budsjettet
+        // er 1000 kr. Differansen (700 kr) skal rulle til neste gjeld i SAMME måned,
+        // ikke "forsvinne" til måneden etter.
+        $debts = collect([
+            new Debt(['name' => 'Almost Done', 'balance' => 300, 'interest_rate' => 0, 'minimum_payment' => 100]),
+            new Debt(['name' => 'Next In Line', 'balance' => 5000, 'interest_rate' => 0, 'minimum_payment' => 200]),
+        ]);
+
+        $result = $this->service->generatePaymentSchedule($debts, 1000, 'custom');
+
+        $month1 = $result['schedule'][0];
+        $almostDone = collect($month1['payments'])->firstWhere('name', 'Almost Done');
+        $nextInLine = collect($month1['payments'])->firstWhere('name', 'Next In Line');
+
+        // Almost Done blir nedbetalt og bruker bare 300 kr.
+        expect($almostDone['amount'])->toBe(300.0)
+            ->and($almostDone['remaining'])->toBe(0.0)
+            ->and($almostDone['isPriority'])->toBeTrue();
+
+        // Next In Line skal arve restbudsjettet (1100 - 300 = 800 ekstra) i samme måned.
+        // Total betaling = 200 (minimum) + 800 (rollover) = 1000.
+        expect($nextInLine['amount'])->toBe(1000.0)
+            ->and($nextInLine['extra'])->toBe(800.0)
+            ->and($nextInLine['isPriority'])->toBeTrue();
+    });
+
+    it('does not give extra to non-priority debts when priority debt is not paid off', function () {
+        // Prioritert gjeld trenger mer enn ekstra-budsjettet, så stafetten stopper der.
+        $debts = collect([
+            new Debt(['name' => 'Big Priority', 'balance' => 10000, 'interest_rate' => 0, 'minimum_payment' => 100]),
+            new Debt(['name' => 'Other', 'balance' => 5000, 'interest_rate' => 0, 'minimum_payment' => 200]),
+        ]);
+
+        $result = $this->service->generatePaymentSchedule($debts, 500, 'custom');
+
+        $month1 = $result['schedule'][0];
+        $other = collect($month1['payments'])->firstWhere('name', 'Other');
+
+        // Other er ikke prioritert og skal kun få minimum.
+        expect($other['amount'])->toBe(200.0)
+            ->and($other['extra'])->toBe(0.0)
+            ->and($other['isPriority'])->toBeFalse();
+    });
+
     it('tracks progress percentage correctly', function () {
         $debts = collect([
             new Debt(['name' => 'Test', 'balance' => 1000, 'interest_rate' => 10, 'minimum_payment' => 500]),

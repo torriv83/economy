@@ -522,13 +522,19 @@ class DebtCalculationService
             // Calculate remaining extra budget for this month (never negative)
             $availableExtraThisMonth = max(0, $availableExtraPayment - $extraPaymentUsedThisMonth);
 
+            // Stafett-flagg: prioritet ruller videre til neste gjeld i SAMME måned
+            // når en prioritert gjeld blir helt nedbetalt, slik at ubrukt ekstra
+            // ikke "forsvinner" til måneden etter.
+            $priorityActive = true;
+
             foreach ($remainingDebts as $index => $debt) {
                 if ($debt['balance'] <= 0.01) {
                     continue;
                 }
 
-                $isPriority = $index === 0;
+                $isPriority = $priorityActive;
                 $debtName = $debt['name'];
+                $hasActualPaymentForDebt = $hasActualPayments && isset($actualPayments[$actualPaymentMonth][$debtName]);
 
                 $interest = $this->calculateMonthlyInterest($debt['balance'], $debt['interest_rate']);
 
@@ -536,7 +542,7 @@ class DebtCalculationService
                 $paymentNotes = null;
                 $cumulativePrincipalPaid = 0;
 
-                if ($hasActualPayments && isset($actualPayments[$actualPaymentMonth][$debtName])) {
+                if ($hasActualPaymentForDebt) {
                     $paymentData = $actualPayments[$actualPaymentMonth][$debtName];
                     $actualAmount = $paymentData['actual_amount'];
                     $principalPaid = $paymentData['principal_paid'];
@@ -548,11 +554,8 @@ class DebtCalculationService
                     $paymentNotes = $paymentData['notes'] ?? null;
                 } else {
                     $minimumPayment = $debt['minimum_payment'];
-                    // Use remaining extra budget (accounts for payments already made this month)
                     $extraForThisDebt = $isPriority ? $availableExtraThisMonth : 0;
                     $totalPayment = $minimumPayment + $extraForThisDebt;
-                    // Reduce available extra for subsequent debts this month
-                    $availableExtraThisMonth -= $extraForThisDebt;
                 }
 
                 $maxPayment = $debt['balance'] + $interest;
@@ -560,6 +563,14 @@ class DebtCalculationService
 
                 if ($maxPayment - $totalPayment > 0 && $maxPayment - $totalPayment <= 1) {
                     $totalPayment = $maxPayment;
+                }
+
+                // Trekk fra availableExtraThisMonth basert på FAKTISK brukt ekstra
+                // (etter kapping) — slik at differansen kan rulle til neste gjeld.
+                if (! $hasActualPaymentForDebt) {
+                    $actualExtraUsed = max(0, $totalPayment - $minimumPayment);
+                    $extraForThisDebt = round($actualExtraUsed, 2);
+                    $availableExtraThisMonth = max(0, $availableExtraThisMonth - $actualExtraUsed);
                 }
 
                 if ($totalPayment >= $maxPayment - 0.01) {
@@ -594,6 +605,14 @@ class DebtCalculationService
                 ];
 
                 $remainingDebts[$index]['balance'] = $newBalance;
+
+                // Stafett: hvis prioritert gjeld ikke ble nedbetalt denne iterasjonen,
+                // stopper rolloveren her — videre gjelder får 0 ekstra.
+                // Hvis den BLE nedbetalt, forblir $priorityActive = true slik at
+                // neste ikke-nedbetalte gjeld arver prioriteten i samme måned.
+                if ($isPriority && $newBalance > 0.01) {
+                    $priorityActive = false;
+                }
             }
 
             $totalRemaining = array_sum(array_column($remainingDebts, 'balance'));
