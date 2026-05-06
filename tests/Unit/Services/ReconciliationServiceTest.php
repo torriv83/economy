@@ -3,12 +3,13 @@
 use App\Models\Debt;
 use App\Models\Payment;
 use App\Services\PaymentService;
+use App\Services\ReconciliationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->service = new PaymentService;
+    $this->service = new ReconciliationService(new PaymentService);
 });
 
 describe('reconcileDebt', function () {
@@ -18,7 +19,7 @@ describe('reconcileDebt', function () {
             'original_balance' => 10000,
         ]);
 
-        $payment = $this->service->reconcileDebt(
+        $payment = $this->service->apply(
             $debt,
             actualBalance: 10500, // 500 kr more than expected
             reconciliationDate: '2024-01-15',
@@ -42,7 +43,7 @@ describe('reconcileDebt', function () {
             'original_balance' => 10000,
         ]);
 
-        $payment = $this->service->reconcileDebt(
+        $payment = $this->service->apply(
             $debt,
             actualBalance: 9500, // 500 kr less than expected
             reconciliationDate: '2024-01-15',
@@ -62,7 +63,7 @@ describe('reconcileDebt', function () {
             'original_balance' => 10000,
         ]);
 
-        $this->service->reconcileDebt(
+        $this->service->apply(
             $debt,
             actualBalance: 9500,
             reconciliationDate: '2024-01-15'
@@ -78,7 +79,7 @@ describe('reconcileDebt', function () {
             'original_balance' => 10000,
         ]);
 
-        expect(fn () => $this->service->reconcileDebt(
+        expect(fn () => $this->service->apply(
             $debt,
             actualBalance: 10000.00, // Same as current
             reconciliationDate: '2024-01-15'
@@ -91,7 +92,7 @@ describe('reconcileDebt', function () {
             'original_balance' => 10000,
         ]);
 
-        $payment = $this->service->reconcileDebt(
+        $payment = $this->service->apply(
             $debt,
             actualBalance: 10500,
             reconciliationDate: '2024-01-15'
@@ -107,7 +108,7 @@ describe('reconcileDebt', function () {
             'original_balance' => 10000,
         ]);
 
-        $payment = $this->service->reconcileDebt(
+        $payment = $this->service->apply(
             $debt,
             actualBalance: 9500,
             reconciliationDate: '2024-03-15'
@@ -123,7 +124,7 @@ describe('reconcileDebt', function () {
         ]);
 
         // 0.005 rounds to 0.01 which is >= 0.01 threshold
-        expect(fn () => $this->service->reconcileDebt(
+        expect(fn () => $this->service->apply(
             $debt,
             actualBalance: 10000.005,
             reconciliationDate: '2024-01-15'
@@ -136,10 +137,10 @@ describe('reconcileDebt', function () {
             'original_balance' => 10000,
         ]);
 
-        $this->service->reconcileDebt($debt, 9500, '2024-01-15', 'First');
+        $this->service->apply($debt, 9500, '2024-01-15', 'First');
         $debt->refresh();
 
-        $this->service->reconcileDebt($debt, 9000, '2024-02-15', 'Second');
+        $this->service->apply($debt, 9000, '2024-02-15', 'Second');
         $debt->refresh();
 
         expect(Payment::where('is_reconciliation_adjustment', true)->count())->toBe(2)
@@ -156,7 +157,7 @@ describe('getReconciliationsForDebt', function () {
         Payment::factory()->reconciliation()->create(['debt_id' => $debt1->id]);
         Payment::factory()->reconciliation()->create(['debt_id' => $debt2->id]);
 
-        $result = $this->service->getReconciliationsForDebt($debt1);
+        $result = $this->service->forDebt($debt1);
 
         expect($result)->toHaveCount(2)
             ->and($result->every(fn ($p) => $p->debt_id === $debt1->id))->toBeTrue();
@@ -174,7 +175,7 @@ describe('getReconciliationsForDebt', function () {
         // Create reconciliation
         Payment::factory()->reconciliation()->create(['debt_id' => $debt->id]);
 
-        $result = $this->service->getReconciliationsForDebt($debt);
+        $result = $this->service->forDebt($debt);
 
         expect($result)->toHaveCount(1)
             ->and($result->first()->is_reconciliation_adjustment)->toBeTrue();
@@ -183,7 +184,7 @@ describe('getReconciliationsForDebt', function () {
     it('returns empty collection when debt has no reconciliations', function () {
         $debt = Debt::factory()->create();
 
-        $result = $this->service->getReconciliationsForDebt($debt);
+        $result = $this->service->forDebt($debt);
 
         expect($result)->toBeEmpty();
     });
@@ -206,7 +207,7 @@ describe('getReconciliationsForDebt', function () {
             'payment_date' => '2024-02-15',
         ]);
 
-        $result = $this->service->getReconciliationsForDebt($debt);
+        $result = $this->service->forDebt($debt);
 
         expect($result->first()->id)->toBe($newer->id)
             ->and($result->get(1)->id)->toBe($middle->id)
@@ -224,7 +225,7 @@ describe('getAllReconciliations', function () {
         Payment::factory()->reconciliation()->create(['debt_id' => $debt2->id]);
         Payment::factory()->reconciliation()->create(['debt_id' => $debt3->id]);
 
-        $result = $this->service->getAllReconciliations();
+        $result = $this->service->all();
 
         expect($result)->toHaveCount(3);
     });
@@ -239,7 +240,7 @@ describe('getAllReconciliations', function () {
 
         Payment::factory()->reconciliation()->create(['debt_id' => $debt->id]);
 
-        $result = $this->service->getAllReconciliations();
+        $result = $this->service->all();
 
         expect($result)->toHaveCount(1)
             ->and($result->first()->is_reconciliation_adjustment)->toBeTrue();
@@ -254,7 +255,7 @@ describe('getAllReconciliations', function () {
             'is_reconciliation_adjustment' => false,
         ]);
 
-        $result = $this->service->getAllReconciliations();
+        $result = $this->service->all();
 
         expect($result)->toBeEmpty();
     });
@@ -264,7 +265,7 @@ describe('getAllReconciliations', function () {
 
         Payment::factory()->reconciliation()->create(['debt_id' => $debt->id]);
 
-        $result = $this->service->getAllReconciliations();
+        $result = $this->service->all();
 
         expect($result->first()->relationLoaded('debt'))->toBeTrue()
             ->and($result->first()->debt->name)->toBe('Test Debt');
@@ -283,7 +284,7 @@ describe('getAllReconciliations', function () {
             'payment_date' => '2024-03-15',
         ]);
 
-        $result = $this->service->getAllReconciliations();
+        $result = $this->service->all();
 
         expect($result->first()->id)->toBe($newer->id)
             ->and($result->last()->id)->toBe($older->id);
@@ -302,7 +303,7 @@ describe('updateReconciliation', function () {
             'principal_paid' => 500, // Initial: balance went from 10000 to 9500
         ]);
 
-        $result = $this->service->updateReconciliation(
+        $result = $this->service->revise(
             $payment,
             newActualBalance: 9000, // Change to 9000 instead of 9500
             reconciliationDate: '2024-02-20',
@@ -328,7 +329,7 @@ describe('updateReconciliation', function () {
             'principal_paid' => 500,
         ]);
 
-        $result = $this->service->updateReconciliation(
+        $result = $this->service->revise(
             $payment,
             newActualBalance: 9500,
             reconciliationDate: '2024-03-20'
@@ -350,7 +351,7 @@ describe('updateReconciliation', function () {
             'principal_paid' => 500,
         ]);
 
-        $result = $this->service->updateReconciliation(
+        $result = $this->service->revise(
             $payment,
             newActualBalance: 9500,
             reconciliationDate: '2024-01-15',
@@ -368,7 +369,7 @@ describe('updateReconciliation', function () {
             'is_reconciliation_adjustment' => false,
         ]);
 
-        expect(fn () => $this->service->updateReconciliation(
+        expect(fn () => $this->service->revise(
             $regularPayment,
             newActualBalance: 9500,
             reconciliationDate: '2024-01-15'
@@ -386,7 +387,7 @@ describe('updateReconciliation', function () {
             'principal_paid' => 500,
         ]);
 
-        $result = $this->service->updateReconciliation(
+        $result = $this->service->revise(
             $payment,
             newActualBalance: 9000,
             reconciliationDate: '2024-01-15'
@@ -411,7 +412,7 @@ describe('updateReconciliation', function () {
         // Balance without reconciliation = 9500 + 500 = 10000
         // New difference = 9000 - 10000 = -1000
         // New principal_paid = -(-1000) = 1000
-        $result = $this->service->updateReconciliation(
+        $result = $this->service->revise(
             $payment,
             newActualBalance: 9000,
             reconciliationDate: '2024-01-15'
@@ -435,7 +436,7 @@ describe('updateReconciliation', function () {
             'principal_paid' => 500,
         ]);
 
-        $result = $this->service->updateReconciliation(
+        $result = $this->service->revise(
             $payment,
             newActualBalance: 9500,
             reconciliationDate: '2024-02-20'
@@ -460,7 +461,7 @@ describe('deleteReconciliation', function () {
 
         $paymentId = $payment->id;
 
-        $result = $this->service->deleteReconciliation($payment);
+        $result = $this->service->revoke($payment);
 
         expect($result)->toBeTrue()
             ->and(Payment::find($paymentId))->toBeNull();
@@ -477,7 +478,7 @@ describe('deleteReconciliation', function () {
             'principal_paid' => 500, // This reduced balance from 10000 to 9500
         ]);
 
-        $this->service->deleteReconciliation($payment);
+        $this->service->revoke($payment);
 
         $debt->refresh();
         expect($debt->balance)->toBe(10000.0); // Balance restored
@@ -491,7 +492,7 @@ describe('deleteReconciliation', function () {
             'is_reconciliation_adjustment' => false,
         ]);
 
-        expect(fn () => $this->service->deleteReconciliation($regularPayment))
+        expect(fn () => $this->service->revoke($regularPayment))
             ->toThrow(InvalidArgumentException::class, 'not a reconciliation adjustment');
     });
 
@@ -506,7 +507,7 @@ describe('deleteReconciliation', function () {
             'principal_paid' => 500,
         ]);
 
-        $result = $this->service->deleteReconciliation($payment);
+        $result = $this->service->revoke($payment);
 
         expect($result)->toBeTrue();
     });
@@ -522,7 +523,7 @@ describe('deleteReconciliation', function () {
             'principal_paid' => -500, // This increased balance from 10000 to 10500
         ]);
 
-        $this->service->deleteReconciliation($payment);
+        $this->service->revoke($payment);
 
         $debt->refresh();
         expect($debt->balance)->toBe(10000.0); // Balance restored to original
@@ -545,7 +546,7 @@ describe('deleteReconciliation', function () {
         ]);
 
         // Delete only the second reconciliation
-        $this->service->deleteReconciliation($secondReconciliation);
+        $this->service->revoke($secondReconciliation);
 
         $debt->refresh();
         expect($debt->balance)->toBe(9500.0); // Only first reconciliation remains
@@ -563,7 +564,7 @@ describe('last_verified_at', function () {
             'last_verified_at' => null,
         ]);
 
-        $this->service->reconcileDebt(
+        $this->service->apply(
             $debt,
             actualBalance: 9500,
             reconciliationDate: '2024-03-15'
@@ -581,7 +582,7 @@ describe('last_verified_at', function () {
             'last_verified_at' => now()->subMonth(),
         ]);
 
-        $this->service->reconcileDebt(
+        $this->service->apply(
             $debt,
             actualBalance: 9500,
             reconciliationDate: '2024-06-20'
@@ -598,7 +599,7 @@ describe('last_verified_at', function () {
             'last_verified_at' => null,
         ]);
 
-        $this->service->reconcileDebt(
+        $this->service->apply(
             $debt,
             actualBalance: 9500,
             reconciliationDate: '2023-01-01'
@@ -617,7 +618,7 @@ describe('edge cases', function () {
             'interest_rate' => 0,
         ]);
 
-        $payment = $this->service->reconcileDebt(
+        $payment = $this->service->apply(
             $debt,
             actualBalance: 9500,
             reconciliationDate: '2024-01-15'
@@ -633,7 +634,7 @@ describe('edge cases', function () {
             'original_balance' => 100000,
         ]);
 
-        $payment = $this->service->reconcileDebt(
+        $payment = $this->service->apply(
             $debt,
             actualBalance: 50000,
             reconciliationDate: '2024-01-15'
@@ -651,7 +652,7 @@ describe('edge cases', function () {
             'original_balance' => 10000.50,
         ]);
 
-        $payment = $this->service->reconcileDebt(
+        $payment = $this->service->apply(
             $debt,
             actualBalance: 9500.75,
             reconciliationDate: '2024-01-15'
@@ -671,7 +672,7 @@ describe('edge cases', function () {
             'original_balance' => 5000,
         ]);
 
-        $this->service->reconcileDebt($debt1, 9500, '2024-01-15');
+        $this->service->apply($debt1, 9500, '2024-01-15');
 
         $debt1->refresh();
         $debt2->refresh();
@@ -686,7 +687,7 @@ describe('edge cases', function () {
             'original_balance' => 10000,
         ]);
 
-        $payment = $this->service->reconcileDebt(
+        $payment = $this->service->apply(
             $debt,
             actualBalance: 9500,
             reconciliationDate: '2024-01-15'

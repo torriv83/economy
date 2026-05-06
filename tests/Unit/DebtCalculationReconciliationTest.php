@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\Debt;
 use App\Services\DebtCalculationService;
 use App\Services\PaymentService;
+use App\Services\ReconciliationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -25,7 +26,7 @@ describe('payment schedule with reconciliation', function () {
         $paymentService->recordPayment($debt, 500, 416, 1, '2025-01');
 
         // Reconcile to 4000
-        $paymentService->reconcileDebt($debt, 4000, '2025-01-20', 'Reconciliation adjustment');
+        app(ReconciliationService::class)->apply($debt, 4000, '2025-01-20', 'Reconciliation adjustment');
 
         // Update debt balances based on all payments
         $paymentService->updateDebtBalances();
@@ -57,7 +58,7 @@ describe('payment schedule with reconciliation', function () {
 
         // Reconcile to lower balance before any payments
         $paymentService = app(PaymentService::class);
-        $paymentService->reconcileDebt($debt, 9000, '2025-01-10', 'Initial reconciliation');
+        app(ReconciliationService::class)->apply($debt, 9000, '2025-01-10', 'Initial reconciliation');
 
         // Update debt balances
         $paymentService->updateDebtBalances();
@@ -91,7 +92,7 @@ describe('payment schedule with reconciliation', function () {
         $paymentService = app(PaymentService::class);
 
         // First reconciliation
-        $paymentService->reconcileDebt($debt, 4500, '2025-01-05', 'First reconciliation');
+        app(ReconciliationService::class)->apply($debt, 4500, '2025-01-05', 'First reconciliation');
         $paymentService->updateDebtBalances();
 
         $debt->refresh();
@@ -101,7 +102,7 @@ describe('payment schedule with reconciliation', function () {
         $paymentService->recordPayment($debt, 300, 300, 1, '2025-01');
 
         // Second reconciliation
-        $paymentService->reconcileDebt($debt, 4000, '2025-01-25', 'Second reconciliation');
+        app(ReconciliationService::class)->apply($debt, 4000, '2025-01-25', 'Second reconciliation');
         $paymentService->updateDebtBalances();
 
         $debt->refresh();
@@ -135,7 +136,7 @@ describe('payment schedule with reconciliation', function () {
         $paymentService->recordPayment($debt, 500, 500, 1, '2025-01');
 
         // Reconcile
-        $paymentService->reconcileDebt($debt, 9000, '2025-01-20', 'Reconciliation');
+        app(ReconciliationService::class)->apply($debt, 9000, '2025-01-20', 'Reconciliation');
         $paymentService->updateDebtBalances();
 
         $debt->refresh();
@@ -171,7 +172,7 @@ describe('payment schedule with reconciliation', function () {
         $paymentService = app(PaymentService::class);
 
         // Reconcile to higher balance (like a late fee)
-        $paymentService->reconcileDebt($debt, 5500, '2025-01-15', 'Late fee added');
+        app(ReconciliationService::class)->apply($debt, 5500, '2025-01-15', 'Late fee added');
         $paymentService->updateDebtBalances();
 
         $debt->refresh();
@@ -206,7 +207,7 @@ describe('payment schedule with reconciliation', function () {
         $paymentService->recordPayment($debt, 400, 400, 1, '2025-01');
 
         // Reconcile (extra payment discovered)
-        $paymentService->reconcileDebt($debt, 7000, '2025-01-20', 'Extra payment found');
+        app(ReconciliationService::class)->apply($debt, 7000, '2025-01-20', 'Extra payment found');
         $paymentService->updateDebtBalances();
 
         $debt->refresh();

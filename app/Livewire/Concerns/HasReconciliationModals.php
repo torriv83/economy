@@ -6,7 +6,7 @@ namespace App\Livewire\Concerns;
 
 use App\Models\Debt;
 use App\Models\Payment;
-use App\Services\PaymentService;
+use App\Services\ReconciliationService;
 use App\Support\DateFormatter;
 
 trait HasReconciliationModals
@@ -25,11 +25,11 @@ trait HasReconciliationModals
 
     public ?int $deletingReconciliationId = null;
 
-    protected PaymentService $paymentService;
+    protected ReconciliationService $reconciliationService;
 
-    public function bootHasReconciliationModals(PaymentService $paymentService): void
+    public function bootHasReconciliationModals(ReconciliationService $reconciliationService): void
     {
-        $this->paymentService = $paymentService;
+        $this->reconciliationService = $reconciliationService;
     }
 
     /**
@@ -104,7 +104,7 @@ trait HasReconciliationModals
 
         $databaseDate = DateFormatter::norwegianToDatabase($this->editDate);
 
-        $this->paymentService->updateReconciliation(
+        $this->reconciliationService->revise(
             $payment,
             (float) $this->editBalance,
             $databaseDate,
@@ -140,7 +140,7 @@ trait HasReconciliationModals
             return;
         }
 
-        $this->paymentService->deleteReconciliation($payment);
+        $this->reconciliationService->revoke($payment);
 
         $this->cancelDelete();
         $this->afterReconciliationDeleted();

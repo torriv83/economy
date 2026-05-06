@@ -11,6 +11,7 @@ use App\Services\DebtCacheService;
 use App\Services\DebtCalculationService;
 use App\Services\PaymentService;
 use App\Services\PayoffSettingsService;
+use App\Services\ReconciliationService;
 use App\Services\YnabDiscrepancyService;
 use App\Services\YnabService;
 use App\Services\YnabSyncService;
@@ -59,6 +60,8 @@ class DebtList extends Component
 
     protected PaymentService $paymentService;
 
+    protected ReconciliationService $reconciliationService;
+
     protected PayoffSettingsService $settingsService;
 
     protected DebtCacheService $debtCacheService;
@@ -72,6 +75,7 @@ class DebtList extends Component
         YnabService $ynabService,
         YnabDiscrepancyService $discrepancyService,
         PaymentService $paymentService,
+        ReconciliationService $reconciliationService,
         PayoffSettingsService $settingsService,
         DebtCacheService $debtCacheService,
         YnabSyncService $ynabSyncService,
@@ -81,6 +85,7 @@ class DebtList extends Component
         $this->ynabService = $ynabService;
         $this->discrepancyService = $discrepancyService;
         $this->paymentService = $paymentService;
+        $this->reconciliationService = $reconciliationService;
         $this->settingsService = $settingsService;
         $this->debtCacheService = $debtCacheService;
         $this->ynabSyncService = $ynabSyncService;
@@ -509,7 +514,7 @@ class DebtList extends Component
             return;
         }
 
-        $this->paymentService->reconcileDebt(
+        $this->reconciliationService->apply(
             $debt,
             (float) $this->reconciliations[$debtId]['balance'],
             $databaseDate,

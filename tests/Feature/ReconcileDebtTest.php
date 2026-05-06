@@ -367,8 +367,8 @@ describe('edge cases', function () {
         ]);
 
         // First reconciliation succeeds
-        $service = app(\App\Services\PaymentService::class);
-        $firstPayment = $service->reconcileDebt($debt, 9500, '2025-01-15', 'First adjustment');
+        $service = app(\App\Services\ReconciliationService::class);
+        $firstPayment = $service->apply($debt, 9500, '2025-01-15', 'First adjustment');
 
         expect(Payment::where('is_reconciliation_adjustment', true)->count())->toBe(1);
         expect($firstPayment->month_number)->toBeNull(); // NULL to avoid collision with regular payments
@@ -377,7 +377,7 @@ describe('edge cases', function () {
         $debt = $debt->fresh();
 
         // Second reconciliation with significant difference from NEW balance
-        $secondPayment = $service->reconcileDebt($debt, 9000, '2025-02-15', 'Second adjustment');
+        $secondPayment = $service->apply($debt, 9000, '2025-02-15', 'Second adjustment');
 
         expect(Payment::where('is_reconciliation_adjustment', true)->count())->toBe(2);
         expect($secondPayment->month_number)->toBeNull(); // Both can be NULL without collision
