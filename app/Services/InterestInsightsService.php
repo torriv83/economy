@@ -63,7 +63,13 @@ class InterestInsightsService
      */
     public function getPerDebtInterestBreakdown(string $period = 'month'): Collection
     {
-        $debts = Debt::all();
+        // Include all debts that should appear in insights: active debts + archived
+        // debts where include_in_charts is true. Archived debts the user has hidden
+        // from charts are excluded from insights as well.
+        $debts = Debt::query()
+            ->where(fn ($q) => $q->whereNull('paid_off_at')
+                ->orWhere('include_in_charts', true))
+            ->get();
 
         if ($debts->isEmpty()) {
             return collect();
@@ -115,7 +121,7 @@ class InterestInsightsService
      */
     public function getExtraPaymentScenarios(array $increments = [500, 1000, 2000]): array
     {
-        $debts = Debt::all();
+        $debts = Debt::active()->get();
 
         if ($debts->isEmpty()) {
             return array_map(fn (int $increment) => [

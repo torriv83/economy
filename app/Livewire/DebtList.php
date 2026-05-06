@@ -103,7 +103,7 @@ class DebtList extends Component
      */
     public function getDebtsProperty(): array
     {
-        $debts = $this->debtCacheService->getAll();
+        $debts = $this->debtCacheService->getAllActive();
 
         // If custom priorities are set, sort by them
         if ($debts->whereNotNull('custom_priority_order')->count() > 0) {
@@ -138,17 +138,17 @@ class DebtList extends Component
 
     public function getTotalDebtProperty(): float
     {
-        return (float) Debt::sum('balance');
+        return (float) Debt::active()->sum('balance');
     }
 
     public function getDebtsCountProperty(): int
     {
-        return Debt::count();
+        return Debt::active()->count();
     }
 
     public function getLastUpdatedProperty(): ?string
     {
-        $latestDebt = Debt::latest('updated_at')->first();
+        $latestDebt = Debt::active()->latest('updated_at')->first();
 
         if (! $latestDebt) {
             return null;
@@ -162,7 +162,7 @@ class DebtList extends Component
      */
     public function getPayoffEstimateProperty(): ?array
     {
-        $debts = $this->debtCacheService->getAll();
+        $debts = $this->debtCacheService->getAllActive();
 
         if ($debts->isEmpty()) {
             return null;
@@ -195,7 +195,7 @@ class DebtList extends Component
      */
     public function getStrategyEstimateProperty(): ?array
     {
-        $debts = $this->debtCacheService->getAll();
+        $debts = $this->debtCacheService->getAllActive();
 
         if ($debts->isEmpty()) {
             return null;
@@ -232,7 +232,7 @@ class DebtList extends Component
      */
     public function getStrategyPayoffDateProperty(): ?string
     {
-        $debts = $this->debtCacheService->getAll();
+        $debts = $this->debtCacheService->getAllActive();
 
         if ($debts->isEmpty()) {
             return null;

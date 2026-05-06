@@ -52,7 +52,12 @@ class ProgressChartService
      */
     public function calculateProgressData(): array
     {
-        $debts = $this->debtCacheService->getAllWithPayments();
+        // Include all debts the user wants visible in charts: active debts + archived
+        // debts where include_in_charts is true. Archived debts that are excluded from
+        // charts (include_in_charts=false) are filtered out entirely.
+        $debts = $this->debtCacheService->getAllWithPayments()
+            ->filter(fn (Debt $debt) => ! $debt->isArchived() || $debt->include_in_charts)
+            ->values();
 
         if ($debts->isEmpty()) {
             return ['labels' => [], 'datasets' => [], 'historicalEndIndex' => -1];
@@ -144,6 +149,8 @@ class ProgressChartService
                 'label' => $debt->name,
                 'data' => [],
                 'borderColor' => self::COLOR_PALETTE[$index % count(self::COLOR_PALETTE)],
+                'hidden' => $debt->isArchived(),
+                'isArchived' => $debt->isArchived(),
             ];
         }
 

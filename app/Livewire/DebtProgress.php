@@ -162,7 +162,7 @@ class DebtProgress extends Component
 
     public function getMonthsToDebtFreeProperty(): int
     {
-        $debts = $this->debtCacheService->getAllWithPayments();
+        $debts = $this->debtCacheService->getAllActiveWithPayments();
 
         if ($debts->isEmpty()) {
             return 0;
@@ -190,7 +190,7 @@ class DebtProgress extends Component
 
     protected function allActiveDebtsPaidForCurrentMonth(): bool
     {
-        $activeDebts = Debt::where('balance', '>', 0)->get();
+        $activeDebts = Debt::active()->get();
 
         if ($activeDebts->isEmpty()) {
             return false;
@@ -214,7 +214,7 @@ class DebtProgress extends Component
 
     public function getProjectedPayoffDateProperty(): string
     {
-        $debts = $this->debtCacheService->getAllWithPayments();
+        $debts = $this->debtCacheService->getAllActiveWithPayments();
 
         if ($debts->isEmpty()) {
             $carbon = now();
@@ -243,7 +243,7 @@ class DebtProgress extends Component
 
     public function getProjectedTotalInterestProperty(): float
     {
-        $debts = $this->debtCacheService->getAllWithPayments();
+        $debts = $this->debtCacheService->getAllActiveWithPayments();
 
         if ($debts->isEmpty()) {
             return 0;

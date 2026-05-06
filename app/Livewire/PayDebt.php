@@ -48,7 +48,7 @@ class PayDebt extends Component
      */
     public function getCurrentMonthProperty(): ?array
     {
-        $debts = $this->debtCacheService->getAllWithPayments();
+        $debts = $this->debtCacheService->getAllActiveWithPayments();
 
         if ($debts->isEmpty()) {
             return null;
@@ -85,7 +85,7 @@ class PayDebt extends Component
      */
     public function getDebtsProperty(): \Illuminate\Database\Eloquent\Collection
     {
-        return $this->debtCacheService->getAllWithPayments()->keyBy('name');
+        return $this->debtCacheService->getAllActiveWithPayments()->keyBy('name');
     }
 
     public function togglePayment(int $monthNumber, int $debtId): void

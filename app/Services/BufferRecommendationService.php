@@ -73,7 +73,7 @@ class BufferRecommendationService
         }
 
         // Prioritet 3: Høyrentegjeld (>10%)
-        $debts = Debt::with('payments')->get();
+        $debts = Debt::active()->with('payments')->get();
         $highInterestDebt = $this->getHighInterestDebt($debts);
         if ($highInterestDebt !== null) {
             $recommendations[] = $this->getHighInterestDebtRecommendation($highInterestDebt, $debts, $readyToAssign);
@@ -389,7 +389,7 @@ class BufferRecommendationService
         ];
 
         // Options 2+: Pay down each debt
-        $debts = Debt::with('payments')->get();
+        $debts = Debt::active()->with('payments')->get();
         $debtOptions = [];
         foreach ($debts as $debt) {
             $impact = $this->calculateDebtImpact($debt, $amount);
@@ -536,7 +536,7 @@ class BufferRecommendationService
     public function getHighestInterestDebt(?Collection $debts = null): ?Debt
     {
         if ($debts === null) {
-            $debts = Debt::all();
+            $debts = Debt::active()->get();
         }
 
         if ($debts->isEmpty()) {
@@ -556,7 +556,7 @@ class BufferRecommendationService
      */
     private function calculateDebtImpact(Debt $debt, float $amount): array
     {
-        $debts = Debt::with('payments')->get();
+        $debts = Debt::active()->with('payments')->get();
         $extraPayment = $this->settingsService->get('payoff_settings.extra_payment', 'float') ?? 2000.0;
         $strategy = $this->settingsService->get('payoff_settings.strategy', 'string') ?? 'avalanche';
 

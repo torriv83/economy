@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\ArchivedDebts;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Debts\DebtLayout;
@@ -23,6 +24,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/insights', InsightsLayout::class)->name('insights');
     Route::get('/payoff', PayoffLayout::class)->name('payoff');
     Route::get('/self-loans', SelfLoanLayout::class)->name('self-loans');
+    Route::get('/archived', ArchivedDebts::class)->name('archived');
     Route::get('/settings', SettingsLayout::class)->name('settings');
 
     Route::post('/logout', function () {

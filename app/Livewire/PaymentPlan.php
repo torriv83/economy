@@ -10,6 +10,7 @@ use Livewire\Component;
 
 /**
  * @property int $totalMonths
+ * @property int $totalHistoricalMonths
  * @property array<int, array<string, mixed>> $detailedSchedule
  */
 class PaymentPlan extends Component
@@ -21,6 +22,8 @@ class PaymentPlan extends Component
     public string $strategy;
 
     public int $visibleMonths = 12;
+
+    public int $visibleHistoricalMonths = 6;
 
     /** @var array<string, float> */
     public array $editingPayments = [];
@@ -63,7 +66,7 @@ class PaymentPlan extends Component
      */
     public function getPaymentScheduleProperty(): array
     {
-        $debts = $this->debtCacheService->getAllWithPayments();
+        $debts = $this->debtCacheService->getAllActiveWithPayments();
 
         if ($debts->isEmpty()) {
             return [];
@@ -87,7 +90,7 @@ class PaymentPlan extends Component
      */
     public function getDetailedScheduleProperty(): array
     {
-        $debts = $this->debtCacheService->getAllWithPayments();
+        $debts = $this->debtCacheService->getAllActiveWithPayments();
 
         if ($debts->isEmpty()) {
             return [];
@@ -109,9 +112,15 @@ class PaymentPlan extends Component
             return $month;
         }, $fullSchedule['schedule']);
 
-        $combined = array_merge($historicalPayments, $futureSchedule);
+        // Show only the most recent N historical months (latest first wins).
+        $visibleHistorical = array_slice(
+            $historicalPayments,
+            max(0, count($historicalPayments) - $this->visibleHistoricalMonths)
+        );
 
-        return array_slice($combined, 0, $this->visibleMonths + count($historicalPayments));
+        $visibleFuture = array_slice($futureSchedule, 0, $this->visibleMonths);
+
+        return array_merge($visibleHistorical, $visibleFuture);
     }
 
     public function loadMoreMonths(): void
@@ -122,6 +131,21 @@ class PaymentPlan extends Component
     public function showAllMonths(): void
     {
         $this->visibleMonths = $this->totalMonths;
+    }
+
+    public function loadMoreHistoricalMonths(): void
+    {
+        $this->visibleHistoricalMonths += 12;
+    }
+
+    public function showAllHistoricalMonths(): void
+    {
+        $this->visibleHistoricalMonths = $this->totalHistoricalMonths;
+    }
+
+    public function getTotalHistoricalMonthsProperty(): int
+    {
+        return count($this->paymentService->getHistoricalPayments());
     }
 
     /**
@@ -138,7 +162,7 @@ class PaymentPlan extends Component
 
     public function getTotalMonthsProperty(): int
     {
-        $debts = $this->debtCacheService->getAllWithPayments();
+        $debts = $this->debtCacheService->getAllActiveWithPayments();
 
         if ($debts->isEmpty()) {
             return 0;
@@ -167,7 +191,7 @@ class PaymentPlan extends Component
      */
     public function getDebtsProperty(): \Illuminate\Database\Eloquent\Collection
     {
-        return $this->debtCacheService->getAllWithPayments()->keyBy('name');
+        return $this->debtCacheService->getAllActiveWithPayments()->keyBy('name');
     }
 
     /**
@@ -175,7 +199,7 @@ class PaymentPlan extends Component
      */
     public function getDebtPayoffScheduleProperty(): array
     {
-        $debts = $this->debtCacheService->getAllWithPayments();
+        $debts = $this->debtCacheService->getAllActiveWithPayments();
 
         if ($debts->isEmpty()) {
             return [];
@@ -273,7 +297,7 @@ class PaymentPlan extends Component
             return;
         }
 
-        $debts = $this->debtCacheService->getAllWithPayments()->keyBy('name');
+        $debts = $this->debtCacheService->getAllActiveWithPayments()->keyBy('name');
         $debtIds = [];
 
         foreach ($monthData['payments'] as $payment) {
@@ -328,7 +352,7 @@ class PaymentPlan extends Component
             return false;
         }
 
-        $debts = $this->debtCacheService->getAllWithPayments()->keyBy('name');
+        $debts = $this->debtCacheService->getAllActiveWithPayments()->keyBy('name');
         $debtIds = [];
 
         foreach ($monthData['payments'] as $payment) {

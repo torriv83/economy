@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -18,6 +19,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int|null $due_day
  * @property string|null $ynab_account_id
  * @property \Carbon\Carbon|null $last_verified_at
+ * @property \Carbon\Carbon|null $paid_off_at
+ * @property bool $include_in_charts
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
  */
@@ -37,6 +40,8 @@ class Debt extends Model
         'due_day',
         'ynab_account_id',
         'last_verified_at',
+        'paid_off_at',
+        'include_in_charts',
     ];
 
     protected function casts(): array
@@ -50,7 +55,39 @@ class Debt extends Model
             'custom_priority_order' => 'integer',
             'due_day' => 'integer',
             'last_verified_at' => 'datetime',
+            'paid_off_at' => 'datetime',
+            'include_in_charts' => 'boolean',
         ];
+    }
+
+    /**
+     * Scope: only debts that are still active (not paid off).
+     *
+     * @param  Builder<Debt>  $query
+     * @return Builder<Debt>
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->whereNull('paid_off_at');
+    }
+
+    /**
+     * Scope: only debts that have been paid off and archived.
+     *
+     * @param  Builder<Debt>  $query
+     * @return Builder<Debt>
+     */
+    public function scopeArchived(Builder $query): Builder
+    {
+        return $query->whereNotNull('paid_off_at');
+    }
+
+    /**
+     * Whether this debt has been paid off and archived.
+     */
+    public function isArchived(): bool
+    {
+        return $this->paid_off_at !== null;
     }
 
     /**

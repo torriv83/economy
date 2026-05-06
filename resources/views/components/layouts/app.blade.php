@@ -72,6 +72,9 @@
                     <a href="{{ route('self-loans') }}" wire:navigate.hover class="nav-link px-4 py-2 rounded-lg font-medium text-sm transition-colors {{ request()->routeIs('self-loans') ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800' }} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2">
                         {{ __('app.self_loans') }}
                     </a>
+                    <a href="{{ route('archived') }}" wire:navigate.hover class="nav-link px-4 py-2 rounded-lg font-medium text-sm transition-colors {{ request()->routeIs('archived') ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800' }} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2">
+                        {{ __('app.archived_debts') }}
+                    </a>
                 </div>
 
                 {{-- Right side controls --}}
@@ -274,6 +277,18 @@
                     </div>
                 </div>
 
+                {{-- Archived Section --}}
+                <div>
+                    <a
+                        href="{{ route('archived') }}"
+                        wire:navigate.hover
+                        @click="mobileMenuOpen = false"
+                        class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-base font-medium {{ request()->routeIs('archived') ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' }} transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+                    >
+                        <span>{{ __('app.archived_debts') }}</span>
+                    </a>
+                </div>
+
                 {{-- Settings Section --}}
                 <div>
                     <button
@@ -348,7 +363,7 @@
     </nav>
 
     {{-- Main Content --}}
-    <main id="main-content" class="{{ request()->routeIs('home', 'debts', 'debts.edit', 'payoff', 'self-loans', 'settings', 'insights') ? 'md:ml-64' : '' }} pt-24 px-4 sm:px-6 lg:px-8 pb-24 md:pb-8">
+    <main id="main-content" class="{{ request()->routeIs('home', 'debts', 'debts.edit', 'payoff', 'self-loans', 'settings', 'insights', 'archived') ? 'md:ml-64' : '' }} pt-24 px-4 sm:px-6 lg:px-8 pb-24 md:pb-8">
         {{ $slot }}
     </main>
 

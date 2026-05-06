@@ -68,7 +68,7 @@ class StrategyComparison extends Component
      */
     protected function getDebts(): Collection
     {
-        return once(fn () => Debt::all());
+        return once(fn () => Debt::active()->get());
     }
 
     /**

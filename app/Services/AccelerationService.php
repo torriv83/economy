@@ -184,7 +184,7 @@ class AccelerationService
      */
     protected function calculateImpact(Debt $debt, float $amount): array
     {
-        $debts = Debt::with('payments')->get();
+        $debts = Debt::active()->with('payments')->get();
         $extraPayment = $this->settingsService->getExtraPayment();
         $strategy = $this->settingsService->getStrategy();
 

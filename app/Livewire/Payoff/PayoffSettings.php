@@ -74,7 +74,7 @@ class PayoffSettings extends Component
 
     public function getTotalMonthsProperty(): int
     {
-        $debts = Debt::with('payments')->get();
+        $debts = Debt::active()->with('payments')->get();
 
         if ($debts->isEmpty()) {
             return 0;
@@ -95,7 +95,7 @@ class PayoffSettings extends Component
 
     public function getPayoffDateProperty(): string
     {
-        $debts = Debt::with('payments')->get();
+        $debts = Debt::active()->with('payments')->get();
 
         if ($debts->isEmpty()) {
             return now()->locale('nb')->translatedFormat('F Y');
@@ -116,7 +116,7 @@ class PayoffSettings extends Component
 
     public function getTotalInterestProperty(): float
     {
-        $debts = Debt::with('payments')->get();
+        $debts = Debt::active()->with('payments')->get();
 
         if ($debts->isEmpty()) {
             return 0;
@@ -143,7 +143,7 @@ class PayoffSettings extends Component
     #[Computed]
     public function debtProjectionData(): array
     {
-        $debts = Debt::with('payments')->get();
+        $debts = Debt::active()->with('payments')->get();
 
         if ($debts->isEmpty()) {
             return ['labels' => [], 'datasets' => []];

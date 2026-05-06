@@ -20,10 +20,18 @@ class DebtCacheService
 
     public const CACHE_KEY_WITH_PAYMENTS = 'debts:all_with_payments';
 
+    public const CACHE_KEY_ACTIVE = 'debts:active';
+
+    public const CACHE_KEY_ACTIVE_WITH_PAYMENTS = 'debts:active_with_payments';
+
+    public const CACHE_KEY_ARCHIVED = 'debts:archived';
+
+    public const CACHE_KEY_ARCHIVED_WITH_PAYMENTS = 'debts:archived_with_payments';
+
     public const CACHE_TTL_MINUTES = 1440; // 24 hours
 
     /**
-     * Get all debts with caching.
+     * Get all debts with caching (active + archived).
      *
      * @return Collection<int, Debt>
      */
@@ -37,7 +45,7 @@ class DebtCacheService
     }
 
     /**
-     * Get all debts with payments relationship eager loaded.
+     * Get all debts with payments relationship eager loaded (active + archived).
      *
      * @return Collection<int, Debt>
      */
@@ -51,6 +59,62 @@ class DebtCacheService
     }
 
     /**
+     * Get only active (not paid off) debts.
+     *
+     * @return Collection<int, Debt>
+     */
+    public function getAllActive(): Collection
+    {
+        return Cache::remember(
+            self::CACHE_KEY_ACTIVE,
+            now()->addMinutes(self::CACHE_TTL_MINUTES),
+            fn () => Debt::active()->get()
+        );
+    }
+
+    /**
+     * Get active debts with payments eager loaded.
+     *
+     * @return Collection<int, Debt>
+     */
+    public function getAllActiveWithPayments(): Collection
+    {
+        return Cache::remember(
+            self::CACHE_KEY_ACTIVE_WITH_PAYMENTS,
+            now()->addMinutes(self::CACHE_TTL_MINUTES),
+            fn () => Debt::active()->with('payments')->get()
+        );
+    }
+
+    /**
+     * Get only archived (paid off) debts.
+     *
+     * @return Collection<int, Debt>
+     */
+    public function getAllArchived(): Collection
+    {
+        return Cache::remember(
+            self::CACHE_KEY_ARCHIVED,
+            now()->addMinutes(self::CACHE_TTL_MINUTES),
+            fn () => Debt::archived()->get()
+        );
+    }
+
+    /**
+     * Get archived debts with payments eager loaded.
+     *
+     * @return Collection<int, Debt>
+     */
+    public function getAllArchivedWithPayments(): Collection
+    {
+        return Cache::remember(
+            self::CACHE_KEY_ARCHIVED_WITH_PAYMENTS,
+            now()->addMinutes(self::CACHE_TTL_MINUTES),
+            fn () => Debt::archived()->with('payments')->get()
+        );
+    }
+
+    /**
      * Clear all debt-related caches.
      * Called when debts or payments are modified.
      */
@@ -58,6 +122,10 @@ class DebtCacheService
     {
         Cache::forget(self::CACHE_KEY_ALL);
         Cache::forget(self::CACHE_KEY_WITH_PAYMENTS);
+        Cache::forget(self::CACHE_KEY_ACTIVE);
+        Cache::forget(self::CACHE_KEY_ACTIVE_WITH_PAYMENTS);
+        Cache::forget(self::CACHE_KEY_ARCHIVED);
+        Cache::forget(self::CACHE_KEY_ARCHIVED_WITH_PAYMENTS);
 
         // Also clear related calculation caches
         DebtCalculationService::clearAllCalculationCaches();
