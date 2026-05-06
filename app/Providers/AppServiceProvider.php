@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Cache\DebtCacheInvalidator;
+use App\Listeners\InvalidateDebtCacheSubscriber;
 use App\Models\Debt;
-use App\Models\Payment;
 use App\Observers\DebtObserver;
-use App\Observers\PaymentObserver;
 use App\Services\SettingsService;
 use App\Services\YnabService;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +20,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->singleton(DebtCacheInvalidator::class);
+
         $this->app->singleton(YnabService::class, function ($app) {
             $settings = $app->make(SettingsService::class);
 
@@ -35,7 +38,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Debt::observe(DebtObserver::class);
-        Payment::observe(PaymentObserver::class);
+
+        Event::subscribe(InvalidateDebtCacheSubscriber::class);
 
         // Override runtime config with database values so existing config() calls work
         $this->app->booted(function () {

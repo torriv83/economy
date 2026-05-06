@@ -390,10 +390,6 @@ class PaymentService
         // Update last verified timestamp
         $debt->update(['last_verified_at' => $reconciliationDate]);
 
-        // Clear relevant caches
-        \App\Services\DebtCacheService::clearCache();
-        \App\Services\ProgressCacheService::clearCache();
-
         return $payment;
     }
 
@@ -470,11 +466,6 @@ class PaymentService
             ]);
 
             $this->updateDebtBalances();
-
-            // Clear relevant caches
-            \App\Services\DebtCacheService::clearCache();
-            \App\Services\ProgressCacheService::clearCache();
-            \App\Services\DebtCalculationService::clearAllCalculationCaches();
         });
 
         return $payment->fresh();
@@ -492,11 +483,6 @@ class PaymentService
         DB::transaction(function () use ($payment) {
             $payment->delete();
             $this->updateDebtBalances();
-
-            // Explicitly clear all caches since updateDebtBalances() uses raw SQL
-            DebtCacheService::clearCache();
-            ProgressCacheService::clearCache();
-            DebtCalculationService::clearAllCalculationCaches();
         });
 
         return true;

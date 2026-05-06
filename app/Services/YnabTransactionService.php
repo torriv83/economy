@@ -107,9 +107,6 @@ class YnabTransactionService
 
         // Oppdater gjeldssaldo
         $this->paymentService->updateDebtBalances();
-
-        // Temporary cache clear (til Bug #509 er fikset)
-        $this->clearTemporaryCaches();
     }
 
     /**
@@ -283,9 +280,6 @@ class YnabTransactionService
 
         // Oppdater gjeldssaldo
         $this->paymentService->updateDebtBalances();
-
-        // Temporary cache clear (til Bug #509 er fikset)
-        $this->clearTemporaryCaches();
     }
 
     /**
@@ -365,15 +359,5 @@ class YnabTransactionService
         if ($amount < 0) {
             throw new InvalidArgumentException('Amount cannot be negative');
         }
-    }
-
-    /**
-     * Clear temporary caches (until Bug #509 is fixed).
-     */
-    private function clearTemporaryCaches(): void
-    {
-        DebtCacheService::clearCache();
-        ProgressCacheService::clearCache();
-        DebtCalculationService::clearAllCalculationCaches();
     }
 }
