@@ -558,31 +558,30 @@ class DebtCalculationService
                     $totalPayment = $minimumPayment + $extraForThisDebt;
                 }
 
-                $maxPayment = $debt['balance'] + $interest;
-                $totalPayment = min($totalPayment, $maxPayment);
+                if ($hasActualPaymentForDebt) {
+                    // Faktiske betalinger er virkelighet og skal ikke klippes mot
+                    // simulert saldo: når planen projiseres fra dagens saldo er
+                    // betalingen allerede trukket fra, og klipping ville telle den
+                    // dobbelt og feilaktig markere gjelden som nedbetalt.
+                    // Gjenstående beregnes som i updateDebtBalances():
+                    // original_balance - SUM(principal_paid), inkl. avstemminger.
+                    $newBalance = max(0, round($debt['original_balance'] - $cumulativePrincipalPaid, 2));
+                } else {
+                    $maxPayment = $debt['balance'] + $interest;
+                    $totalPayment = min($totalPayment, $maxPayment);
 
-                if ($maxPayment - $totalPayment > 0 && $maxPayment - $totalPayment <= 1) {
-                    $totalPayment = $maxPayment;
-                }
+                    if ($maxPayment - $totalPayment > 0 && $maxPayment - $totalPayment <= 1) {
+                        $totalPayment = $maxPayment;
+                    }
 
-                // Trekk fra availableExtraThisMonth basert på FAKTISK brukt ekstra
-                // (etter kapping) — slik at differansen kan rulle til neste gjeld.
-                if (! $hasActualPaymentForDebt) {
+                    // Trekk fra availableExtraThisMonth basert på FAKTISK brukt ekstra
+                    // (etter kapping) — slik at differansen kan rulle til neste gjeld.
                     $actualExtraUsed = max(0, $totalPayment - $minimumPayment);
                     $extraForThisDebt = round($actualExtraUsed, 2);
                     $availableExtraThisMonth = max(0, $availableExtraThisMonth - $actualExtraUsed);
-                }
 
-                if ($totalPayment >= $maxPayment - 0.01) {
-                    $newBalance = 0;
-                } else {
-                    // When using actual payments, use cumulative principal_paid to calculate remaining
-                    // because database balance = original_balance - SUM(principal_paid)
-                    // Note: cumulative_principal_paid includes reconciliation adjustments
-                    if ($hasActualPayments && isset($actualPayments[$actualPaymentMonth][$debtName])) {
-                        // Calculate remaining balance based on cumulative principal paid
-                        // This matches how updateDebtBalances() calculates: original_balance - SUM(principal_paid)
-                        $newBalance = round($debt['original_balance'] - $cumulativePrincipalPaid, 2);
+                    if ($totalPayment >= $maxPayment - 0.01) {
+                        $newBalance = 0;
                     } else {
                         $newBalance = round($debt['balance'] + $interest - $totalPayment, 2);
                     }

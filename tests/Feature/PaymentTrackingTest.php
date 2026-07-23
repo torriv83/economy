@@ -526,6 +526,53 @@ describe('Payment Schedule Integration', function () {
 
         expect($result['months'])->toBeLessThanOrEqual(3);
     });
+
+    it('rolls remaining balance to next month when a partial payment nearly pays off the debt', function () {
+        $debt = Debt::factory()->create([
+            'name' => 'Klarna Mobil',
+            'original_balance' => 2157,
+            'balance' => 657, // Balance already reflects both payments below
+            'interest_rate' => 0,
+            'minimum_payment' => 750,
+        ]);
+
+        // Historical payment last month (gives the schedule a month offset of 1)
+        $debt->payments()->create([
+            'planned_amount' => 750,
+            'actual_amount' => 750,
+            'interest_paid' => 0,
+            'principal_paid' => 750,
+            'payment_date' => now()->subMonth(),
+            'month_number' => 1,
+            'payment_month' => now()->subMonth()->format('Y-m'),
+        ]);
+
+        // Partial payment recorded this month - 657 still remains on the debt
+        $debt->payments()->create([
+            'planned_amount' => 1407,
+            'actual_amount' => 750,
+            'interest_paid' => 0,
+            'principal_paid' => 750,
+            'payment_date' => now(),
+            'month_number' => 2,
+            'payment_month' => now()->format('Y-m'),
+        ]);
+
+        $offset = count($this->paymentService->getHistoricalPayments());
+        $debts = collect([$debt->fresh('payments')]);
+        $result = $this->calculationService->generatePaymentSchedule($debts, 0, 'avalanche', $offset);
+
+        // Current month shows the actual payment without marking the debt as paid off
+        $month1 = collect($result['schedule'][0]['payments'])->firstWhere('name', 'Klarna Mobil');
+        expect($month1['amount'])->toBe(750.0);
+        expect($month1['remaining'])->toBe(657.0);
+
+        // The remaining 657 is scheduled for payoff next month
+        expect($result['schedule'])->toHaveCount(2);
+        $month2 = collect($result['schedule'][1]['payments'])->firstWhere('name', 'Klarna Mobil');
+        expect($month2['amount'])->toBe(657.0);
+        expect($month2['remaining'])->toBe(0.0);
+    });
 });
 
 describe('Payment Data Consistency', function () {

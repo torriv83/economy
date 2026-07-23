@@ -559,10 +559,6 @@ The application uses SQLite and stores debt records with:
 3. Write comprehensive Pest tests covering happy paths, failures, and edge cases
 4. Run `vendor/bin/pint --dirty` before finalizing changes
 
-### Authentication
-- **No authentication** - this is a personal single-user application
-- Do not add authentication unless explicitly requested
-
 ### Testing Strategy
 - Feature tests for user workflows (CRUD operations, calculations)
 - Unit tests for calculation logic (interest calculations, payoff ordering)
@@ -570,11 +566,9 @@ The application uses SQLite and stores debt records with:
 - Always verify calculation accuracy with financial edge cases
 
 ## IMPORTANT NOTES
-**CRITICAL: ALWAYS Run subagents unless the change is a one liner. NO EXCUSES.**
 
 - This is a **personal single-user application** for local use only
 - Financial calculations must be precise - always test with edge cases
-- YNAB integration is planned but not yet implemented
 - Keep the UI simple and responsive (mobile-first approach)
 
 ## Shell Environment
@@ -677,9 +671,10 @@ TINKER
 - KUN leseoperasjoner — ALDRI endre data på produksjon
 - Bruk `--execute="..."` for tinker-kommandoer
 - Dobbelt-escape backslash for namespaces: `App\\\\Models\\\\Debt`
-- Se Kanban Memory #52 "Connect to production site via ssh" for mer detaljer
 
 ## TaskHub MCP - Oppgavehåndtering
+
+Bruk taskhub KUN hvis bruker ber om det.
 
 ### Prosjekt-IDer
 - **list_id**: `31` (Economy)
