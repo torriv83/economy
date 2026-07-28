@@ -6,6 +6,7 @@ use App\Models\Debt;
 use App\Services\DebtCacheService;
 use App\Services\DebtCalculationService;
 use App\Services\PaymentService;
+use Carbon\Carbon;
 use Livewire\Component;
 
 /**
@@ -273,7 +274,7 @@ class PaymentPlan extends Component
             return;
         }
 
-        $paymentMonth = now()->addMonths($monthNumber - 1)->format('Y-m');
+        $paymentMonth = $this->resolvePaymentMonth($monthData);
 
         $this->paymentService->recordPayment(
             $debt,
@@ -318,7 +319,7 @@ class PaymentPlan extends Component
 
         // Mark all as paid
         $payments = [];
-        $paymentMonth = now()->addMonths($monthNumber - 1)->format('Y-m');
+        $paymentMonth = $this->resolvePaymentMonth($monthData);
 
         foreach ($monthData['payments'] as $payment) {
             $debt = $debts->get($payment['name']);
@@ -341,6 +342,18 @@ class PaymentPlan extends Component
             $this->paymentService->recordMonthPayments($payments, $paymentMonth, $monthNumber);
             session()->flash('message', __('app.payments_saved'));
         }
+    }
+
+    /**
+     * Resolve payment_month from the schedule row's own date. The schedule's
+     * month numbers include the historical offset, so deriving the month from
+     * now()->addMonths() would shift it by the number of historical months.
+     *
+     * @param  array<string, mixed>  $monthData
+     */
+    protected function resolvePaymentMonth(array $monthData): string
+    {
+        return Carbon::parse($monthData['date'])->format('Y-m');
     }
 
     public function isMonthFullyPaid(int $monthNumber): bool
