@@ -2,6 +2,7 @@
 ## Personal Debt Management Application
 
 **Date:** 2025-11-26
+**Last updated:** 2026-08-01 (version-based invalidation)
 **Status:** Implementation complete (all medium/high priority items done)
 
 ---
@@ -36,16 +37,19 @@ This analysis identified **12 distinct caching opportunities** across the Larave
 **WHAT:** Complex amortization calculations generating complete payment schedules (up to 600 months)
 
 **IMPLEMENTATION:**
-- Added `getPaymentScheduleCacheKey()` method (lines 166-182)
-- Added `clearPaymentScheduleCache()` static method (lines 187-205)
-- Wrapped `generatePaymentSchedule()` with `Cache::remember()` (5 min TTL)
+- Added `getPaymentScheduleCacheKey()` method
+- Wrapped `generatePaymentSchedule()` with `Cache::remember()` (24 hour TTL)
 - Moved calculation logic to `calculatePaymentSchedule()` protected method
 
 **Cache key includes:**
+- Cache version prefix (`v{version}:`) — see [Cache Invalidation Strategy](#cache-invalidation-strategy)
 - Debt ID, balance, interest_rate, minimum_payment, custom_priority_order
 - Payments hash (count + max updated_at)
 - Extra payment amount
 - Strategy name
+- Current date (`Y-m-d`) — the schedule is built from `now()`, so a plan cached
+  yesterday would otherwise be served today with every month shifted
+- The `actualPaymentMonthOffset` is appended to the key by the caller
 
 **PRIORITY:** **HIGH** - This single optimization could improve page load times by 50-80%.
 
@@ -60,16 +64,17 @@ This analysis identified **12 distinct caching opportunities** across the Larave
 
 **IMPLEMENTATION:**
 - Added `getStrategyComparisonCacheKey()` method
-- Added `clearStrategyComparisonCache()` static method
-- Added `clearAllCalculationCaches()` convenience method
-- Wrapped `compareStrategies()` with `Cache::remember()` (10 min TTL)
+- Added `clearAllCalculationCaches()` convenience method (now a single version bump)
+- Wrapped `compareStrategies()` with `Cache::remember()` (24 hour TTL)
 - Moved calculation logic to `calculateStrategyComparison()` protected method
 - Added early return for empty debts (no caching needed)
 
 **Cache key includes:**
+- Cache version prefix (`v{version}:`)
 - Debt ID, balance, interest_rate, minimum_payment, custom_priority_order
 - Payments hash (count + max updated_at)
 - Extra payment amount
+- Current date (`Y-m-d`), for the same reason as the payment schedule
 
 **PRIORITY:** **HIGH** - Triple computation eliminated with single cache.
 
@@ -83,7 +88,7 @@ This analysis identified **12 distinct caching opportunities** across the Larave
 **WHAT:** Database query for PayoffSetting record
 
 **IMPLEMENTATION:**
-- Replaced instance-level `$cachedSettings` property with Laravel `Cache::remember()` (1 hour TTL)
+- Replaced instance-level `$cachedSettings` property with Laravel `Cache::remember()` (24 hour TTL)
 - Added `CACHE_KEY` and `CACHE_TTL_HOURS` constants for maintainability
 - Added `clearSettingsCache()` static method for manual cache invalidation
 - Cache automatically cleared in `setExtraPayment()`, `setStrategy()`, and `saveSettings()`
@@ -104,21 +109,26 @@ This analysis identified **12 distinct caching opportunities** across the Larave
 **WHAT:** `Debt::all()` or `Debt::with('payments')->get()` queries
 
 **IMPLEMENTATION:**
-- Created `app/Services/DebtCacheService.php` as centralized caching service:
-  - `getAll()` - Returns all debts with caching (5-minute TTL)
-  - `getAllWithPayments()` - Returns all debts with payments relationship (5-minute TTL)
+- Created `app/Services/DebtCacheService.php` as centralized caching service
+  (24 hour TTL on every entry, invalidated by version bump rather than expiry):
+  - `getAll()` / `getAllWithPayments()` - all debts, optionally with payments
+  - `getAllActive()` / `getAllActiveWithPayments()` - non-archived debts
+  - `getAllArchived()` / `getAllArchivedWithPayments()` - paid-off debts
   - `clearCache()` static method for manual cache invalidation
-- Created `app/Observers/DebtObserver.php` - Clears cache on Debt model events
-- Created `app/Observers/PaymentObserver.php` - Clears cache on Payment model events
-- Registered observers in `AppServiceProvider::boot()`
+- Invalidation is driven by `InvalidateDebtCacheSubscriber`, registered in
+  `AppServiceProvider::boot()` via `Event::subscribe()`
 - Updated components to use `DebtCacheService`:
   - `PaymentPlan.php` - 7 locations updated
   - `DebtList.php` - 5 locations updated
   - `DebtProgress.php` - 5 locations updated
 
-**Cache keys:**
-- `debts:all` - For `Debt::all()` queries
-- `debts:all_with_payments` - For `Debt::with('payments')->get()` queries
+**Cache keys** (all prefixed with `v{version}:`):
+- `debts:all`, `debts:all_with_payments`
+- `debts:active`, `debts:active_with_payments`
+- `debts:archived`, `debts:archived_with_payments`
+
+> `app/Observers/DebtObserver.php` still exists, but it only maintains the
+> `paid_off_at` flag — it no longer takes part in cache invalidation.
 
 **PRIORITY:** **MEDIUM** - Centralized caching now provides consistent behavior across all components.
 
@@ -132,23 +142,26 @@ This analysis identified **12 distinct caching opportunities** across the Larave
 **WHAT:** Generates monthly historical data points for chart visualization
 
 **IMPLEMENTATION:**
-- Added `getProgressDataCacheKey()` static method using Payment and Debt max updated_at
-- Added `clearProgressDataCache()` static method with Redis pattern matching support
-- Wrapped `getProgressDataProperty()` with `Cache::remember()` (1 hour TTL)
-- Moved calculation logic to `calculateProgressData()` protected method
+- Cache logic extracted to `app/Services/ProgressCacheService.php` (24 hour TTL)
+- Key derived from Payment and Debt max updated_at, plus the shared cache version
+- Moved calculation logic to `ProgressChartService`
 - Fixed N+1 queries by pre-calculating payments by debt and month
 - Uses `DebtCacheService` for debt retrieval (eager loading)
 
 **Cache key includes:**
+- Cache version prefix (`v{version}:`)
+- Environment name, so test and production caches never collide
 - Payment max updated_at timestamp
 - Debt max updated_at timestamp
 
 **Cache invalidation:**
-- Automatically via `DebtObserver` and `PaymentObserver` which call `DebtCacheService::clearCache()`
-- Which in turn calls `DebtCalculationService::clearAllCalculationCaches()`
-- Which now includes `DebtProgress::clearProgressDataCache()`
+- Automatically via `InvalidateDebtCacheSubscriber` → `DebtCacheInvalidator` →
+  a single version bump that covers this cache along with all the others
 
-**Tests:** 13 tests in `tests/Feature/DebtProgressCachingTest.php`
+> `DebtProgress::getProgressDataCacheKey()` and `clearProgressDataCache()` remain
+> as deprecated pass-throughs to `ProgressCacheService`.
+
+**Tests:** `tests/Feature/DebtProgressCachingTest.php`
 
 **PRIORITY:** **MEDIUM** - Expensive but only displayed on one page.
 
@@ -169,22 +182,20 @@ This analysis identified **12 distinct caching opportunities** across the Larave
 
 **IMPLEMENTATION:**
 - Added `getMinimumPaymentsCacheKey()` protected method for cache key generation
-- Added `clearMinimumPaymentsCache()` static method for cache invalidation
-- Wrapped `calculateMinimumPaymentsOnly()` with `Cache::remember()` (10 min TTL)
-- Wrapped `calculateMinimumPaymentsInterest()` with `Cache::remember()` (10 min TTL)
+- Wrapped `calculateMinimumPaymentsOnly()` with `Cache::remember()` (24 hour TTL)
+- Wrapped `calculateMinimumPaymentsInterest()` with `Cache::remember()` (24 hour TTL)
 - Moved calculation logic to `performCalculateMinimumPaymentsOnly()` and `performCalculateMinimumPaymentsInterest()` protected methods
-- Updated `clearAllCalculationCaches()` to include minimum payments cache
 
 **Cache key includes:**
+- Cache version prefix (`v{version}:`)
 - Debt ID, balance, interest_rate, minimum_payment
 - Type suffix ('months' or 'interest') to differentiate the two calculations
+- **No date**, unlike the schedule keys: the result holds no calendar dates
 
 **Cache invalidation:**
-- Automatically via `DebtObserver` and `PaymentObserver` which call `DebtCacheService::clearCache()`
-- Which in turn calls `DebtCalculationService::clearAllCalculationCaches()`
-- Which now includes `clearMinimumPaymentsCache()`
+- Automatically via `InvalidateDebtCacheSubscriber` → version bump
 
-**Tests:** 11 tests in `tests/Feature/MinimumPaymentCachingTest.php`
+**Tests:** `tests/Feature/MinimumPaymentCachingTest.php`
 
 **PRIORITY:** **MEDIUM** - Lightweight but called frequently.
 
@@ -265,29 +276,63 @@ This analysis identified **12 distinct caching opportunities** across the Larave
 
 ## CACHE INVALIDATION STRATEGY
 
-**STATUS:** ✅ **IMPLEMENTED**
+**STATUS:** ✅ **IMPLEMENTED** (rewritten 2026-08-01)
 
-Cache invalidation is handled through Eloquent model observers and service methods.
+Invalidation is **version-based**: every debt-related cache key carries a
+`v{version}:` prefix, and invalidating means advancing a single counter. All
+previously cached entries become unreachable at once, atomically, on every cache
+driver.
+
+### Why not pattern-based deletion
+
+The previous implementation tried to delete keys by pattern
+(`clearPaymentScheduleCache()` and friends, calling `KEYS payment_schedule:*`).
+That approach was removed because it never worked and failed silently:
+
+- It ran `Cache::getStore()->getRedis()`, which uses the **default** Redis
+  connection rather than the cache connection — a different database entirely.
+- It built the pattern as `config('cache.prefix').':'`, but Laravel's `RedisStore`
+  writes the prefix verbatim, with no colon. The pattern matched nothing.
+- It was guarded by `config('cache.default') === 'redis'`, so on any other driver
+  it did nothing at all.
+- `KEYS` is O(n) and blocks the Redis server, so it was the wrong tool regardless.
+
+Stale calculation results could therefore survive for the full 24 hour TTL, which
+is what produced inconsistent debt-free dates across pages after a reconciliation.
 
 ### Implementation
 
-#### Model Observers (`app/Observers/`)
+#### The version counter (`app/Cache/DebtCacheVersion.php`)
 
-**DebtObserver** and **PaymentObserver** handle all model events (created, updated, deleted, restored, forceDeleted) by calling `DebtCacheService::clearCache()`.
+```php
+DebtCacheVersion::key('payment_schedule:...')  // → 'v1754006400:payment_schedule:...'
+DebtCacheVersion::bump()                        // → atomic Cache::increment()
+```
 
-#### Cache Clear Chain
+Stored with `Cache::forever()` under `debt_cache_version`, and seeded from
+`now()->timestamp` rather than `1` — so a version key that is evicted or lost can
+never land back on a number that older cached entries were written under.
+
+#### Deferred flush (`app/Cache/DebtCacheInvalidator.php`)
+
+The flush is deferred until the surrounding database transaction **commits**.
+Flushing mid-transaction let a concurrent request re-populate the cache from the
+pre-commit database state, leaving stale data behind for the full cache lifetime.
 
 ```
-DebtObserver / PaymentObserver
-    └── DebtCacheService::clearCache()
-            ├── Cache::forget('debts:all')
-            ├── Cache::forget('debts:all_with_payments')
-            └── DebtCalculationService::clearAllCalculationCaches()
-                    ├── clearPaymentScheduleCache()      → payment_schedule:*
-                    ├── clearStrategyComparisonCache()   → strategy_comparison:*
-                    ├── clearMinimumPaymentsCache()      → minimum_payments:*
-                    └── DebtProgress::clearProgressDataCache() → progress_data:*
+InvalidateDebtCacheSubscriber  (eloquent.saved/deleted/restored/forceDeleted on Debt + Payment)
+    └── DebtCacheInvalidator::flush()
+            ├── DB::afterCommit(...)   → runs immediately when no transaction is active
+            ├── DB::afterRollBack(...) → releases the pending guard, nothing was changed
+            └── DebtCacheService::clearCache()
+                    └── DebtCacheVersion::bump()   ← invalidates every layer at once:
+                        debts:*, payment_schedule:*, strategy_comparison:*,
+                        minimum_payments:*, progress_data*
 ```
+
+A pending guard collapses many model events inside one transaction into a single
+flush, and a re-entry guard protects against a flush that triggers further
+Eloquent events.
 
 #### PayoffSettings Cache
 
@@ -300,17 +345,22 @@ DebtObserver / PaymentObserver
 
 | Event | Caches Cleared |
 |-------|----------------|
-| Debt created/updated/deleted | All caches (via observer chain) |
-| Payment created/updated/deleted | All caches (via observer chain) |
+| Debt created/updated/deleted | All debt caches (one version bump, after commit) |
+| Payment created/updated/deleted | All debt caches (one version bump, after commit) |
 | PayoffSettings changed | `payoff_settings` only |
 
-### Observer Registration
+### Subscriber Registration
 
-Observers are registered in `AppServiceProvider::boot()`:
+Registered in `AppServiceProvider::boot()`:
 ```php
-Debt::observe(DebtObserver::class);
-Payment::observe(PaymentObserver::class);
+Event::subscribe(InvalidateDebtCacheSubscriber::class);
 ```
+
+`DebtObserver` is still registered there too, but it only keeps `paid_off_at`
+consistent — it plays no part in cache invalidation.
+
+**Tests:** `tests/Feature/DebtCacheInvalidationTest.php` covers deferred flushing,
+rollback handling, version-based invalidation and date-sensitive keys.
 
 ---
 
@@ -350,13 +400,19 @@ Payment::observe(PaymentObserver::class);
 ### Configuration Recommendations
 
 - Use **file** or **Redis** cache driver (not array for persistence)
-- Set TTL to 5-15 minutes for most caches
-- Implement cache tags for easier invalidation
+- TTL is 24 hours across the board: entries are invalidated by version bump, so
+  the TTL is only a backstop against unbounded growth, not the freshness
+  mechanism
+- Use the **version prefix** for invalidation, never key-pattern scanning —
+  `KEYS` blocks Redis and is not portable across cache drivers
+- Anything derived from `now()` must include the date in its cache key
 - Monitor cache hit rates with Laravel Telescope (if installed)
 
 ### Notes
 
 - This is a **single-user application**, so aggressive caching is safe
 - No cache stampede concerns
-- Cache invalidation is straightforward (no multi-user conflicts)
+- Concurrency still matters despite the single user: a page renders several
+  Livewire components, each issuing its own request, so a flush that happens
+  before commit can be undone by a sibling request
 - Consider **eager loading** (`with()`) in addition to caching
