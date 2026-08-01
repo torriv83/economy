@@ -409,6 +409,11 @@ describe('deletePayment', function () {
         DB::shouldReceive('transaction')->once()->andReturnUsing(function ($callback) {
             return $callback();
         });
+        // Cache invalidation defers its flush through afterCommit
+        DB::shouldReceive('afterCommit')->andReturnUsing(function ($callback) {
+            $callback();
+        });
+        DB::shouldReceive('afterRollBack');
         DB::shouldReceive('update')->andReturn(1);
 
         $this->service->deletePayment($debt->id, 1);
@@ -463,6 +468,11 @@ describe('deleteMonthPayments', function () {
         DB::shouldReceive('transaction')->once()->andReturnUsing(function ($callback) {
             return $callback();
         });
+        // Cache invalidation defers its flush through afterCommit
+        DB::shouldReceive('afterCommit')->andReturnUsing(function ($callback) {
+            $callback();
+        });
+        DB::shouldReceive('afterRollBack');
         DB::shouldReceive('update')->andReturn(1);
 
         $this->service->deleteMonthPayments(1);
@@ -540,6 +550,11 @@ describe('updatePaymentAmount', function () {
         DB::shouldReceive('transaction')->once()->andReturnUsing(function ($callback) {
             return $callback();
         });
+        // Cache invalidation defers its flush through afterCommit
+        DB::shouldReceive('afterCommit')->andReturnUsing(function ($callback) {
+            $callback();
+        });
+        DB::shouldReceive('afterRollBack');
         DB::shouldReceive('update')->andReturn(1);
 
         $this->service->updatePaymentAmount($debt->id, 1, 2500);

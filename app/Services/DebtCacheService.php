@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Cache\DebtCacheVersion;
 use App\Models\Debt;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -12,7 +13,8 @@ use Illuminate\Support\Facades\Cache;
  * Service for caching debt collection queries.
  *
  * This service provides centralized caching for debt queries to avoid
- * redundant database calls across multiple Livewire components.
+ * redundant database calls across multiple Livewire components. Every key is
+ * versioned, so invalidation is a single increment of DebtCacheVersion.
  */
 class DebtCacheService
 {
@@ -38,7 +40,7 @@ class DebtCacheService
     public function getAll(): Collection
     {
         return Cache::remember(
-            self::CACHE_KEY_ALL,
+            self::versionedKey(self::CACHE_KEY_ALL),
             now()->addMinutes(self::CACHE_TTL_MINUTES),
             fn () => Debt::all()
         );
@@ -52,7 +54,7 @@ class DebtCacheService
     public function getAllWithPayments(): Collection
     {
         return Cache::remember(
-            self::CACHE_KEY_WITH_PAYMENTS,
+            self::versionedKey(self::CACHE_KEY_WITH_PAYMENTS),
             now()->addMinutes(self::CACHE_TTL_MINUTES),
             fn () => Debt::with('payments')->get()
         );
@@ -66,7 +68,7 @@ class DebtCacheService
     public function getAllActive(): Collection
     {
         return Cache::remember(
-            self::CACHE_KEY_ACTIVE,
+            self::versionedKey(self::CACHE_KEY_ACTIVE),
             now()->addMinutes(self::CACHE_TTL_MINUTES),
             fn () => Debt::active()->get()
         );
@@ -80,7 +82,7 @@ class DebtCacheService
     public function getAllActiveWithPayments(): Collection
     {
         return Cache::remember(
-            self::CACHE_KEY_ACTIVE_WITH_PAYMENTS,
+            self::versionedKey(self::CACHE_KEY_ACTIVE_WITH_PAYMENTS),
             now()->addMinutes(self::CACHE_TTL_MINUTES),
             fn () => Debt::active()->with('payments')->get()
         );
@@ -94,7 +96,7 @@ class DebtCacheService
     public function getAllArchived(): Collection
     {
         return Cache::remember(
-            self::CACHE_KEY_ARCHIVED,
+            self::versionedKey(self::CACHE_KEY_ARCHIVED),
             now()->addMinutes(self::CACHE_TTL_MINUTES),
             fn () => Debt::archived()->get()
         );
@@ -108,27 +110,30 @@ class DebtCacheService
     public function getAllArchivedWithPayments(): Collection
     {
         return Cache::remember(
-            self::CACHE_KEY_ARCHIVED_WITH_PAYMENTS,
+            self::versionedKey(self::CACHE_KEY_ARCHIVED_WITH_PAYMENTS),
             now()->addMinutes(self::CACHE_TTL_MINUTES),
             fn () => Debt::archived()->with('payments')->get()
         );
     }
 
     /**
+     * Prefix a base cache key with the current debt cache version.
+     */
+    private static function versionedKey(string $key): string
+    {
+        return DebtCacheVersion::key($key);
+    }
+
+    /**
      * Clear all debt-related caches.
      * Called when debts or payments are modified.
+     *
+     * One version bump invalidates the debt collections, the calculation
+     * caches and the progress data cache in a single atomic operation.
      */
     public static function clearCache(): void
     {
-        Cache::forget(self::CACHE_KEY_ALL);
-        Cache::forget(self::CACHE_KEY_WITH_PAYMENTS);
-        Cache::forget(self::CACHE_KEY_ACTIVE);
-        Cache::forget(self::CACHE_KEY_ACTIVE_WITH_PAYMENTS);
-        Cache::forget(self::CACHE_KEY_ARCHIVED);
-        Cache::forget(self::CACHE_KEY_ARCHIVED_WITH_PAYMENTS);
-
-        // Also clear related calculation caches
-        DebtCalculationService::clearAllCalculationCaches();
+        DebtCacheVersion::bump();
     }
 
     /**
@@ -136,6 +141,7 @@ class DebtCacheService
      */
     public function hasCachedData(): bool
     {
-        return Cache::has(self::CACHE_KEY_ALL) || Cache::has(self::CACHE_KEY_WITH_PAYMENTS);
+        return Cache::has(self::versionedKey(self::CACHE_KEY_ALL))
+            || Cache::has(self::versionedKey(self::CACHE_KEY_WITH_PAYMENTS));
     }
 }

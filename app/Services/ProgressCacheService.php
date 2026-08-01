@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Cache\DebtCacheVersion;
 use App\Models\Debt;
 use App\Models\Payment;
 use Illuminate\Support\Facades\Cache;
@@ -36,14 +37,14 @@ class ProgressCacheService
      *
      * The cache key is derived from the latest update timestamps of both
      * debts and payments, ensuring the cache is automatically invalidated
-     * when data changes.
+     * when data changes, and from the shared debt cache version.
      */
     public function getCacheKey(): string
     {
         $paymentMaxUpdated = Payment::max('updated_at') ?? '';
         $debtMaxUpdated = Debt::max('updated_at') ?? '';
 
-        return self::getPrefix().':'.md5($paymentMaxUpdated.$debtMaxUpdated);
+        return DebtCacheVersion::key(self::getPrefix().':'.md5($paymentMaxUpdated.$debtMaxUpdated));
     }
 
     /**
@@ -68,28 +69,12 @@ class ProgressCacheService
     }
 
     /**
-     * Clear the progress data cache.
-     *
-     * For Redis, clears all progress data cache keys by pattern.
-     * For file/array cache, clears the current cache key.
+     * Clear the progress data cache by advancing the shared debt cache
+     * version, which makes every previously cached key unreachable.
      */
     public function clear(): void
     {
-        $store = Cache::getStore();
-
-        if ($store instanceof \Illuminate\Cache\RedisStore) {
-            /** @var \Illuminate\Redis\Connections\Connection $redis */
-            $redis = $store->getRedis();
-            $prefix = config('cache.prefix', 'laravel').':';
-            $keys = $redis->keys($prefix.self::getPrefix().':*');
-            foreach ($keys as $key) {
-                $cacheKey = str_replace($prefix, '', $key);
-                Cache::forget($cacheKey);
-            }
-        } else {
-            // For file/array cache, just clear the current cache key
-            Cache::forget($this->getCacheKey());
-        }
+        DebtCacheVersion::bump();
     }
 
     /**

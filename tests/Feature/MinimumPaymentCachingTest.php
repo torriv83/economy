@@ -1,5 +1,6 @@
 <?php
 
+use App\Cache\DebtCacheVersion;
 use App\Models\Debt;
 use App\Services\DebtCalculationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -70,7 +71,7 @@ test('minimum payments returns consistent results for same data', function () {
 });
 
 // Cache Invalidation Tests - Test observable behavior
-test('clearMinimumPaymentsCache allows fresh calculation', function () {
+test('a version bump allows fresh calculation', function () {
     Debt::factory()->create([
         'balance' => 10000,
         'original_balance' => 10000,
@@ -85,7 +86,7 @@ test('clearMinimumPaymentsCache allows fresh calculation', function () {
     $result1 = $service->calculateMinimumPaymentsOnly($debts);
 
     // Clear cache
-    DebtCalculationService::clearMinimumPaymentsCache();
+    DebtCacheVersion::bump();
 
     // After clearing, should still get same result (recalculated)
     $result2 = $service->calculateMinimumPaymentsOnly($debts);

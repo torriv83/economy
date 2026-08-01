@@ -10,9 +10,9 @@ use App\Models\Payment;
 use Illuminate\Events\Dispatcher;
 
 /**
- * Subscribes to Eloquent lifecycle events for Debt and Payment models
- * and marks the cache as dirty, deferring the actual flush to request
- * (or job) termination.
+ * Subscribes to Eloquent lifecycle events for Debt and Payment models and
+ * schedules a cache flush. The invalidator defers the flush until the
+ * surrounding transaction commits.
  */
 final class InvalidateDebtCacheSubscriber
 {

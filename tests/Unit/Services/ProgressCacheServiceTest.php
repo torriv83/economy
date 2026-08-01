@@ -30,7 +30,8 @@ describe('getCacheKey', function () {
         $key = $this->service->getCacheKey();
 
         expect($key)->toBeString()
-            ->and($key)->toStartWith('progress_data_');
+            ->and($key)->toStartWith('v')
+            ->and($key)->toContain('progress_data_');
     });
 
     it('generates same key for same data state', function () {

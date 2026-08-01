@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Cache\DebtCacheVersion;
 use App\Contracts\DebtOrderingStrategy;
 use App\Models\Debt;
 use App\Services\DebtOrdering\AvalancheStrategy;
@@ -241,17 +242,22 @@ class DebtCalculationService
     /**
      * Generate a cache key for the payment schedule.
      *
+     * The current date is part of the key because the schedule is built from
+     * now(): a plan cached yesterday would otherwise be served today with
+     * every month shifted by one day.
+     *
      * @param  \Illuminate\Support\Collection<int, \App\Models\Debt>  $debts
      */
     protected function getPaymentScheduleCacheKey(Collection $debts, float $extraPayment, string $strategy): string
     {
         $debtData = $this->getDebtDataForCacheKey($debts);
 
-        return 'payment_schedule:'.md5(json_encode([
+        return DebtCacheVersion::key('payment_schedule:'.md5(json_encode([
             'debts' => $debtData,
             'extra_payment' => $extraPayment,
             'strategy' => $strategy,
-        ]));
+            'date' => now()->format('Y-m-d'),
+        ])));
     }
 
     /**
@@ -263,10 +269,11 @@ class DebtCalculationService
     {
         $debtData = $this->getDebtDataForCacheKey($debts);
 
-        return 'strategy_comparison:'.md5(json_encode([
+        return DebtCacheVersion::key('strategy_comparison:'.md5(json_encode([
             'debts' => $debtData,
             'extra_payment' => $extraPayment,
-        ]));
+            'date' => now()->format('Y-m-d'),
+        ])));
     }
 
     /**
@@ -294,7 +301,8 @@ class DebtCalculationService
      */
     protected function getMinimumPaymentsCacheKey(Collection $debts, string $type): string
     {
-        // For minimum payments, we only need debt financial data (not payments or custom order)
+        // For minimum payments, we only need debt financial data (not payments or custom order).
+        // No date in the key: the result holds no calendar dates.
         $debtData = $debts->map(fn (Debt $debt) => [
             'id' => $debt->id,
             'balance' => $debt->balance,
@@ -302,77 +310,7 @@ class DebtCalculationService
             'minimum_payment' => $debt->minimum_payment,
         ])->toArray();
 
-        return 'minimum_payments:'.$type.':'.md5(json_encode($debtData));
-    }
-
-    /**
-     * Clear all minimum payment caches.
-     */
-    public static function clearMinimumPaymentsCache(): void
-    {
-        // Clear all minimum payments cache keys by pattern
-        if (config('cache.default') === 'redis') {
-            /** @var \Illuminate\Cache\RedisStore $store */
-            $store = Cache::getStore();
-            /** @var \Illuminate\Redis\Connections\Connection $redis */
-            $redis = $store->getRedis();
-            $prefix = config('cache.prefix', 'laravel').':';
-            $keys = $redis->keys($prefix.'minimum_payments:*');
-            foreach ($keys as $key) {
-                $cacheKey = str_replace($prefix, '', $key);
-                Cache::forget($cacheKey);
-            }
-        }
-    }
-
-    /**
-     * Clear all payment schedule caches.
-     */
-    public static function clearPaymentScheduleCache(): void
-    {
-        // Clear all payment schedule cache keys by pattern
-        // Since Redis doesn't support pattern deletion easily with Laravel's Cache facade,
-        // we use a cache tag approach or clear specific known keys
-        Cache::forget('payment_schedule_keys');
-
-        // For Redis, we can use the Redis facade directly for pattern matching
-        if (config('cache.default') === 'redis') {
-            /** @var \Illuminate\Cache\RedisStore $store */
-            $store = Cache::getStore();
-            /** @var \Illuminate\Redis\Connections\Connection $redis */
-            $redis = $store->getRedis();
-            $prefix = config('cache.prefix', 'laravel').':';
-            $keys = $redis->keys($prefix.'payment_schedule:*');
-            foreach ($keys as $key) {
-                // Remove the prefix that Redis adds
-                $cacheKey = str_replace($prefix, '', $key);
-                Cache::forget($cacheKey);
-            }
-        }
-    }
-
-    /**
-     * Clear all strategy comparison caches.
-     */
-    public static function clearStrategyComparisonCache(): void
-    {
-        // Clear all strategy comparison cache keys by pattern
-        Cache::forget('strategy_comparison_keys');
-
-        // For Redis, we can use the Redis facade directly for pattern matching
-        if (config('cache.default') === 'redis') {
-            /** @var \Illuminate\Cache\RedisStore $store */
-            $store = Cache::getStore();
-            /** @var \Illuminate\Redis\Connections\Connection $redis */
-            $redis = $store->getRedis();
-            $prefix = config('cache.prefix', 'laravel').':';
-            $keys = $redis->keys($prefix.'strategy_comparison:*');
-            foreach ($keys as $key) {
-                // Remove the prefix that Redis adds
-                $cacheKey = str_replace($prefix, '', $key);
-                Cache::forget($cacheKey);
-            }
-        }
+        return DebtCacheVersion::key('minimum_payments:'.$type.':'.md5(json_encode($debtData)));
     }
 
     /**
@@ -380,10 +318,7 @@ class DebtCalculationService
      */
     public static function clearAllCalculationCaches(): void
     {
-        self::clearPaymentScheduleCache();
-        self::clearStrategyComparisonCache();
-        self::clearMinimumPaymentsCache();
-        ProgressCacheService::clearCache();
+        DebtCacheVersion::bump();
     }
 
     /**
