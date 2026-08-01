@@ -396,6 +396,99 @@ describe('updateReconciliation', function () {
         expect($result->notes)->toContain('Avstemming');
     });
 
+    it('regenerates an untouched auto-generated note with the new amount', function () {
+        $debt = Debt::factory()->create([
+            'balance' => 9500,
+            'original_balance' => 10000,
+        ]);
+
+        $payment = Payment::factory()->reconciliation()->create([
+            'debt_id' => $debt->id,
+            'principal_paid' => 500,
+            'actual_amount' => 500,
+            'notes' => 'Avstemming: Reduksjon på 500,00 kr',
+        ]);
+
+        // The edit modal pre-fills the field with the stored auto-generated note
+        $result = $this->service->revise(
+            $payment,
+            newActualBalance: 9000,
+            reconciliationDate: '2024-01-15',
+            notes: 'Avstemming: Reduksjon på 500,00 kr'
+        );
+
+        expect($result->notes)->toBe('Avstemming: Reduksjon på 1 000,00 kr');
+    });
+
+    it('regenerates an untouched auto-generated note for balance increases', function () {
+        $debt = Debt::factory()->create([
+            'balance' => 10500,
+            'original_balance' => 10000,
+        ]);
+
+        $payment = Payment::factory()->reconciliation()->create([
+            'debt_id' => $debt->id,
+            'principal_paid' => -500,
+            'actual_amount' => -500,
+            'notes' => 'Avstemming: Økning på 500,00 kr',
+        ]);
+
+        $result = $this->service->revise(
+            $payment,
+            newActualBalance: 11000,
+            reconciliationDate: '2024-01-15',
+            notes: 'Avstemming: Økning på 500,00 kr'
+        );
+
+        expect($result->notes)->toBe('Avstemming: Økning på 1 000,00 kr');
+    });
+
+    it('preserves a custom note verbatim', function () {
+        $debt = Debt::factory()->create([
+            'balance' => 9500,
+            'original_balance' => 10000,
+        ]);
+
+        $payment = Payment::factory()->reconciliation()->create([
+            'debt_id' => $debt->id,
+            'principal_paid' => 500,
+            'actual_amount' => 500,
+            'notes' => 'Gebyr fra banken',
+        ]);
+
+        $result = $this->service->revise(
+            $payment,
+            newActualBalance: 9000,
+            reconciliationDate: '2024-01-15',
+            notes: 'Gebyr fra banken'
+        );
+
+        expect($result->notes)->toBe('Gebyr fra banken');
+    });
+
+    it('preserves a custom note that only resembles the auto-generated one', function () {
+        $debt = Debt::factory()->create([
+            'balance' => 9500,
+            'original_balance' => 10000,
+        ]);
+
+        $payment = Payment::factory()->reconciliation()->create([
+            'debt_id' => $debt->id,
+            'principal_paid' => 500,
+            'actual_amount' => 500,
+            'notes' => 'Avstemming: Reduksjon på 500,00 kr',
+        ]);
+
+        $result = $this->service->revise(
+            $payment,
+            newActualBalance: 9000,
+            reconciliationDate: '2024-01-15',
+            notes: 'Avstemming: Reduksjon på 500,00 kr (bekreftet med banken)'
+        );
+
+        expect($result->notes)->toBe('Avstemming: Reduksjon på 500,00 kr (bekreftet med banken)');
+    });
+
     it('recalculates principal_paid and actual_amount', function () {
         $debt = Debt::factory()->create([
             'balance' => 9500,

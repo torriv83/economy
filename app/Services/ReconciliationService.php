@@ -80,6 +80,14 @@ class ReconciliationService
         /** @var Debt $debt */
         $debt = $reconciliation->debt;
 
+        // The edit modal pre-fills the note field with the stored note, which is
+        // usually the auto-generated one. Submitting it unchanged must not pin
+        // the note to the old amount, so it is treated as "no note given" and
+        // regenerated. Genuinely custom notes are kept verbatim.
+        if ($notes !== null && $notes === $this->buildDefaultNote((float) $reconciliation->principal_paid)) {
+            $notes = null;
+        }
+
         $principalPaid = $this->calculatePrincipalAdjustment(
             calculatedBalanceExcludingThisAdjustment: $debt->balance + $reconciliation->principal_paid,
             actualBalance: $newActualBalance,
