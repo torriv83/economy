@@ -405,10 +405,7 @@ class BufferRecommendationService
 
         // Sort debt options by interest saved (highest first)
         usort($debtOptions, function ($a, $b) {
-            $aSaved = $a['impact']['interest_saved'] ?? 0;
-            $bSaved = $b['impact']['interest_saved'] ?? 0;
-
-            return $bSaved <=> $aSaved; // Descending order
+            return $b['impact']['interest_saved'] <=> $a['impact']['interest_saved']; // Descending order
         });
 
         // Add sorted debt options to main options array
@@ -587,8 +584,6 @@ class BufferRecommendationService
             $strategy
         );
 
-        $whatIfStartingBalance = max(0, $debt->balance - $amount);
-
         // Calculate total debt-free date (when ALL debts are paid off)
         $currentDebtFreeMonth = ! empty($currentSchedule['schedule'])
             ? end($currentSchedule['schedule'])['month']
@@ -605,36 +600,5 @@ class BufferRecommendationService
             'months_saved' => $monthsSaved,
             'new_payoff_date' => now()->addMonths($whatIfDebtFreeMonth)->format('Y-m-d'),
         ];
-    }
-
-    /**
-     * Find the month number when a specific debt is paid off.
-     *
-     * @param  array<int, array<string, mixed>>  $schedule
-     */
-    private function findDebtPayoffMonth(array $schedule, string $debtName, ?float $startingBalance = null): int
-    {
-        if ($startingBalance !== null && $startingBalance <= 0.01) {
-            return 0;
-        }
-
-        $debtAppearsInSchedule = false;
-
-        foreach ($schedule as $month) {
-            foreach ($month['payments'] as $payment) {
-                if ($payment['name'] === $debtName) {
-                    $debtAppearsInSchedule = true;
-                    if ($payment['remaining'] <= 0.01) {
-                        return $month['month'];
-                    }
-                }
-            }
-        }
-
-        if (! $debtAppearsInSchedule && $startingBalance !== null) {
-            return 0;
-        }
-
-        return count($schedule);
     }
 }
