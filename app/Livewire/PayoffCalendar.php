@@ -524,8 +524,6 @@ class PayoffCalendar extends Component
         $schedule = $this->paymentSchedule;
         $actualPayments = $this->actualPayments;
         $currentMonthKey = Carbon::create($this->currentYear, $this->currentMonth, 1)->format('Y-m');
-        $currentMonthDate = Carbon::create($this->currentYear, $this->currentMonth, 1);
-        $isPastMonth = $currentMonthDate->lt(now()->startOfMonth());
 
         // Calculate historical offset for correct month_number
         $historicalPayments = $this->paymentService->getHistoricalPayments();
@@ -536,39 +534,13 @@ class PayoffCalendar extends Component
             return $payment->debt_id.'_'.$payment->payment_month;
         })->map(fn ($group) => $group->first());
 
-        // For past months, show actual payments directly (no schedule needed)
-        if ($isPastMonth) {
-            foreach ($actualPayments as $payment) {
-                $actualDateKey = $payment->payment_date->format('Y-m-d');
+        // Build planned events from the schedule, tracking which actual payments
+        // the schedule already covers so the rest can be added afterwards rather
+        // than being dropped. Past months simply match no schedule row, so they
+        // fall through to the actual payments below.
+        $handledPaymentIds = [];
 
-                if (! isset($events[$actualDateKey])) {
-                    $events[$actualDateKey] = [
-                        'type' => 'payment',
-                        'amount' => 0,
-                        'debts' => [],
-                    ];
-                }
-
-                $events[$actualDateKey]['amount'] += $payment->actual_amount;
-                $events[$actualDateKey]['debts'][] = [
-                    'payment_id' => $payment->id,
-                    'debt_id' => $payment->debt_id,
-                    'name' => $payment->debt->name,
-                    'amount' => $payment->actual_amount,
-                    'isPriority' => false,
-                    'isPaid' => true,
-                ];
-            }
-
-            return $events;
-        }
-
-        // For current/future months, use the schedule
-        if (empty($schedule['schedule'])) {
-            return [];
-        }
-
-        foreach ($schedule['schedule'] as $monthData) {
+        foreach ($schedule['schedule'] ?? [] as $monthData) {
             $baseDate = Carbon::parse($monthData['date']);
             $scheduleMonthKey = $baseDate->format('Y-m');
 
@@ -605,6 +577,7 @@ class PayoffCalendar extends Component
 
                     if ($actualPayment) {
                         // There's an actual payment - use the actual payment date
+                        $handledPaymentIds[] = $actualPayment->id;
                         $actualDateKey = $actualPayment->payment_date->format('Y-m-d');
 
                         if (! isset($events[$actualDateKey])) {
@@ -653,6 +626,40 @@ class PayoffCalendar extends Component
             }
         }
 
+        // Actual payments the schedule never covered. A debt that was paid off
+        // this month is archived the moment its balance hits zero, which drops
+        // it from Debt::active() and therefore from the schedule - without this
+        // its final payment would stay invisible until the month became history.
+        foreach ($actualPayments as $payment) {
+            if (in_array($payment->id, $handledPaymentIds, true)) {
+                continue;
+            }
+
+            if ($payment->debt === null) {
+                continue;
+            }
+
+            $actualDateKey = $payment->payment_date->format('Y-m-d');
+
+            if (! isset($events[$actualDateKey])) {
+                $events[$actualDateKey] = [
+                    'type' => 'payment',
+                    'amount' => 0,
+                    'debts' => [],
+                ];
+            }
+
+            $events[$actualDateKey]['amount'] += $payment->actual_amount;
+            $events[$actualDateKey]['debts'][] = [
+                'payment_id' => $payment->id,
+                'debt_id' => $payment->debt_id,
+                'name' => $payment->debt->name,
+                'amount' => $payment->actual_amount,
+                'isPriority' => false,
+                'isPaid' => true,
+            ];
+        }
+
         return $events;
     }
 
@@ -664,13 +671,21 @@ class PayoffCalendar extends Component
         $milestones = [];
         $schedule = $this->paymentSchedule;
 
-        if (empty($schedule['schedule'])) {
-            return [];
-        }
-
         $paidOffDebts = [];
 
-        foreach ($schedule['schedule'] as $monthData) {
+        // Debts that are already paid off are archived and therefore absent from
+        // the schedule, so their milestone is derived from the payment history.
+        foreach ($this->archivedPayoffMilestones() as $dateKey => $debtNames) {
+            foreach ($debtNames as $debtName) {
+                $milestones[$dateKey][] = [
+                    'type' => 'debt_payoff',
+                    'debtName' => $debtName,
+                ];
+                $paidOffDebts[] = $debtName;
+            }
+        }
+
+        foreach ($schedule['schedule'] ?? [] as $monthData) {
             if (! isset($monthData['payments']) || ! is_array($monthData['payments'])) {
                 continue;
             }
@@ -699,6 +714,44 @@ class PayoffCalendar extends Component
                     $paidOffDebts[] = $debtName;
                 }
             }
+        }
+
+        return $milestones;
+    }
+
+    /**
+     * Payoff milestones for archived debts, keyed by date.
+     *
+     * The milestone lands on the date of the final real payment rather than on
+     * paid_off_at, so a payment registered after the fact is still shown on the
+     * day it was actually made.
+     *
+     * @return array<string, array<int, string>>
+     */
+    private function archivedPayoffMilestones(): array
+    {
+        $currentMonthKey = Carbon::create($this->currentYear, $this->currentMonth, 1)->format('Y-m');
+
+        $archivedDebts = Debt::archived()
+            ->with(['payments' => fn ($query) => $query->where('is_reconciliation_adjustment', false)])
+            ->get();
+
+        $milestones = [];
+
+        foreach ($archivedDebts as $debt) {
+            $payoffDate = $debt->payments->max('payment_date') ?? $debt->paid_off_at;
+
+            if ($payoffDate === null) {
+                continue;
+            }
+
+            $payoffDate = Carbon::parse($payoffDate);
+
+            if ($payoffDate->format('Y-m') !== $currentMonthKey) {
+                continue;
+            }
+
+            $milestones[$payoffDate->format('Y-m-d')][] = $debt->name;
         }
 
         return $milestones;
