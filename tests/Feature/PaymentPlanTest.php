@@ -2,10 +2,29 @@
 
 use App\Livewire\PaymentPlan;
 use App\Models\Debt;
+use App\Models\Payment;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
+
+/**
+ * Create one payment per historical month, oldest first, so the payment plan
+ * reports exactly $months historical months.
+ */
+function createHistoricalPaymentMonths(Debt $debt, int $months): void
+{
+    for ($i = $months; $i >= 1; $i--) {
+        Payment::factory()->create([
+            'debt_id' => $debt->id,
+            'planned_amount' => 1000,
+            'actual_amount' => 1000,
+            'payment_date' => now()->subMonths($i),
+            'month_number' => $months - $i + 1,
+            'payment_month' => now()->subMonths($i)->format('Y-m'),
+        ]);
+    }
+}
 
 test('payment plan component renders successfully', function () {
     Debt::factory()->create(['name' => 'Kredittkort', 'type' => 'kredittkort', 'balance' => 50000, 'original_balance' => 50000, 'interest_rate' => 8.5, 'minimum_payment' => 1500]);
@@ -205,6 +224,98 @@ test('markMonthAsPaid stores current month as payment_month when historical mont
     foreach ($payments as $payment) {
         expect($payment->payment_month)->toBe(now()->format('Y-m'));
     }
+});
+
+test('shows only the show all historical button when 12 or fewer months remain', function () {
+    app()->setLocale('en');
+
+    $debt = Debt::factory()->create([
+        'name' => 'Kredittkort',
+        'type' => 'kredittkort',
+        'balance' => 50000,
+        'original_balance' => 70000,
+        'interest_rate' => 8.5,
+        'minimum_payment' => 1500,
+    ]);
+
+    // 8 historiske måneder - 6 er synlige, så 2 gjenstår
+    createHistoricalPaymentMonths($debt, 8);
+
+    Livewire::test(PaymentPlan::class)
+        ->call('loadData')
+        ->assertSet('visibleHistoricalMonths', 6)
+        ->assertSee('Show all earlier')
+        ->assertDontSee('Show earlier months')
+        ->assertDontSeeHtml('wire:click="loadMoreHistoricalMonths"');
+});
+
+test('shows only the show all historical button when exactly 12 months remain', function () {
+    app()->setLocale('en');
+
+    $debt = Debt::factory()->create([
+        'name' => 'Kredittkort',
+        'type' => 'kredittkort',
+        'balance' => 50000,
+        'original_balance' => 70000,
+        'interest_rate' => 8.5,
+        'minimum_payment' => 1500,
+    ]);
+
+    // 18 historiske måneder - 6 er synlige, så nøyaktig 12 gjenstår
+    createHistoricalPaymentMonths($debt, 18);
+
+    Livewire::test(PaymentPlan::class)
+        ->call('loadData')
+        ->assertSee('Show all earlier')
+        ->assertDontSee('Show earlier months')
+        ->assertDontSeeHtml('wire:click="loadMoreHistoricalMonths"');
+});
+
+test('shows both historical buttons when more than 12 months remain', function () {
+    app()->setLocale('en');
+
+    $debt = Debt::factory()->create([
+        'name' => 'Kredittkort',
+        'type' => 'kredittkort',
+        'balance' => 50000,
+        'original_balance' => 70000,
+        'interest_rate' => 8.5,
+        'minimum_payment' => 1500,
+    ]);
+
+    // 20 historiske måneder - 6 er synlige, så 14 gjenstår
+    createHistoricalPaymentMonths($debt, 20);
+
+    Livewire::test(PaymentPlan::class)
+        ->call('loadData')
+        ->assertSee('Show earlier months')
+        ->assertSee('Show all earlier')
+        ->assertSeeHtml('wire:click="loadMoreHistoricalMonths"')
+        ->assertSeeHtml('wire:click="showAllHistoricalMonths"');
+});
+
+test('load more historical hides the load more button once 12 or fewer months remain', function () {
+    app()->setLocale('en');
+
+    $debt = Debt::factory()->create([
+        'name' => 'Kredittkort',
+        'type' => 'kredittkort',
+        'balance' => 50000,
+        'original_balance' => 70000,
+        'interest_rate' => 8.5,
+        'minimum_payment' => 1500,
+    ]);
+
+    // 25 historiske måneder - 19 gjenstår, etter innlasting gjenstår 7
+    createHistoricalPaymentMonths($debt, 25);
+
+    Livewire::test(PaymentPlan::class)
+        ->call('loadData')
+        ->assertSeeHtml('wire:click="loadMoreHistoricalMonths"')
+        ->call('loadMoreHistoricalMonths')
+        ->assertSet('visibleHistoricalMonths', 18)
+        ->assertDontSeeHtml('wire:click="loadMoreHistoricalMonths"')
+        ->assertSee('Show all earlier');
 });
 
 test('togglePayment stores schedule month as payment_month for future months', function () {
